@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Ace Gym — Admin</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <main>
+    <h1>Admin — Ace Gym</h1>
+    <section id="auth-section">
+      <form id="login-form">
+        <label>Email <input name="email" type="email" required></label>
+        <label>Password <input name="password" type="password" required></label>
+        <button>Sign in</button>
+      </form>
+    </section>
+
+    <section id="admin-section" style="display:none">
+      <button id="signout">Sign out</button>
+      <h2>Members</h2>
+      <div>
+        <label>Search <input id="search" placeholder="name or email"></label>
+        <button id="refresh">Refresh</button>
+      </div>
+      <table id="members-table">
+        <thead>
+          <tr><th>Name</th><th>Email</th><th>Phone</th><th>Plan</th><th>Next due</th><th>Last paid</th><th>Actions</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <template id="member-row">
+        <tr>
+          <td class="name"></td>
+          <td class="email"></td>
+          <td class="phone"></td>
+          <td class="plan"></td>
+          <td class="next_due"></td>
+          <td class="last_paid"></td>
+          <td class="actions"></td>
+        </tr>
+      </template>
+
+      <h3>Record payment</h3>
+      <form id="payment-form">
+        <label>Member ID <input name="member_id" required></label>
+        <label>Amount (INR) <input name="amount" required type="number" min="0"></label>
+        <label>Paid for date <input name="paid_for_date" type="date" required></label>
+        <label>Note <input name="note"></label>
+        <button>Record payment</button>
+      </form>
+    </section>
+  </main>
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>

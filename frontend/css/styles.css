@@ -1,0 +1,10 @@
+/* Simple styles */
+body { font-family: system-ui, Arial, sans-serif; margin: 24px; }
+main { max-width: 900px; margin: auto; }
+label { display: block; margin: 8px 0; }
+input, select { padding: 6px; width: 100%; max-width: 420px; }
+button { padding: 8px 12px; margin-top: 8px; }
+table { border-collapse: collapse; width: 100%; margin-top: 12px; }
+table, th, td { border: 1px solid #ddd; }
+th, td { padding: 8px; text-align: left; }
+#message { margin-top: 12px; color: green; }
