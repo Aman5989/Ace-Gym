@@ -34,19 +34,28 @@ export default function MemberActions({
   const supabase = createClient();
 
   async function deleteMember() {
-    const { error } = await supabase
-      .from("members")
-      .delete()
-      .eq("id", member.id);
+    try {
+      const { error } = await supabase
+        .from("members")
+        .delete()
+        .eq("id", member.id);
 
-    if (error) {
-      toast.error("Failed to delete member");
-      return;
+      if (error) {
+        console.error("MEMBER DELETE ERROR:", error);
+        toast.error(error.message);
+        return;
+      }
+
+      toast.success("Member deleted");
+      router.refresh();
+    } catch (error) {
+      console.error("MEMBER DELETE REQUEST FAILED:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Unable to delete member"
+      );
     }
-
-    toast.success("Member deleted");
-
-    router.refresh();
   }
 
   return (

@@ -528,6 +528,7 @@ export default function RegistrationForm() {
 
 
       <Button
+        type="submit"
 
         disabled={loading}
 

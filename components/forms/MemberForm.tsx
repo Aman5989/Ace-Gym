@@ -54,7 +54,6 @@ export default function MemberForm({
     phone: member?.phone ?? "",
 
     email: member?.email ?? "",
-
     emergency_contact:
       member?.emergency_contact ?? "",
 
@@ -95,79 +94,48 @@ export default function MemberForm({
 
     setLoading(true);
 
-    const payload = {
-      full_name: formData.full_name,
+    try {
+      const payload = {
+        full_name: formData.full_name,
+        phone: formData.phone,
+        email: formData.email || null,
+        emergency_contact: formData.emergency_contact || null,
+        gender: formData.gender || null,
+        membership_plan: formData.membership_plan,
+        monthly_fee: Number(formData.monthly_fee),
+        join_date: formData.join_date,
+        next_due_date: formData.next_due_date,
+        notes: formData.notes || null,
+      };
 
-      phone: formData.phone,
+      const result = member
+        ? await supabase
+            .from("members")
+            .update(payload)
+            .eq("id", member.id)
+        : await supabase
+            .from("members")
+            .insert(payload);
 
-      email:
-        formData.email || null,
+      if (result.error) {
+        console.error("MEMBER SAVE ERROR:", result.error);
+        toast.error(result.error.message);
+        return;
+      }
 
-      emergency_contact:
-        formData.emergency_contact || null,
-
-      gender:
-        formData.gender || null,
-
-      membership_plan:
-        formData.membership_plan,
-
-      monthly_fee:
-        Number(formData.monthly_fee),
-
-      join_date:
-        formData.join_date,
-
-      next_due_date:
-        formData.next_due_date,
-
-      notes:
-        formData.notes || null,
-    };
-
-    let error;
-
-    if (member) {
-      const result =
-        await supabase
-          .from("members")
-          .update(payload)
-          .eq(
-            "id",
-            member.id
-          );
-
-      error = result.error;
-    } else {
-      const result =
-        await supabase
-          .from("members")
-          .insert(payload);
-
-      error = result.error;
-    }
-
-    if (error) {
+      toast.success(member ? "Member updated" : "Member added");
+      router.refresh();
+      onSuccess?.();
+    } catch (error) {
+      console.error("MEMBER SAVE REQUEST FAILED:", error);
       toast.error(
-        "Something went wrong"
+        error instanceof Error
+          ? error.message
+          : "Unable to save member"
       );
-
+    } finally {
       setLoading(false);
-
-      return;
     }
-
-    toast.success(
-      member
-        ? "Member updated"
-        : "Member added"
-    );
-
-    router.refresh();
-
-    onSuccess?.();
-
-    setLoading(false);
   }
 
   return (
@@ -261,7 +229,7 @@ export default function MemberForm({
         >
           <Field label="Subscription Type">
             <Select
-              value={formData.membership_plan}
+              value={formData.membership_plan || null}
               onValueChange={(value) =>
                 setFormData({
                   ...formData,
@@ -351,6 +319,7 @@ export default function MemberForm({
       </Section>
 
       <Button
+        type="submit"
         disabled={loading}
         className="
           h-12

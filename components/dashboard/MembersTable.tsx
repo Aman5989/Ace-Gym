@@ -71,6 +71,13 @@ export default function MembersTable({
 
   }
 
+  function formatDateTime(date: string) {
+    return new Date(date).toLocaleString("en-IN", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+  }
+
 
 
 
@@ -390,9 +397,17 @@ export default function MembersTable({
                       [
                         "Member",
                         "Phone",
+                        "Email",
+                        "Emergency Contact",
+                        "Gender",
+                        "Monthly Fee",
+                        "Join Date",
+                        "Notes",
+                        "Created",
+                        "Updated",
                         "Plan",
                         "Due Date",
-                        "Status",
+                        "Due Status",
                         "Actions",
                       ].map((heading) => (
 
@@ -534,6 +549,62 @@ export default function MembersTable({
                           <td className="px-6 py-4 text-slate-700">
 
                             {member.phone}
+
+                          </td>
+
+
+                          <td className="px-6 py-4 text-slate-700">
+
+                            {member.email || "-"}
+
+                          </td>
+
+
+                          <td className="px-6 py-4 text-slate-700">
+
+                            {member.emergency_contact || "-"}
+
+                          </td>
+
+
+                          <td className="px-6 py-4 text-slate-700">
+
+                            {member.gender || "-"}
+
+                          </td>
+
+
+                          <td className="px-6 py-4 text-slate-700">
+
+                            {member.monthly_fee.toLocaleString("en-IN")}
+
+                          </td>
+
+
+                          <td className="px-6 py-4 text-slate-700">
+
+                            {formatDate(member.join_date)}
+
+                          </td>
+
+
+                          <td className="px-6 py-4 text-slate-700">
+
+                            {member.notes || "-"}
+
+                          </td>
+
+
+                          <td className="px-6 py-4 text-slate-700">
+
+                            {formatDateTime(member.created_at)}
+
+                          </td>
+
+
+                          <td className="px-6 py-4 text-slate-700">
+
+                            {formatDateTime(member.updated_at)}
 
                           </td>
 

@@ -54,7 +54,10 @@ function SelectValue({
         `
         flex
         flex-1
+        min-w-0
         items-center
+        truncate
+        font-medium
         text-left
         text-slate-900
         `,
@@ -86,7 +89,6 @@ function SelectTrigger({
   ...props
 
 }: SelectPrimitive.Trigger.Props & {
-
   size?: "sm" | "default"
 
 }) {
@@ -94,6 +96,8 @@ function SelectTrigger({
   return (
 
     <SelectPrimitive.Trigger
+
+      type="button"
 
       data-slot="select-trigger"
 
@@ -104,13 +108,18 @@ function SelectTrigger({
         `
         flex
 
-        h-12
+        min-h-12
+
+        min-w-30
+
 
         w-full
 
         items-center
 
         justify-between
+
+        gap-2
 
 
         rounded-xl
@@ -281,11 +290,13 @@ SelectPrimitive.Positioner.Props,
             `
             max-h-(--available-height)
 
+
             w-(--anchor-width)
 
-            min-w-36
+            min-w-56
 
 
+            overflow-x-hidden
             overflow-y-auto
 
 
@@ -453,10 +464,12 @@ function SelectItem({
         px-3
 
 
-        py-2.5
+        min-h-11
+
+        py-3
 
 
-        text-sm
+        text-base
 
 
         text-slate-700
@@ -619,56 +632,21 @@ function SelectSeparator({
 
 
 function SelectScrollUpButton({
-
   className,
-
   ...props
-
-}: React.ComponentProps<
-typeof SelectPrimitive.ScrollUpArrow
->) {
-
-
+}: React.ComponentProps<typeof SelectPrimitive.ScrollUpArrow>) {
   return (
-
     <SelectPrimitive.ScrollUpArrow
-
-
       data-slot="select-scroll-up-button"
-
-
       className={cn(
-
-        `
-        flex
-
-        justify-center
-
-        bg-white
-
-        py-1
-
-        `,
-
+        "flex justify-center bg-white py-1",
         className
-
       )}
-
-
       {...props}
-
-
     >
-
-
-      <ChevronUpIcon className="size-4"/>
-
-
+      <ChevronUpIcon className="size-4" />
     </SelectPrimitive.ScrollUpArrow>
-
-
-  )
-
+  );
 }
 
 
@@ -680,56 +658,21 @@ typeof SelectPrimitive.ScrollUpArrow
 
 
 function SelectScrollDownButton({
-
   className,
-
   ...props
-
-}: React.ComponentProps<
-typeof SelectPrimitive.ScrollDownArrow
->) {
-
-
+}: React.ComponentProps<typeof SelectPrimitive.ScrollDownArrow>) {
   return (
-
     <SelectPrimitive.ScrollDownArrow
-
-
       data-slot="select-scroll-down-button"
-
-
       className={cn(
-
-        `
-        flex
-
-        justify-center
-
-        bg-white
-
-        py-1
-
-        `,
-
+        "flex justify-center bg-white py-1",
         className
-
       )}
-
-
       {...props}
-
-
     >
-
-
-      <ChevronDownIcon className="size-4"/>
-
-
+      <ChevronDownIcon className="size-4" />
     </SelectPrimitive.ScrollDownArrow>
-
-
-  )
-
+  );
 }
 
 

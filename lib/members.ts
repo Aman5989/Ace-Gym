@@ -1,10 +1,10 @@
-import { createClient } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 
 import { Member } from "@/types/member";
 
 
 export async function getMembers(): Promise<Member[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const {
     data,
