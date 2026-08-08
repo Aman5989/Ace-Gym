@@ -1,0 +1,801 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+
+import {
+  Button,
+} from "@/components/ui/button";
+
+import {
+  Input,
+} from "@/components/ui/input";
+
+import {
+  Textarea,
+} from "@/components/ui/textarea";
+
+import {
+  Label,
+} from "@/components/ui/label";
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+import { createClient } from "@/lib/supabase";
+
+
+import {
+  Member,
+} from "@/types/member";
+
+
+
+interface Props {
+  member?: Member;
+  onSuccess?: () => void;
+}
+
+
+
+const plans = [
+  "Monthly",
+  "Quarterly",
+  "Half Yearly",
+  "Yearly",
+];
+
+
+const genders = [
+  "Male",
+  "Female",
+  "Other",
+];
+
+
+
+export default function MemberForm({
+  member,
+  onSuccess,
+}: Props) {
+
+
+  const router = useRouter();
+  const supabase = createClient();
+
+  
+
+
+  const [loading,setLoading] = useState(false);
+
+
+
+  const [formData,setFormData] = useState({
+
+    full_name:
+      member?.full_name ?? "",
+
+    phone:
+      member?.phone ?? "",
+
+    email:
+      member?.email ?? "",
+
+    emergency_contact:
+      member?.emergency_contact ?? "",
+
+    gender:
+      member?.gender ?? "",
+
+    membership_plan:
+      member?.membership_plan ?? "Monthly",
+
+    monthly_fee:
+      member?.monthly_fee?.toString() ?? "",
+
+    join_date:
+      member?.join_date ?? "",
+
+    next_due_date:
+      member?.next_due_date ?? "",
+
+    notes:
+      member?.notes ?? "",
+
+  });
+
+
+
+
+
+  function handleChange(
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement
+    >
+  ){
+
+    setFormData({
+
+      ...formData,
+
+      [e.target.name]:
+        e.target.value,
+
+    });
+
+  }
+
+
+
+
+
+
+  async function handleSubmit(
+    e:React.FormEvent
+  ){
+
+    e.preventDefault();
+
+
+    setLoading(true);
+
+
+
+    const payload = {
+
+      full_name:
+        formData.full_name,
+
+      phone:
+        formData.phone,
+
+      email:
+        formData.email || null,
+
+      emergency_contact:
+        formData.emergency_contact || null,
+
+      gender:
+        formData.gender || null,
+
+      membership_plan:
+        formData.membership_plan,
+
+      monthly_fee:
+        Number(formData.monthly_fee),
+
+      join_date:
+        formData.join_date,
+
+      next_due_date:
+        formData.next_due_date,
+
+      notes:
+        formData.notes || null,
+
+    };
+
+
+
+
+    let error;
+
+
+
+    if(member){
+
+      const result =
+        await supabase
+          .from("members")
+          .update(payload)
+          .eq(
+            "id",
+            member.id
+          );
+
+
+      error=result.error;
+
+
+    } else {
+
+
+      const result =
+        await supabase
+          .from("members")
+          .insert(payload);
+
+
+      error=result.error;
+
+
+    }
+
+
+
+
+
+    if(error){
+
+      toast.error(
+        "Something went wrong"
+      );
+
+      setLoading(false);
+
+      return;
+
+    }
+
+
+
+
+
+    toast.success(
+      member
+      ? "Member updated"
+      : "Member added"
+    );
+
+
+    router.refresh();
+
+
+    onSuccess?.();
+
+
+    setLoading(false);
+
+  }
+
+
+
+
+
+
+
+
+  return (
+
+    <form
+      onSubmit={handleSubmit}
+      className="
+        space-y-5
+      "
+    >
+
+
+
+
+
+      <Section title="Personal Information">
+
+
+        <div
+          className="
+            grid
+            gap-4
+            md:grid-cols-2
+          "
+        >
+
+
+          <Field label="Full Name">
+
+            <InputField
+
+              name="full_name"
+
+              value={formData.full_name}
+
+              onChange={handleChange}
+
+              placeholder="Enter full name"
+
+              required
+
+            />
+
+          </Field>
+
+
+
+
+
+          <Field label="Phone">
+
+            <InputField
+
+              name="phone"
+
+              value={formData.phone}
+
+              onChange={handleChange}
+
+              placeholder="Phone number"
+
+              required
+
+            />
+
+          </Field>
+
+
+
+
+
+          <Field label="Email">
+
+            <InputField
+
+              name="email"
+
+              type="email"
+
+              value={formData.email}
+
+              onChange={handleChange}
+
+              placeholder="Email address"
+
+            />
+
+          </Field>
+
+
+
+
+
+          <Field label="Emergency Contact">
+
+            <InputField
+
+              name="emergency_contact"
+
+              value={formData.emergency_contact}
+
+              onChange={handleChange}
+
+              placeholder="Emergency number"
+
+            />
+
+          </Field>
+
+
+
+
+
+          <Field label="Gender">
+
+
+            <Select
+
+              value={formData.gender}
+
+              onValueChange={(value)=>
+
+                setFormData({
+                  ...formData,
+                  gender:value,
+                })
+
+              }
+
+            >
+
+              <SelectTrigger
+                className="inputStyle"
+              >
+
+                <SelectValue placeholder="Select gender"/>
+
+              </SelectTrigger>
+
+
+              <SelectContent>
+
+                {
+                  genders.map(item=>(
+
+                    <SelectItem
+                      key={item}
+                      value={item}
+                    >
+                      {item}
+                    </SelectItem>
+
+                  ))
+                }
+
+              </SelectContent>
+
+
+            </Select>
+
+
+          </Field>
+
+
+        </div>
+
+
+      </Section>
+
+
+
+
+
+
+
+
+      <Section title="Membership Details">
+
+
+        <div
+          className="
+            grid
+            gap-4
+            md:grid-cols-2
+          "
+        >
+
+
+          <Field label="Subscription Type">
+
+
+            <Select
+
+              value={
+                formData.membership_plan
+              }
+
+              onValueChange={(value)=>
+
+                setFormData({
+                  ...formData,
+                  membership_plan:value,
+                })
+
+              }
+
+            >
+
+              <SelectTrigger
+                className="inputStyle"
+              >
+
+                <SelectValue/>
+
+              </SelectTrigger>
+
+
+              <SelectContent>
+
+                {
+                  plans.map(item=>(
+
+                    <SelectItem
+                      key={item}
+                      value={item}
+                    >
+                      {item}
+                    </SelectItem>
+
+                  ))
+                }
+
+              </SelectContent>
+
+
+            </Select>
+
+
+          </Field>
+
+
+
+
+
+
+          <Field label="Monthly Fee">
+
+
+            <InputField
+
+              name="monthly_fee"
+
+              type="number"
+
+              value={formData.monthly_fee}
+
+              onChange={handleChange}
+
+              placeholder="1500"
+
+              required
+
+            />
+
+
+          </Field>
+
+
+        </div>
+
+
+      </Section>
+
+
+
+
+
+
+
+
+
+      <Section title="Membership Timeline">
+
+
+        <div
+          className="
+            grid
+            gap-4
+            md:grid-cols-2
+          "
+        >
+
+
+          <Field label="Join Date">
+
+
+            <InputField
+
+              name="join_date"
+
+              type="date"
+
+              value={formData.join_date}
+
+              onChange={handleChange}
+
+              required
+
+            />
+
+
+          </Field>
+
+
+
+
+
+          <Field label="Next Due Date">
+
+
+            <InputField
+
+              name="next_due_date"
+
+              type="date"
+
+              value={formData.next_due_date}
+
+              onChange={handleChange}
+
+              required
+
+            />
+
+
+          </Field>
+
+
+        </div>
+
+
+
+
+
+        <div className="mt-4">
+
+
+          <Field label="Notes">
+
+
+            <Textarea
+
+              name="notes"
+
+              value={formData.notes}
+
+              onChange={handleChange}
+
+              placeholder="Additional notes..."
+
+              className="
+                min-h-[100px]
+                rounded-xl
+                border-slate-200
+                bg-white
+                resize-none
+                focus:ring-4
+                focus:ring-blue-500/10
+              "
+
+            />
+
+
+          </Field>
+
+
+        </div>
+
+
+      </Section>
+
+
+
+
+
+
+
+      <Button
+
+        disabled={loading}
+
+        className="
+          h-12
+          w-full
+          rounded-xl
+          bg-blue-600
+          text-white
+          hover:bg-blue-700
+        "
+
+      >
+
+        {
+          loading
+          ?
+          "Saving..."
+          :
+          member
+          ?
+          "Update Member"
+          :
+          "Add Member"
+        }
+
+      </Button>
+
+
+    </form>
+
+  );
+
+}
+
+
+
+
+
+
+function Section({
+  title,
+  children,
+}:{
+  title:string;
+  children:React.ReactNode;
+}){
+
+  return (
+
+    <div
+      className="
+        rounded-2xl
+        border
+        border-slate-200
+        bg-white
+        p-5
+        shadow-sm
+      "
+    >
+
+      <h3
+        className="
+          mb-4
+          text-base
+          font-semibold
+          text-slate-900
+        "
+      >
+        {title}
+      </h3>
+
+
+      {children}
+
+
+    </div>
+
+  );
+
+}
+
+
+
+
+
+
+function Field({
+  label,
+  children,
+}:{
+  label:string;
+  children:React.ReactNode;
+}){
+
+  return (
+
+    <div className="space-y-2">
+
+      <Label
+        className="
+          text-sm
+          font-medium
+          text-slate-700
+        "
+      >
+        {label}
+      </Label>
+
+
+      {children}
+
+
+    </div>
+
+  );
+
+}
+
+
+
+
+
+
+
+function InputField(
+  props:React.ComponentProps<typeof Input>
+){
+
+  return (
+
+    <Input
+
+      {...props}
+
+      className="
+        h-11
+        rounded-xl
+        border-slate-200
+        bg-white
+        text-slate-900
+        placeholder:text-slate-400
+        focus:border-blue-500
+        focus:ring-4
+        focus:ring-blue-500/10
+      "
+
+    />
+
+  );
+
+}
