@@ -4,21 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-import {
-  Button,
-} from "@/components/ui/button";
-
-import {
-  Input,
-} from "@/components/ui/input";
-
-import {
-  Textarea,
-} from "@/components/ui/textarea";
-
-import {
-  Label,
-} from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 import {
   Select,
@@ -30,19 +19,12 @@ import {
 
 import { createClient } from "@/lib/supabase";
 
-
-import {
-  Member,
-} from "@/types/member";
-
-
+import { Member } from "@/types/member";
 
 interface Props {
   member?: Member;
   onSuccess?: () => void;
 }
-
-
 
 const plans = [
   "Monthly",
@@ -51,41 +33,27 @@ const plans = [
   "Yearly",
 ];
 
-
 const genders = [
   "Male",
   "Female",
   "Other",
 ];
 
-
-
 export default function MemberForm({
   member,
   onSuccess,
 }: Props) {
-
-
   const router = useRouter();
   const supabase = createClient();
 
-  
+  const [loading, setLoading] = useState(false);
 
+  const [formData, setFormData] = useState({
+    full_name: member?.full_name ?? "",
 
-  const [loading,setLoading] = useState(false);
+    phone: member?.phone ?? "",
 
-
-
-  const [formData,setFormData] = useState({
-
-    full_name:
-      member?.full_name ?? "",
-
-    phone:
-      member?.phone ?? "",
-
-    email:
-      member?.email ?? "",
+    email: member?.email ?? "",
 
     emergency_contact:
       member?.emergency_contact ?? "",
@@ -107,53 +75,30 @@ export default function MemberForm({
 
     notes:
       member?.notes ?? "",
-
   });
-
-
-
-
 
   function handleChange(
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement
     >
-  ){
-
+  ) {
     setFormData({
-
       ...formData,
-
-      [e.target.name]:
-        e.target.value,
-
+      [e.target.name]: e.target.value,
     });
-
   }
 
-
-
-
-
-
   async function handleSubmit(
-    e:React.FormEvent
-  ){
-
+    e: React.FormEvent
+  ) {
     e.preventDefault();
-
 
     setLoading(true);
 
-
-
     const payload = {
+      full_name: formData.full_name,
 
-      full_name:
-        formData.full_name,
-
-      phone:
-        formData.phone,
+      phone: formData.phone,
 
       email:
         formData.email || null,
@@ -178,18 +123,11 @@ export default function MemberForm({
 
       notes:
         formData.notes || null,
-
     };
-
-
-
 
     let error;
 
-
-
-    if(member){
-
+    if (member) {
       const result =
         await supabase
           .from("members")
@@ -199,30 +137,17 @@ export default function MemberForm({
             member.id
           );
 
-
-      error=result.error;
-
-
+      error = result.error;
     } else {
-
-
       const result =
         await supabase
           .from("members")
           .insert(payload);
 
-
-      error=result.error;
-
-
+      error = result.error;
     }
 
-
-
-
-
-    if(error){
-
+    if (error) {
       toast.error(
         "Something went wrong"
       );
@@ -230,53 +155,27 @@ export default function MemberForm({
       setLoading(false);
 
       return;
-
     }
-
-
-
-
 
     toast.success(
       member
-      ? "Member updated"
-      : "Member added"
+        ? "Member updated"
+        : "Member added"
     );
-
 
     router.refresh();
 
-
     onSuccess?.();
 
-
     setLoading(false);
-
   }
 
-
-
-
-
-
-
-
   return (
-
     <form
       onSubmit={handleSubmit}
-      className="
-        space-y-5
-      "
+      className="space-y-5"
     >
-
-
-
-
-
       <Section title="Personal Information">
-
-
         <div
           className="
             grid
@@ -284,160 +183,75 @@ export default function MemberForm({
             md:grid-cols-2
           "
         >
-
-
           <Field label="Full Name">
-
             <InputField
-
               name="full_name"
-
               value={formData.full_name}
-
               onChange={handleChange}
-
               placeholder="Enter full name"
-
               required
-
             />
-
           </Field>
-
-
-
-
 
           <Field label="Phone">
-
             <InputField
-
               name="phone"
-
               value={formData.phone}
-
               onChange={handleChange}
-
               placeholder="Phone number"
-
               required
-
             />
-
           </Field>
-
-
-
-
 
           <Field label="Email">
-
             <InputField
-
               name="email"
-
               type="email"
-
               value={formData.email}
-
               onChange={handleChange}
-
               placeholder="Email address"
-
             />
-
           </Field>
-
-
-
-
 
           <Field label="Emergency Contact">
-
             <InputField
-
               name="emergency_contact"
-
               value={formData.emergency_contact}
-
               onChange={handleChange}
-
               placeholder="Emergency number"
-
             />
-
           </Field>
-
-
-
-
 
           <Field label="Gender">
-
-
             <Select
-
               value={formData.gender}
-
-              onValueChange={(value)=>
-
+              onValueChange={(value) =>
                 setFormData({
                   ...formData,
-                  gender:value,
+                  gender: value ?? "",
                 })
-
               }
-
             >
-
-              <SelectTrigger
-                className="inputStyle"
-              >
-
-                <SelectValue placeholder="Select gender"/>
-
+              <SelectTrigger className="inputStyle">
+                <SelectValue placeholder="Select gender" />
               </SelectTrigger>
 
-
               <SelectContent>
-
-                {
-                  genders.map(item=>(
-
-                    <SelectItem
-                      key={item}
-                      value={item}
-                    >
-                      {item}
-                    </SelectItem>
-
-                  ))
-                }
-
+                {genders.map((item) => (
+                  <SelectItem
+                    key={item}
+                    value={item}
+                  >
+                    {item}
+                  </SelectItem>
+                ))}
               </SelectContent>
-
-
             </Select>
-
-
           </Field>
-
-
         </div>
-
-
       </Section>
-
-
-
-
-
-
-
 
       <Section title="Membership Details">
-
-
         <div
           className="
             grid
@@ -445,104 +259,48 @@ export default function MemberForm({
             md:grid-cols-2
           "
         >
-
-
           <Field label="Subscription Type">
-
-
             <Select
-
-              value={
-                formData.membership_plan
-              }
-
-              onValueChange={(value)=>
-
+              value={formData.membership_plan}
+              onValueChange={(value) =>
                 setFormData({
                   ...formData,
-                  membership_plan:value,
+                  membership_plan:
+                    value ?? "",
                 })
-
               }
-
             >
-
-              <SelectTrigger
-                className="inputStyle"
-              >
-
-                <SelectValue/>
-
+              <SelectTrigger className="inputStyle">
+                <SelectValue />
               </SelectTrigger>
 
-
               <SelectContent>
-
-                {
-                  plans.map(item=>(
-
-                    <SelectItem
-                      key={item}
-                      value={item}
-                    >
-                      {item}
-                    </SelectItem>
-
-                  ))
-                }
-
+                {plans.map((item) => (
+                  <SelectItem
+                    key={item}
+                    value={item}
+                  >
+                    {item}
+                  </SelectItem>
+                ))}
               </SelectContent>
-
-
             </Select>
-
-
           </Field>
-
-
-
-
-
 
           <Field label="Monthly Fee">
-
-
             <InputField
-
               name="monthly_fee"
-
               type="number"
-
               value={formData.monthly_fee}
-
               onChange={handleChange}
-
               placeholder="1500"
-
               required
-
             />
-
-
           </Field>
-
-
         </div>
-
-
       </Section>
 
-
-
-
-
-
-
-
-
       <Section title="Membership Timeline">
-
-
         <div
           className="
             grid
@@ -550,75 +308,34 @@ export default function MemberForm({
             md:grid-cols-2
           "
         >
-
-
           <Field label="Join Date">
-
-
             <InputField
-
               name="join_date"
-
               type="date"
-
               value={formData.join_date}
-
               onChange={handleChange}
-
               required
-
             />
-
-
           </Field>
-
-
-
-
 
           <Field label="Next Due Date">
-
-
             <InputField
-
               name="next_due_date"
-
               type="date"
-
               value={formData.next_due_date}
-
               onChange={handleChange}
-
               required
-
             />
-
-
           </Field>
-
-
         </div>
 
-
-
-
-
         <div className="mt-4">
-
-
           <Field label="Notes">
-
-
             <Textarea
-
               name="notes"
-
               value={formData.notes}
-
               onChange={handleChange}
-
               placeholder="Additional notes..."
-
               className="
                 min-h-[100px]
                 rounded-xl
@@ -628,28 +345,13 @@ export default function MemberForm({
                 focus:ring-4
                 focus:ring-blue-500/10
               "
-
             />
-
-
           </Field>
-
-
         </div>
-
-
       </Section>
 
-
-
-
-
-
-
       <Button
-
         disabled={loading}
-
         className="
           h-12
           w-full
@@ -658,45 +360,25 @@ export default function MemberForm({
           text-white
           hover:bg-blue-700
         "
-
       >
-
-        {
-          loading
-          ?
-          "Saving..."
-          :
-          member
-          ?
-          "Update Member"
-          :
-          "Add Member"
-        }
-
+        {loading
+          ? "Saving..."
+          : member
+          ? "Update Member"
+          : "Add Member"}
       </Button>
-
-
     </form>
-
   );
-
 }
-
-
-
-
-
 
 function Section({
   title,
   children,
-}:{
-  title:string;
-  children:React.ReactNode;
-}){
-
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
-
     <div
       className="
         rounded-2xl
@@ -707,7 +389,6 @@ function Section({
         shadow-sm
       "
     >
-
       <h3
         className="
           mb-4
@@ -719,33 +400,20 @@ function Section({
         {title}
       </h3>
 
-
       {children}
-
-
     </div>
-
   );
-
 }
-
-
-
-
-
 
 function Field({
   label,
   children,
-}:{
-  label:string;
-  children:React.ReactNode;
-}){
-
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
   return (
-
     <div className="space-y-2">
-
       <Label
         className="
           text-sm
@@ -756,32 +424,17 @@ function Field({
         {label}
       </Label>
 
-
       {children}
-
-
     </div>
-
   );
-
 }
 
-
-
-
-
-
-
 function InputField(
-  props:React.ComponentProps<typeof Input>
-){
-
+  props: React.ComponentProps<typeof Input>
+) {
   return (
-
     <Input
-
       {...props}
-
       className="
         h-11
         rounded-xl
@@ -793,9 +446,6 @@ function InputField(
         focus:ring-4
         focus:ring-blue-500/10
       "
-
     />
-
   );
-
 }

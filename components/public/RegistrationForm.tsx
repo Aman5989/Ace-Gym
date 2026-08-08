@@ -48,22 +48,22 @@ const genders = [
 export default function RegistrationForm() {
 
 
-  const [loading,setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
 
 
-  const [formData,setFormData] = useState({
+  const [formData, setFormData] = useState({
 
-    full_name:"",
-    phone:"",
-    email:"",
-    emergency_contact:"",
-    gender:"",
-    membership_plan:"Monthly",
-    monthly_fee:"",
-    join_date:"",
-    next_due_date:"",
-    notes:"",
+    full_name: "",
+    phone: "",
+    email: "",
+    emergency_contact: "",
+    gender: "",
+    membership_plan: "Monthly",
+    monthly_fee: "",
+    join_date: "",
+    next_due_date: "",
+    notes: "",
 
   });
 
@@ -73,11 +73,11 @@ export default function RegistrationForm() {
 
   function handleChange(
     e:
-    React.ChangeEvent<
-      HTMLInputElement |
-      HTMLTextAreaElement
-    >
-  ){
+      React.ChangeEvent<
+        HTMLInputElement |
+        HTMLTextAreaElement
+      >
+  ) {
 
     setFormData({
 
@@ -96,8 +96,8 @@ export default function RegistrationForm() {
 
 
   async function handleSubmit(
-    e:React.FormEvent
-  ){
+    e: React.FormEvent
+  ) {
 
     e.preventDefault();
 
@@ -111,9 +111,9 @@ export default function RegistrationForm() {
         await fetch(
           "/api/register",
           {
-            method:"POST",
+            method: "POST",
 
-            headers:{
+            headers: {
               "Content-Type":
                 "application/json",
             },
@@ -132,7 +132,7 @@ export default function RegistrationForm() {
 
 
 
-      if(!response.ok){
+      if (!response.ok) {
 
         toast.error(
           data.error ||
@@ -153,29 +153,29 @@ export default function RegistrationForm() {
 
       setFormData({
 
-        full_name:"",
-        phone:"",
-        email:"",
-        emergency_contact:"",
-        gender:"",
-        membership_plan:"Monthly",
-        monthly_fee:"",
-        join_date:"",
-        next_due_date:"",
-        notes:"",
+        full_name: "",
+        phone: "",
+        email: "",
+        emergency_contact: "",
+        gender: "",
+        membership_plan: "Monthly",
+        monthly_fee: "",
+        join_date: "",
+        next_due_date: "",
+        notes: "",
 
       });
 
 
     }
-    catch{
+    catch {
 
       toast.error(
         "Something went wrong"
       );
 
     }
-    finally{
+    finally {
 
       setLoading(false);
 
@@ -274,35 +274,36 @@ export default function RegistrationForm() {
 
           value={formData.gender}
 
-          onValueChange={(value)=>
+          onValueChange={(value) =>
 
             setFormData({
               ...formData,
-              gender:value,
+              gender: value ?? "",
             })
 
           }
 
         >
 
-<SelectTrigger
-  className="
-    h-14
-    w-full
-    rounded-xl
-    border-slate-200
-    bg-white
-    px-4
-    text-base
-    text-slate-900
-    shadow-sm
-    focus:ring-4
-    focus:ring-blue-500/10
-  "
->
+          <SelectTrigger
+            className="
+              h-14
+              w-full
+              rounded-xl
+              border-slate-200
+              bg-white
+              px-4
+              text-base
+              text-slate-900
+              shadow-sm
+              focus:ring-4
+              focus:ring-blue-500/10
+            "
+          >
 
-
-            <SelectValue placeholder="Select gender"/>
+            <SelectValue
+              placeholder="Select gender"
+            />
 
           </SelectTrigger>
 
@@ -311,7 +312,7 @@ export default function RegistrationForm() {
           <SelectContent>
 
             {
-              genders.map(item=>(
+              genders.map(item => (
 
                 <SelectItem
                   key={item}
@@ -345,35 +346,35 @@ export default function RegistrationForm() {
 
           value={formData.membership_plan}
 
-          onValueChange={(value)=>
+          onValueChange={(value) =>
 
             setFormData({
               ...formData,
-              membership_plan:value,
+              membership_plan:
+                value ?? "",
             })
 
           }
 
         >
 
-<SelectTrigger
-  className="
-    h-14
-    w-full
-    rounded-xl
-    border-slate-200
-    bg-white
-    px-4
-    text-base
-    text-slate-900
-    shadow-sm
-    focus:ring-4
-    focus:ring-blue-500/10
-  "
->
+          <SelectTrigger
+            className="
+              h-14
+              w-full
+              rounded-xl
+              border-slate-200
+              bg-white
+              px-4
+              text-base
+              text-slate-900
+              shadow-sm
+              focus:ring-4
+              focus:ring-blue-500/10
+            "
+          >
 
-
-            <SelectValue/>
+            <SelectValue />
 
           </SelectTrigger>
 
@@ -382,7 +383,7 @@ export default function RegistrationForm() {
           <SelectContent>
 
             {
-              plans.map(item=>(
+              plans.map(item => (
 
                 <SelectItem
                   key={item}
@@ -543,10 +544,10 @@ export default function RegistrationForm() {
 
         {
           loading
-          ?
-          "Submitting..."
-          :
-          "Register"
+            ?
+            "Submitting..."
+            :
+            "Register"
         }
 
       </Button>
@@ -566,10 +567,10 @@ export default function RegistrationForm() {
 function Field({
   label,
   children,
-}:{
-  label:string;
-  children:React.ReactNode;
-}){
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
 
 
   return (
@@ -603,8 +604,8 @@ function Field({
 
 
 function InputBox(
-  props:React.ComponentProps<typeof Input>
-){
+  props: React.ComponentProps<typeof Input>
+) {
 
   return (
 

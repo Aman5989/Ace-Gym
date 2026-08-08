@@ -1,16 +1,9 @@
 import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase-server";
 
-import { supabase } from "@/lib/supabase";
-
-
-export async function POST(
-  request: Request
-) {
-
+export async function POST(request: Request) {
   try {
-
     const body = await request.json();
-
 
     const {
       full_name,
@@ -25,117 +18,66 @@ export async function POST(
       notes,
     } = body;
 
-
-
-    if (
-      !full_name ||
-      !phone ||
-      !membership_plan
-    ) {
-
+    if (!full_name || !phone || !membership_plan) {
       return NextResponse.json(
         {
-          error:
-            "Required fields missing",
+          error: "Required fields missing",
         },
         {
-          status:400,
+          status: 400,
         }
       );
-
     }
 
+    const supabase = await createClient();
 
-
-
-    const {
-      error,
-    } = await supabase
+    const { error } = await supabase
       .from("members")
       .insert({
-
         full_name,
-
         phone,
-
-        email:
-          email || null,
-
-        emergency_contact:
-          emergency_contact || null,
-
-        gender:
-          gender || null,
-
+        email: email || null,
+        emergency_contact: emergency_contact || null,
+        gender: gender || null,
         membership_plan,
-
-        monthly_fee:
-          Number(monthly_fee),
-
+        monthly_fee: Number(monthly_fee),
         join_date,
-
         next_due_date,
-
-        notes:
-          notes || null,
-
+        notes: notes || null,
       });
 
-
-
-
-
-    if(error){
-
+    if (error) {
       console.error(error);
-
 
       return NextResponse.json(
         {
-          error:
-            "Failed to register member",
+          error: "Failed to register member",
         },
         {
-          status:500,
+          status: 500,
         }
       );
-
     }
 
-
-
-
-
     return NextResponse.json(
       {
-        success:true,
-        message:
-          "Registration completed",
+        success: true,
+        message: "Registration completed",
       },
       {
-        status:200,
+        status: 200,
       }
     );
-
-
-
-  } catch(error){
-
-
+  } catch (error) {
     console.error(error);
 
-
     return NextResponse.json(
       {
-        error:
-          "Server error",
+        error: "Server error",
       },
       {
-        status:500,
+        status: 500,
       }
     );
-
-
   }
-
 }

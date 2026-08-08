@@ -1,24 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import {
-  Trash2,
-} from "lucide-react";
-
+import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-import {
-  Button,
-} from "@/components/ui/button";
-
-import {
-  Member,
-} from "@/types/member";
-
+import { Button } from "@/components/ui/button";
+import { Member } from "@/types/member";
 import { createClient } from "@/lib/supabase";
 
 import EditMemberDialog from "./EditMemberDialog";
-
 
 import {
   AlertDialog,
@@ -32,67 +22,34 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-
-
 interface Props {
   member: Member;
 }
 
-
-
 export default function MemberActions({
   member,
 }: Props) {
-
-
   const router = useRouter();
 
-
-  const supabase = createClient()
-
+  const supabase = createClient();
 
   async function deleteMember() {
-
-
-    const {
-      error,
-    } = await supabase
+    const { error } = await supabase
       .from("members")
       .delete()
-      .eq(
-        "id",
-        member.id
-      );
+      .eq("id", member.id);
 
-
-
-    if(error){
-
-      toast.error(
-        "Failed to delete member"
-      );
-
+    if (error) {
+      toast.error("Failed to delete member");
       return;
-
     }
 
-
-
-    toast.success(
-      "Member deleted"
-    );
-
+    toast.success("Member deleted");
 
     router.refresh();
-
   }
 
-
-
-
-
   return (
-
     <div
       className="
         flex
@@ -100,62 +57,37 @@ export default function MemberActions({
         gap-2
       "
     >
-
-
-
       <EditMemberDialog
         member={member}
       />
 
-
-
-
-
       <AlertDialog>
-
-
-        <AlertDialogTrigger asChild>
-
-
-          <Button
-
-            variant="ghost"
-
-            size="icon"
-
-            className="
-              h-9
-              w-9
-              rounded-xl
-              text-slate-400
-              transition
-              hover:bg-red-50
-              hover:text-red-600
-            "
-
-          >
-
-
-            <Trash2
+        <AlertDialogTrigger
+          render={
+            <Button
+              variant="ghost"
+              size="icon"
               className="
-                h-4
-                w-4
+                h-9
+                w-9
+                rounded-xl
+                text-slate-400
+                transition
+                hover:bg-red-50
+                hover:text-red-600
               "
-            />
-
-
-          </Button>
-
-
-        </AlertDialogTrigger>
-
-
-
-
-
+            >
+              <Trash2
+                className="
+                  h-4
+                  w-4
+                "
+              />
+            </Button>
+          }
+        />
 
         <AlertDialogContent
-
           className="
             rounded-2xl
             bg-white
@@ -163,35 +95,22 @@ export default function MemberActions({
             border
             border-slate-200
           "
-
         >
-
-
           <AlertDialogHeader>
-
-
             <AlertDialogTitle
               className="
                 text-xl
                 font-bold
               "
             >
-
               Delete Member?
-
             </AlertDialogTitle>
 
-
-
-
             <AlertDialogDescription
-
               className="
                 text-slate-500
               "
-
             >
-
               Are you sure you want to remove{" "}
 
               <span
@@ -200,9 +119,7 @@ export default function MemberActions({
                   text-slate-900
                 "
               >
-
                 {member.full_name}
-
               </span>
 
               ?
@@ -210,71 +127,32 @@ export default function MemberActions({
               <br />
 
               This action cannot be undone.
-
-
             </AlertDialogDescription>
-
-
-
           </AlertDialogHeader>
 
-
-
-
-
-
           <AlertDialogFooter>
-
-
             <AlertDialogCancel
-
               className="
                 rounded-xl
               "
-
             >
-
               Cancel
-
             </AlertDialogCancel>
 
-
-
-
-
             <AlertDialogAction
-
               onClick={deleteMember}
-
               className="
                 rounded-xl
                 bg-red-600
                 hover:bg-red-700
                 text-white
               "
-
             >
-
               Delete
-
             </AlertDialogAction>
-
-
-
           </AlertDialogFooter>
-
-
-
         </AlertDialogContent>
-
-
-
       </AlertDialog>
-
-
-
     </div>
-
   );
-
 }
