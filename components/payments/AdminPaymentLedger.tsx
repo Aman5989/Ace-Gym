@@ -73,8 +73,10 @@ export default function AdminPaymentLedger() {
       current.total += amount;
       current.count += 1;
       current.payments.push(payment);
-      if (payment.payment_method.toLowerCase() === "cash") current.cash += amount;
-      if (payment.payment_method.toLowerCase() === "upi") current.upi += amount;
+      if (payment.cash_amount !== null && payment.cash_amount !== undefined) current.cash += Number(payment.cash_amount || 0);
+      else if (payment.payment_method.toLowerCase() === "cash") current.cash += amount;
+      if (payment.upi_amount !== null && payment.upi_amount !== undefined) current.upi += Number(payment.upi_amount || 0);
+      else if (payment.payment_method.toLowerCase() === "upi") current.upi += amount;
       if (payment.collection_period?.status === "open") current.status = "open";
       groups.set(key, current);
     }
@@ -114,7 +116,7 @@ export default function AdminPaymentLedger() {
                 <div className="hidden text-right sm:block"><p className="text-lg font-bold text-emerald-300">{formatCurrency(month.total)}</p><p className="text-[11px] text-slate-500">monthly collection</p></div>
                 <ChevronDown className={`h-5 w-5 shrink-0 text-slate-400 transition-transform ${expanded ? "rotate-180" : ""}`} />
               </button>
-              {expanded && <div className="border-t border-white/10 bg-slate-950/25 px-4 py-3 sm:px-5"><div className="mb-3 flex items-center justify-between"><p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Payment details</p><p className="text-sm font-bold text-emerald-300 sm:hidden">{formatCurrency(month.total)}</p></div><div className="space-y-2">{month.payments.map((payment) => <div key={payment.id} className="flex flex-wrap items-center gap-3 rounded-xl border border-white/5 bg-white/[0.03] px-3 py-3 sm:px-4"><div className="min-w-[150px] flex-1"><p className="font-semibold text-white">{payment.member?.full_name ?? "Unknown member"}</p><p className="mt-1 text-xs text-slate-500">{payment.notes || "Membership payment"}</p></div><span className="inline-flex items-center gap-1.5 text-xs text-slate-400"><CalendarDays className="h-3.5 w-3.5" />{formatDate(payment.payment_date)}</span><span className="rounded-full bg-white/10 px-2.5 py-1 text-xs font-semibold text-slate-300">{payment.payment_method}</span><span className="font-bold text-emerald-300">{formatCurrency(Number(payment.amount))}</span></div>)}</div></div>}
+              {expanded && <div className="border-t border-white/10 bg-slate-950/25 px-4 py-3 sm:px-5"><div className="mb-3 flex items-center justify-between"><p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Payment details</p><p className="text-sm font-bold text-emerald-300 sm:hidden">{formatCurrency(month.total)}</p></div><div className="space-y-2">{month.payments.map((payment) => <div key={payment.id} className="flex flex-wrap items-center gap-3 rounded-xl border border-white/5 bg-white/[0.03] px-3 py-3 sm:px-4"><div className="min-w-[150px] flex-1"><p className="font-semibold text-white">{payment.member?.full_name ?? "Unknown member"}</p><p className="mt-1 text-xs text-slate-500">{payment.notes || "Membership payment"}</p></div><span className="inline-flex items-center gap-1.5 text-xs text-slate-400"><CalendarDays className="h-3.5 w-3.5" />{formatDate(payment.payment_date)}</span><span className="rounded-full bg-white/10 px-2.5 py-1 text-xs font-semibold text-slate-300">{payment.payment_method}</span><span className="text-right"><span className="block font-bold text-emerald-300">{formatCurrency(Number(payment.amount))}</span>{payment.payment_method === "Half UPI + Half Cash" ? <span className="block text-[10px] text-slate-500">Cash {formatCurrency(Number(payment.cash_amount ?? payment.amount / 2))} · UPI {formatCurrency(Number(payment.upi_amount ?? payment.amount / 2))}</span> : null}</span></div>)}</div></div>}
             </div>;
           })}
         </div>}

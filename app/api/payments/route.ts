@@ -39,6 +39,9 @@ export async function POST(request: NextRequest) {
     const paymentMethod = String(body.payment_method ?? "UPI");
     const paymentDate = String(body.payment_date ?? "");
     const notes = body.notes ? String(body.notes) : null;
+    const halfCash = paymentMethod === "Half UPI + Half Cash" ? Math.round((amount / 2) * 100) / 100 : 0;
+    const cashAmount = paymentMethod === "Cash" ? amount : halfCash;
+    const upiAmount = paymentMethod === "UPI" ? amount : paymentMethod === "Half UPI + Half Cash" ? Math.round((amount - halfCash) * 100) / 100 : 0;
 
     if (!memberId || !Number.isFinite(amount) || amount <= 0 || !paymentDate) {
       return NextResponse.json(
@@ -88,6 +91,8 @@ export async function POST(request: NextRequest) {
         member_id: memberId,
         amount,
         payment_method: paymentMethod,
+        cash_amount: cashAmount,
+        upi_amount: upiAmount,
         payment_date: paymentDate,
         notes,
         period_id: period.id,

@@ -17,8 +17,14 @@ export interface CollectionPeriod {
 
 function aggregate(payments: Payment[]) {
   const monthTotal = payments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
-  const cashTotal = payments.filter((payment) => payment.payment_method.toLowerCase() === "cash").reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
-  const upiTotal = payments.filter((payment) => payment.payment_method.toLowerCase() === "upi").reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+  const cashTotal = payments.reduce((sum, payment) => {
+    if (payment.cash_amount !== null && payment.cash_amount !== undefined) return sum + Number(payment.cash_amount || 0);
+    return sum + (payment.payment_method.toLowerCase() === "cash" ? Number(payment.amount || 0) : 0);
+  }, 0);
+  const upiTotal = payments.reduce((sum, payment) => {
+    if (payment.upi_amount !== null && payment.upi_amount !== undefined) return sum + Number(payment.upi_amount || 0);
+    return sum + (payment.payment_method.toLowerCase() === "upi" ? Number(payment.amount || 0) : 0);
+  }, 0);
   return { monthTotal, cashTotal, upiTotal, count: payments.length };
 }
 

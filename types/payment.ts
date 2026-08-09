@@ -4,6 +4,8 @@ export interface Payment {
   id: string;
   member_id: string;
   amount: number;
+  cash_amount?: number | null;
+  upi_amount?: number | null;
   payment_method: PaymentMethod | string;
   payment_date: string;
   notes: string | null;
