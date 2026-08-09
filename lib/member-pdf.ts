@@ -1,9 +1,9 @@
 import { jsPDF } from "jspdf";
 import { Member } from "@/types/member";
 
-async function loadHeaderFigure() {
+async function loadAssetDataUrl(path: string) {
   try {
-    const response = await fetch("/assets/ace-gym-header-figure.png");
+    const response = await fetch(path);
     if (!response.ok) return null;
     const blob = await response.blob();
     return await new Promise<string>((resolve, reject) => {
@@ -85,7 +85,8 @@ function checkbox(pdf: jsPDF, label: string, x: number, y: number, checked: bool
 
 export async function downloadMemberPdf(member: Member) {
   const pdf = new jsPDF({ unit: "mm", format: "a4" });
-  const headerFigure = await loadHeaderFigure();
+  const headerFigure = await loadAssetDataUrl("/assets/ace-gym-header-figure.png");
+  const wordmark = await loadAssetDataUrl("/assets/ace-gym-wordmark.png");
   const width = pdf.internal.pageSize.getWidth();
   const height = pdf.internal.pageSize.getHeight();
   const margin = 10;
@@ -97,7 +98,7 @@ export async function downloadMemberPdf(member: Member) {
   pdf.rect(margin, margin, content, height - margin * 2, "S");
 
   if (headerFigure) {
-    pdf.addImage(headerFigure, "PNG", width / 2 - 12, y + 1, 24, 21, undefined, "FAST");
+    pdf.addImage(headerFigure, "PNG", width / 2 - 10, y + 3, 20, 18, undefined, "FAST");
   }
   pdf.setTextColor(INK);
   pdf.setFont("helvetica", "bold");
@@ -108,13 +109,12 @@ export async function downloadMemberPdf(member: Member) {
   pdf.text("For Men & Women", width - margin - 8, y + 10, { align: "right" });
   pdf.text("Address: __________________________", width - margin - 8, y + 16, { align: "right" });
 
-  pdf.setFontSize(30);
-  pdf.text("ACE々GYM", width / 2, y + 27, { align: "center" });
-  pdf.setFontSize(13);
-  pdf.text("FITNESS", width / 2, y + 35, { align: "center" });
+  if (wordmark) {
+    pdf.addImage(wordmark, "PNG", width / 2 - 31, y + 24, 62, 12, undefined, "FAST");
+  }
   pdf.setFontSize(9);
-  pdf.text("FUTURE TO YOUR FITNESS", width / 2, y + 43, { align: "center" });
-  y += 52;
+  pdf.text("FUTURE TO YOUR FITNESS", width / 2, y + 42, { align: "center" });
+  y += 50;
   line(pdf, margin + 1, y, width - margin - 1);
 
   labelLine(pdf, "Membership No.:", member.id.slice(0, 8).toUpperCase(), margin + 7, y + 8, 77);
