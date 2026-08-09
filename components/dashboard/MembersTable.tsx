@@ -504,12 +504,12 @@ export default function MembersTable({
                       [
                         "Member",
                         "Phone",
-                        "Email",
-                        "Emergency Contact",
+                        "Father’s Name",
+                        "Address",
                         "Gender",
                         "Timing",
                         "Payment Type",
-                        "Monthly Fee",
+                        "Total Fee",
                         "Join Date",
                         "Notes",
                         "Created",
@@ -676,14 +676,14 @@ export default function MembersTable({
 
                           <td className="px-6 py-4 text-slate-300">
 
-                            {member.email || "-"}
+                            {member.father_name || "-"}
 
                           </td>
 
 
                           <td className="px-6 py-4 text-slate-300">
 
-                            {member.emergency_contact || "-"}
+                            {member.address || "-"}
 
                           </td>
 

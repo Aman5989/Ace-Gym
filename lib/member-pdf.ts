@@ -125,8 +125,8 @@ export async function downloadMemberPdf(member: Member) {
   sectionTitle(pdf, "Personal Information", margin + 2, y, content - 4);
   y += 16;
   labelLine(pdf, "Name:", member.full_name, margin + 7, y, content - 14);
-  labelLine(pdf, "Father's Name:", "", margin + 7, y + 10, content - 14);
-  labelLine(pdf, "Address:", "", margin + 7, y + 20, content - 14);
+  labelLine(pdf, "Father's Name:", member.father_name ?? "", margin + 7, y + 10, content - 14);
+  labelLine(pdf, "Address:", member.address ?? "", margin + 7, y + 20, content - 14);
   labelLine(pdf, "Contact No.:", member.phone, margin + 7, y + 30, 100);
   labelLine(pdf, "Age:", "", margin + 115, y + 30, 65);
   labelLine(pdf, "Sex:", member.gender ?? "", margin + 7, y + 40, 62);

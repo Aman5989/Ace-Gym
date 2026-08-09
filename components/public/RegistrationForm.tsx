@@ -57,8 +57,8 @@ export default function RegistrationForm() {
 
     full_name: "",
     phone: "",
-    email: "",
-    emergency_contact: "",
+    father_name: "",
+    address: "",
     gender: "",
     membership_plan: "Monthly",
     monthly_fee: "",
@@ -157,8 +157,8 @@ export default function RegistrationForm() {
 
         full_name: "",
         phone: "",
-        email: "",
-        emergency_contact: "",
+        father_name: "",
+        address: "",
         gender: "",
         membership_plan: "Monthly",
         monthly_fee: "",
@@ -236,13 +236,12 @@ export default function RegistrationForm() {
 
 
 
-        <Field label="Email Address">
+                <Field label="Father’s Name">
 
           <InputBox
-            name="email"
-            type="email"
-            placeholder="Enter email"
-            value={formData.email}
+            name="father_name"
+            placeholder="Enter father’s or guardian’s name"
+            value={formData.father_name}
             onChange={handleChange}
           />
 
@@ -251,17 +250,17 @@ export default function RegistrationForm() {
 
 
 
-
-        <Field label="Emergency Contact">
+        <Field label="Address">
 
           <InputBox
-            name="emergency_contact"
-            placeholder="Emergency number"
-            value={formData.emergency_contact}
+            name="address"
+            placeholder="Enter residential address"
+            value={formData.address}
             onChange={handleChange}
           />
 
         </Field>
+
 
 
       </div>
@@ -413,7 +412,7 @@ export default function RegistrationForm() {
 
 
 
-      <Field label="Monthly Fee">
+      <Field label="Total Fee">
 
 
         <InputBox

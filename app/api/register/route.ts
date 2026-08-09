@@ -8,8 +8,8 @@ export async function POST(request: Request) {
     const {
       full_name,
       phone,
-      email,
-      emergency_contact,
+      father_name,
+      address,
       gender,
       membership_plan,
       monthly_fee,
@@ -37,8 +37,8 @@ export async function POST(request: Request) {
       .insert({
         full_name,
         phone,
-        email: email || null,
-        emergency_contact: emergency_contact || null,
+        father_name: father_name || null,
+        address: address || null,
         gender: gender || null,
         membership_plan,
         monthly_fee: Number(monthly_fee),

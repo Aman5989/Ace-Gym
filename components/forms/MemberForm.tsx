@@ -74,9 +74,8 @@ export default function MemberForm({
 
     phone: member?.phone ?? "",
 
-    email: member?.email ?? "",
-    emergency_contact:
-      member?.emergency_contact ?? "",
+    father_name: member?.father_name ?? "",
+    address: member?.address ?? "",
 
     gender:
       member?.gender ?? "",
@@ -138,8 +137,8 @@ export default function MemberForm({
       const payload = {
         full_name: formData.full_name,
         phone: formData.phone,
-        email: formData.email || null,
-        emergency_contact: formData.emergency_contact || null,
+        father_name: formData.father_name || null,
+        address: formData.address || null,
         gender: formData.gender || null,
         timing: formData.timing,
         payment_type: formData.payment_type,
@@ -235,22 +234,21 @@ export default function MemberForm({
             />
           </Field>
 
-          <Field label="Email">
+          <Field label="Father’s Name">
             <InputField
-              name="email"
-              type="email"
-              value={formData.email}
+              name="father_name"
+              value={formData.father_name}
               onChange={handleChange}
-              placeholder="Email address"
+              placeholder="Enter father’s or guardian’s name"
             />
           </Field>
 
-          <Field label="Emergency Contact">
+          <Field label="Address">
             <InputField
-              name="emergency_contact"
-              value={formData.emergency_contact}
+              name="address"
+              value={formData.address}
               onChange={handleChange}
-              placeholder="Emergency number"
+              placeholder="Enter residential address"
             />
           </Field>
 
@@ -342,7 +340,7 @@ export default function MemberForm({
             </Select>
           </Field>
 
-          <Field label="Monthly Fee">
+          <Field label="Total Fee">
             <InputField
               name="monthly_fee"
               type="number"

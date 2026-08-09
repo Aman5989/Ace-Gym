@@ -15,9 +15,9 @@ export interface Member {
   
     join_date: string;
 
-    email: string | null;
+    father_name: string | null;
 
-    emergency_contact: string | null;
+    address: string | null;
 
 
     monthly_fee: number;
