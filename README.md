@@ -387,3 +387,38 @@ When asked to modify this project, an AI contributor should:
 9. Report exactly what changed, what was verified, and what was not tested with production data.
 
 The README should be updated whenever a new route, table, business rule, environment variable, authentication behavior, or deployment requirement is introduced.
+
+## Member PDF documents
+
+Administrators can download a professional membership document from the member table. The download action is available in `components/dashboard/MemberActions.tsx` and calls `downloadMemberPdf()` from `lib/member-pdf.ts`.
+
+The PDF is generated in the browser with `jspdf`; it does not upload member data to an external document service and does not modify the database. The downloaded filename follows this pattern:
+
+```text
+ace-gym-<member-name>-membership.pdf
+```
+
+Each document includes the following sections:
+
+| Section | Included information |
+|---|---|
+| Branded header | ACE GYM name, membership registration title, member ID, and issue date |
+| Personal information | Full name, phone, email, gender, and emergency contact |
+| Membership details | Plan, monthly fee, join date, next due date, and optional notes |
+| Member terms | A clearly formatted acknowledgement and gym rules section |
+| Footer | ACE GYM document label and record-keeping reminder |
+
+The PDF’s rules section currently contains these production terms:
+
+1. **Fees are non-refundable under any circumstances.**
+2. **Members are permitted one workout visit per day.**
+3. **Proper athletic footwear is required inside the gym premises. Slippers and sandals are not permitted.**
+4. **Any member found defacing or damaging gym premises or property will be subject to disciplinary action.**
+5. **The gym organization is not responsible for lost or stolen articles.**
+6. **Members must follow all gym rules and regulations and maintain proper cleanliness.**
+
+When changing these rules, update the `rules` constant in `lib/member-pdf.ts` and keep the wording professional and suitable for a signed membership document. Do not place sensitive authentication credentials or payment secrets in the PDF. The document is intended for administrative download and member records only.
+
+To verify this feature manually, sign in to `/admin`, locate a member, click the download icon in the Actions column, and confirm that the browser downloads a readable PDF. Do not submit a payment or modify a member solely for PDF testing.
+
+The PDF generator is client-side code. If it is moved to a server route in the future, ensure that authorization, data minimization, and file retention rules are documented before implementation.

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MessageCircle, Trash2 } from "lucide-react";
+import { Download, MessageCircle, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -11,6 +11,7 @@ import { createClient } from "@/lib/supabase";
 import EditMemberDialog from "./EditMemberDialog";
 import PaymentDialog from "@/components/payments/PaymentDialog";
 import PaymentHistory from "@/components/payments/PaymentHistory";
+import { downloadMemberPdf } from "@/lib/member-pdf";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,6 +34,16 @@ function whatsappNumber(phone: string) {
 export default function MemberActions({ member }: Props) {
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
+
+  function downloadProfile() {
+    try {
+      downloadMemberPdf(member);
+      toast.success("Member PDF downloaded");
+    } catch (error) {
+      console.error("MEMBER PDF ERROR:", error);
+      toast.error("Unable to create member PDF");
+    }
+  }
 
   function sendReminder() {
     if (!member.phone) {
@@ -62,6 +73,9 @@ export default function MemberActions({ member }: Props) {
     <div className="flex items-center gap-1.5">
       <PaymentDialog member={member} compact onSuccess={() => router.refresh()} />
       <PaymentHistory member={member} compact />
+      <Button type="button" variant="ghost" size="icon" onClick={downloadProfile} title="Download member PDF" className="h-9 w-9 rounded-xl text-indigo-500 hover:bg-indigo-50 hover:text-indigo-600">
+        <Download className="h-4 w-4" />
+      </Button>
       <Button type="button" variant="ghost" size="icon" onClick={sendReminder} title="Send WhatsApp reminder" className="h-9 w-9 rounded-xl text-emerald-500 hover:bg-emerald-50 hover:text-emerald-600">
         <MessageCircle className="h-4 w-4" />
       </Button>
