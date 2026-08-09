@@ -1,6 +1,22 @@
 import { jsPDF } from "jspdf";
 import { Member } from "@/types/member";
 
+async function loadHeaderFigure() {
+  try {
+    const response = await fetch("/assets/ace-gym-header-figure.png");
+    if (!response.ok) return null;
+    const blob = await response.blob();
+    return await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+}
+
 const INK = "#111827";
 const MUTED = "#374151";
 const BORDER = "#1f2937";
@@ -67,8 +83,9 @@ function checkbox(pdf: jsPDF, label: string, x: number, y: number, checked: bool
   }
 }
 
-export function downloadMemberPdf(member: Member) {
+export async function downloadMemberPdf(member: Member) {
   const pdf = new jsPDF({ unit: "mm", format: "a4" });
+  const headerFigure = await loadHeaderFigure();
   const width = pdf.internal.pageSize.getWidth();
   const height = pdf.internal.pageSize.getHeight();
   const margin = 10;
@@ -79,6 +96,9 @@ export function downloadMemberPdf(member: Member) {
   pdf.setLineWidth(0.7);
   pdf.rect(margin, margin, content, height - margin * 2, "S");
 
+  if (headerFigure) {
+    pdf.addImage(headerFigure, "PNG", width / 2 - 12, y + 1, 24, 21, undefined, "FAST");
+  }
   pdf.setTextColor(INK);
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(10);
@@ -89,12 +109,12 @@ export function downloadMemberPdf(member: Member) {
   pdf.text("Address: __________________________", width - margin - 8, y + 16, { align: "right" });
 
   pdf.setFontSize(30);
-  pdf.text("ACE GYM", width / 2, y + 22, { align: "center" });
+  pdf.text("ACE GYM", width / 2, y + 27, { align: "center" });
   pdf.setFontSize(13);
-  pdf.text("FITNESS", width / 2, y + 30, { align: "center" });
+  pdf.text("FITNESS", width / 2, y + 35, { align: "center" });
   pdf.setFontSize(9);
-  pdf.text("FUTURE TO YOUR FITNESS", width / 2, y + 38, { align: "center" });
-  y += 47;
+  pdf.text("FUTURE TO YOUR FITNESS", width / 2, y + 43, { align: "center" });
+  y += 52;
   line(pdf, margin + 1, y, width - margin - 1);
 
   labelLine(pdf, "Membership No.:", member.id.slice(0, 8).toUpperCase(), margin + 7, y + 8, 77);
