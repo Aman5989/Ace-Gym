@@ -13,6 +13,8 @@ import {
 
 import {
   Search,
+  SlidersHorizontal,
+  Users,
 } from "lucide-react";
 
 import {
@@ -56,7 +58,6 @@ export default function MembersTable({
 
 
 
-
   function formatDate(date: string) {
 
     return new Date(date)
@@ -81,7 +82,6 @@ export default function MembersTable({
 
 
 
-
   function isOverdue(date: string) {
 
     return new Date(date) < new Date();
@@ -89,6 +89,20 @@ export default function MembersTable({
   }
 
 
+
+
+  function daysUntil(date: string) {
+
+    const due = new Date(date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    due.setHours(0, 0, 0, 0);
+    const diff = Math.ceil(
+      (due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    return diff;
+
+  }
 
 
 
@@ -140,7 +154,11 @@ export default function MembersTable({
     }
   );
 
-
+  const filterCounts = {
+    all: members.length,
+    active: members.filter((m) => !isOverdue(m.next_due_date)).length,
+    overdue: members.filter((m) => isOverdue(m.next_due_date)).length,
+  };
 
 
 
@@ -148,11 +166,14 @@ export default function MembersTable({
 
     <Card
       className="
+        overflow-hidden
         rounded-3xl
         border
-        border-slate-200
-        bg-white
-        shadow-lg
+        border-white/10
+        bg-gradient-to-br
+        from-slate-900
+        to-slate-900/80
+        shadow-xl
       "
     >
 
@@ -162,13 +183,14 @@ export default function MembersTable({
 
 
 
+        {/* Toolbar */}
         <div
           className="
             flex
             flex-col
             gap-4
             border-b
-            border-slate-100
+            border-white/10
             p-6
             md:flex-row
             md:items-center
@@ -178,29 +200,63 @@ export default function MembersTable({
 
           <div>
 
-            <h2
-              className="
-                text-xl
-                font-bold
-                text-slate-900
-              "
-            >
-              Members
-            </h2>
+            <div className="flex items-center gap-2">
+
+              <div
+                className="
+                  flex
+                  h-9
+                  w-9
+                  items-center
+                  justify-center
+                  rounded-xl
+                  bg-gradient-to-br
+                  from-indigo-500
+                  to-violet-600
+                  shadow-lg
+                  shadow-indigo-500/30
+                "
+              >
+                <Users className="h-4 w-4 text-white" />
+              </div>
+
+              <h2
+                className="
+                  text-xl
+                  font-bold
+                  text-white
+                "
+              >
+                Members
+              </h2>
+
+              <Badge
+                className="
+                  rounded-full
+                  bg-white/10
+                  px-2.5
+                  py-0.5
+                  font-medium
+                  text-slate-300
+                "
+              >
+                {filteredMembers.length}
+              </Badge>
+
+            </div>
 
 
             <p
               className="
-                mt-1
+                mt-2
                 text-sm
-                text-slate-500
+                text-slate-400
               "
             >
               Manage members and subscription status.
             </p>
 
           </div>
-
 
 
 
@@ -229,7 +285,7 @@ export default function MembersTable({
                   h-4
                   w-4
                   -translate-y-1/2
-                  text-slate-400
+                  text-slate-500
                 "
               />
 
@@ -241,17 +297,18 @@ export default function MembersTable({
                   w-full
                   rounded-xl
                   border
-                  border-slate-200
-                  bg-white
+                  border-white/10
+                  bg-white/5
                   pl-10
                   pr-4
                   text-sm
-                  text-slate-900
+                  text-white
+                  placeholder:text-slate-500
                   outline-none
                   transition
-                  focus:border-blue-500
+                  focus:border-indigo-500/60
                   focus:ring-2
-                  focus:ring-blue-500/20
+                  focus:ring-indigo-500/20
                   sm:w-64
                 "
 
@@ -272,56 +329,83 @@ export default function MembersTable({
 
 
 
-
-            <select
-
+            <div
               className="
-                h-10
+                flex
+                items-center
+                gap-1.5
                 rounded-xl
                 border
-                border-slate-200
-                bg-white
-                px-4
-                text-sm
-                text-slate-700
-                outline-none
-                focus:border-blue-500
+                border-white/10
+                bg-white/5
+                p-1
               "
-
-              value={filter}
-
-              onChange={(e) =>
-                setFilter(
-                  e.target.value as
-                  "all" |
-                  "active" |
-                  "overdue"
-                )
-              }
-
             >
 
-              <option value="all">
-                All Members
-              </option>
+              <SlidersHorizontal
+                className="
+                  ml-2
+                  h-4
+                  w-4
+                  text-slate-500
+                "
+              />
 
-              <option value="active">
-                Active
-              </option>
+              {(
+                [
+                  ["all", "All", "all"],
+                  ["active", "Active", "active"],
+                  ["overdue", "Overdue", "overdue"],
+                ] as const
+              ).map(([value, label, key]) => (
 
-              <option value="overdue">
-                Overdue
-              </option>
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setFilter(value)}
+                  className={`
+                    flex
+                    items-center
+                    gap-1.5
+                    rounded-lg
+                    px-3
+                    py-1.5
+                    text-sm
+                    font-medium
+                    transition
+                    ${
+                      filter === value
+                        ? "bg-gradient-to-r from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/30"
+                        : "text-slate-400 hover:text-white"
+                    }
+                  `}
+                >
+                  {label}
+                  <span
+                    className={`
+                      rounded-full
+                      px-1.5
+                      text-[11px]
+                      ${
+                        filter === value
+                          ? "bg-white/20 text-white"
+                          : "bg-white/5 text-slate-500"
+                      }
+                    `}
+                  >
+                    {filterCounts[key]}
+                  </span>
+                </button>
 
+              ))}
 
-            </select>
+            </div>
 
 
           </div>
 
 
         </div>
-
 
 
 
@@ -336,15 +420,36 @@ export default function MembersTable({
 
             <div
               className="
-                p-12
-                text-center
+                flex
+                flex-col
+                items-center
+                justify-center
+                gap-2
+                p-16
               "
             >
 
+              <div
+                className="
+                  flex
+                  h-14
+                  w-14
+                  items-center
+                  justify-center
+                  rounded-2xl
+                  bg-white/5
+                  border
+                  border-white/10
+                "
+              >
+                <Search className="h-6 w-6 text-slate-500" />
+              </div>
+
               <p
                 className="
+                  mt-2
                   font-medium
-                  text-slate-700
+                  text-slate-300
                 "
               >
                 No members found
@@ -353,9 +458,8 @@ export default function MembersTable({
 
               <p
                 className="
-                  mt-1
                   text-sm
-                  text-slate-400
+                  text-slate-500
                 "
               >
                 Try changing your search or filter.
@@ -388,8 +492,9 @@ export default function MembersTable({
 
                   <tr
                     className="
-                      bg-slate-50
                       border-b
+                      border-white/10
+                      bg-white/[0.03]
                     "
                   >
 
@@ -416,10 +521,14 @@ export default function MembersTable({
                           key={heading}
 
                           className="
+                            whitespace-nowrap
                             px-6
                             py-4
                             text-left
-                            font-medium
+                            text-xs
+                            font-semibold
+                            uppercase
+                            tracking-wider
                             text-slate-500
                           "
 
@@ -440,13 +549,18 @@ export default function MembersTable({
 
 
 
-
                 <tbody>
 
 
                   {
                     filteredMembers.map(
-                      (member) => (
+                      (member) => {
+
+                        const overdue = isOverdue(member.next_due_date);
+                        const days = daysUntil(member.next_due_date);
+
+
+                        return (
 
                         <tr
 
@@ -454,9 +568,9 @@ export default function MembersTable({
 
                           className="
                             border-b
-                            border-slate-100
+                            border-white/5
                             transition
-                            hover:bg-blue-50/40
+                            hover:bg-white/[0.04]
                           "
 
                         >
@@ -480,15 +594,18 @@ export default function MembersTable({
                                   flex
                                   h-11
                                   w-11
+                                  shrink-0
                                   items-center
                                   justify-center
                                   rounded-full
                                   bg-gradient-to-br
-                                  from-blue-500
-                                  to-indigo-600
+                                  from-indigo-500
+                                  to-violet-600
                                   text-sm
                                   font-bold
                                   text-white
+                                  shadow-md
+                                  shadow-indigo-500/25
                                 "
                               >
 
@@ -507,8 +624,9 @@ export default function MembersTable({
 
                                 <p
                                   className="
+                                    whitespace-nowrap
                                     font-semibold
-                                    text-slate-900
+                                    text-white
                                   "
                                 >
 
@@ -520,7 +638,7 @@ export default function MembersTable({
                                 <p
                                   className="
                                     text-xs
-                                    text-slate-400
+                                    text-slate-500
                                   "
                                 >
 
@@ -545,64 +663,65 @@ export default function MembersTable({
 
 
 
-
-                          <td className="px-6 py-4 text-slate-700">
+                          <td className="px-6 py-4 text-slate-300">
 
                             {member.phone}
 
                           </td>
 
 
-                          <td className="px-6 py-4 text-slate-700">
+                          <td className="px-6 py-4 text-slate-300">
 
                             {member.email || "-"}
 
                           </td>
 
 
-                          <td className="px-6 py-4 text-slate-700">
+                          <td className="px-6 py-4 text-slate-300">
 
                             {member.emergency_contact || "-"}
 
                           </td>
 
 
-                          <td className="px-6 py-4 text-slate-700">
+                          <td className="px-6 py-4 text-slate-300">
 
                             {member.gender || "-"}
 
                           </td>
 
 
-                          <td className="px-6 py-4 text-slate-700">
+                          <td className="px-6 py-4">
 
-                            {member.monthly_fee.toLocaleString("en-IN")}
+                            <span className="font-semibold text-white">
+                              ₹{member.monthly_fee.toLocaleString("en-IN")}
+                            </span>
 
                           </td>
 
 
-                          <td className="px-6 py-4 text-slate-700">
+                          <td className="px-6 py-4 text-slate-300">
 
                             {formatDate(member.join_date)}
 
                           </td>
 
 
-                          <td className="px-6 py-4 text-slate-700">
+                          <td className="px-6 py-4 text-slate-300">
 
                             {member.notes || "-"}
 
                           </td>
 
 
-                          <td className="px-6 py-4 text-slate-700">
+                          <td className="px-6 py-4 text-slate-300">
 
                             {formatDateTime(member.created_at)}
 
                           </td>
 
 
-                          <td className="px-6 py-4 text-slate-700">
+                          <td className="px-6 py-4 text-slate-300">
 
                             {formatDateTime(member.updated_at)}
 
@@ -617,9 +736,11 @@ export default function MembersTable({
 
                             <Badge
                               className="
-                                bg-blue-50
-                                text-blue-700
-                                hover:bg-blue-50
+                                rounded-full
+                                bg-indigo-500/15
+                                font-medium
+                                text-indigo-300
+                                hover:bg-indigo-500/15
                               "
                             >
 
@@ -633,8 +754,7 @@ export default function MembersTable({
 
 
 
-
-                          <td className="px-6 py-4 text-slate-700">
+                          <td className="px-6 py-4 text-slate-300">
 
                             {
                               formatDate(
@@ -647,44 +767,61 @@ export default function MembersTable({
 
 
 
-
                           <td className="px-6 py-4">
 
 
                             {
-                              isOverdue(
-                                member.next_due_date
-                              )
+                              overdue
 
                               ?
 
-                              <Badge
-                                className="
-                                  bg-red-100
-                                  text-red-700
-                                  hover:bg-red-100
-                                "
-                              >
-                                Overdue
-                              </Badge>
+                              <div className="flex items-center gap-2">
 
+                                <Badge
+                                  className="
+                                    rounded-full
+                                    bg-rose-500/15
+                                    font-medium
+                                    text-rose-300
+                                    hover:bg-rose-500/15
+                                  "
+                                >
+                                  Overdue
+                                </Badge>
+
+                                <span className="text-xs text-rose-400/80">
+                                  {Math.abs(days)}d late
+                                </span>
+
+                              </div>
 
                               :
 
-                              <Badge
-                                className="
-                                  bg-emerald-100
-                                  text-emerald-700
-                                  hover:bg-emerald-100
-                                "
-                              >
-                                Active
-                              </Badge>
+                              <div className="flex items-center gap-2">
+
+                                <Badge
+                                  className="
+                                    rounded-full
+                                    bg-emerald-500/15
+                                    font-medium
+                                    text-emerald-300
+                                    hover:bg-emerald-500/15
+                                  "
+                                >
+                                  Active
+                                </Badge>
+
+                                {days <= 15 && days >= 0 && (
+                                  <span className="text-xs text-amber-400/90">
+                                    due in {days}d
+                                  </span>
+                                )}
+
+                              </div>
                             }
 
 
                           </td>
-
 
 
 
@@ -700,7 +837,9 @@ export default function MembersTable({
 
                         </tr>
 
-                      )
+                      );
+
+                      }
                     )
                   }
 
@@ -716,6 +855,30 @@ export default function MembersTable({
           )
         }
 
+
+        {/* Footer strip */}
+        <div
+          className="
+            flex
+            items-center
+            justify-between
+            border-t
+            border-white/10
+            bg-white/[0.02]
+            px-6
+            py-3.5
+          "
+        >
+
+          <p className="text-xs text-slate-500">
+            Showing {filteredMembers.length} of {members.length} members
+          </p>
+
+          <p className="text-xs font-medium text-slate-500">
+            ACE々GYM · Admin
+          </p>
+
+        </div>
 
 
       </CardContent>

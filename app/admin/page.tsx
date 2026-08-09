@@ -15,9 +15,9 @@ export default async function Home() {
     <main className="
       min-h-screen
       bg-linear-to-br
-      from-slate-950
-      via-slate-900
-      to-slate-800
+      from-[#05071a]
+      via-[#0a0e27]
+      to-[#100828]
     ">
 
       <div className="

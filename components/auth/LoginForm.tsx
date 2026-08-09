@@ -175,7 +175,7 @@ export default function LoginForm() {
           "
         >
 
-          Ace Gym Admin
+          ACE々GYM Admin
 
         </CardTitle>
 

@@ -42,7 +42,7 @@ export default function RegisterPage() {
               md:text-5xl
             "
           >
-            Ace Gym
+            ACE<span className="text-amber-400">々</span>GYM
           </h1>
 
 
@@ -52,7 +52,7 @@ export default function RegisterPage() {
               text-slate-300
             "
           >
-            Join our gym and start your fitness journey.
+            Join ACE々GYM and start your fitness journey.
           </p>
 
 
@@ -126,7 +126,7 @@ export default function RegisterPage() {
             text-slate-400
           "
         >
-          © {new Date().getFullYear()} Ace Gym. All rights reserved.
+          © {new Date().getFullYear()} ACE々GYM. All rights reserved.
         </p>
 
 
