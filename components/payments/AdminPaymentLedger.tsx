@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CalendarDays, Clock3, History, Loader2, ReceiptText, RefreshCw, WalletCards } from "lucide-react";
+import { CalendarDays, ChevronDown, History, Loader2, ReceiptText, RefreshCw, WalletCards } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PaymentWithMember } from "@/types/payment";
@@ -12,11 +12,28 @@ function formatCurrency(value: number) {
 function formatDate(value: string) {
   return new Date(`${value}T00:00:00`).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 }
+function monthLabel(key: string) {
+  const [year, month] = key.split("-").map(Number);
+  if (!year || !month) return key;
+  return new Date(year, month - 1, 1).toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+}
+
+type MonthGroup = {
+  key: string;
+  label: string;
+  status: "open" | "closed";
+  total: number;
+  cash: number;
+  upi: number;
+  count: number;
+  payments: PaymentWithMember[];
+};
 
 export default function AdminPaymentLedger() {
   const [payments, setPayments] = useState<PaymentWithMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [expandedMonth, setExpandedMonth] = useState<string | null>(null);
 
   async function loadPayments() {
     setLoading(true);
@@ -24,10 +41,10 @@ export default function AdminPaymentLedger() {
     try {
       const response = await fetch("/api/payments?all=true", { cache: "no-store" });
       const result = await response.json();
-      if (!response.ok) throw new Error(result.error ?? "Unable to load transaction history");
+      if (!response.ok) throw new Error(result.error ?? "Unable to load payment archive");
       setPayments(result.payments ?? []);
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Unable to load transaction history");
+      setError(requestError instanceof Error ? requestError.message : "Unable to load payment archive");
     } finally {
       setLoading(false);
     }
@@ -38,32 +55,69 @@ export default function AdminPaymentLedger() {
     return () => window.clearTimeout(timer);
   }, []);
 
-  const totals = useMemo(() => ({
-    total: payments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0),
-    cash: payments.filter((payment) => payment.payment_method.toLowerCase() === "cash").reduce((sum, payment) => sum + Number(payment.amount || 0), 0),
-    upi: payments.filter((payment) => payment.payment_method.toLowerCase() === "upi").reduce((sum, payment) => sum + Number(payment.amount || 0), 0),
-  }), [payments]);
+  const months = useMemo<MonthGroup[]>(() => {
+    const groups = new Map<string, MonthGroup>();
+    for (const payment of payments) {
+      const key = payment.collection_period?.period_key?.slice(0, 7) || payment.payment_date.slice(0, 7);
+      const current = groups.get(key) ?? {
+        key,
+        label: monthLabel(key),
+        status: payment.collection_period?.status ?? "closed",
+        total: 0,
+        cash: 0,
+        upi: 0,
+        count: 0,
+        payments: [],
+      };
+      const amount = Number(payment.amount || 0);
+      current.total += amount;
+      current.count += 1;
+      current.payments.push(payment);
+      if (payment.payment_method.toLowerCase() === "cash") current.cash += amount;
+      if (payment.payment_method.toLowerCase() === "upi") current.upi += amount;
+      if (payment.collection_period?.status === "open") current.status = "open";
+      groups.set(key, current);
+    }
+    return Array.from(groups.values()).sort((a, b) => b.key.localeCompare(a.key));
+  }, [payments]);
+
+  const allTimeTotal = months.reduce((sum, month) => sum + month.total, 0);
+  const allTimeCash = months.reduce((sum, month) => sum + month.cash, 0);
+  const allTimeUpi = months.reduce((sum, month) => sum + month.upi, 0);
 
   return (
     <Card className="ace-glass overflow-hidden rounded-3xl border-white/10 text-white">
       <CardHeader className="flex flex-row items-center justify-between gap-4 border-b border-white/10 pb-5">
         <div>
           <div className="mb-2 flex items-center gap-2 text-violet-300"><History className="h-4 w-4" /><span className="text-xs font-semibold uppercase tracking-[0.2em]">Financial archive</span></div>
-          <CardTitle className="text-xl font-bold">All payment transactions</CardTitle>
-          <p className="mt-1 text-sm text-slate-400">Complete history across active and closed collection periods. No payment records are removed when a month is closed.</p>
+          <CardTitle className="text-xl font-bold">Monthly collection master</CardTitle>
+          <p className="mt-1 text-sm text-slate-400">Monthly totals at a glance. Open any month to view every member payment.</p>
         </div>
-        <Button variant="outline" size="icon" onClick={() => void loadPayments()} disabled={loading} className="shrink-0 rounded-xl border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 hover:text-white" title="Refresh transaction history"><RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} /></Button>
+        <Button variant="outline" size="icon" onClick={() => void loadPayments()} disabled={loading} className="shrink-0 rounded-xl border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 hover:text-white" title="Refresh archive"><RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} /></Button>
       </CardHeader>
       <CardContent className="p-0">
         <div className="grid gap-px border-b border-white/10 bg-white/10 sm:grid-cols-3">
-          {[{ label: "All-time collected", value: totals.total, icon: WalletCards }, { label: "Cash collected", value: totals.cash, icon: ReceiptText }, { label: "UPI collected", value: totals.upi, icon: ReceiptText }].map(({ label, value, icon: Icon }) => (
+          {[{ label: "All-time collected", value: allTimeTotal, icon: WalletCards }, { label: "Total Cash", value: allTimeCash, icon: ReceiptText }, { label: "Total UPI", value: allTimeUpi, icon: ReceiptText }].map(({ label, value, icon: Icon }) => (
             <div key={label} className="bg-slate-950/40 px-5 py-4"><div className="flex items-center gap-2 text-xs text-slate-400"><Icon className="h-3.5 w-3.5" />{label}</div><p className="mt-1 text-lg font-bold text-white">{formatCurrency(value)}</p></div>
           ))}
         </div>
-        {loading && <div className="flex items-center justify-center gap-2 py-12 text-sm text-slate-400"><Loader2 className="h-4 w-4 animate-spin" /> Loading complete transaction history…</div>}
+        {loading && <div className="flex items-center justify-center gap-2 py-12 text-sm text-slate-400"><Loader2 className="h-4 w-4 animate-spin" /> Loading monthly archive…</div>}
         {error && <div className="m-5 rounded-2xl border border-rose-400/20 bg-rose-500/10 p-4 text-sm text-rose-200">{error}</div>}
-        {!loading && !error && payments.length === 0 && <div className="p-10 text-center text-sm text-slate-400">No payment transactions have been recorded yet.</div>}
-        {!loading && !error && payments.length > 0 && <div className="max-h-[560px] overflow-auto"><table className="w-full min-w-[760px] text-left text-sm"><thead className="sticky top-0 z-10 bg-[#101633] text-xs uppercase tracking-wider text-slate-400"><tr><th className="px-5 py-3">Date</th><th className="px-5 py-3">Member</th><th className="px-5 py-3">Amount</th><th className="px-5 py-3">Method</th><th className="px-5 py-3">Collection period</th><th className="px-5 py-3">Status</th></tr></thead><tbody className="divide-y divide-white/5">{payments.map((payment) => { const periodClosed = payment.collection_period?.status === "closed"; return <tr key={payment.id} className="transition-colors hover:bg-white/[0.04]"><td className="whitespace-nowrap px-5 py-4 text-slate-300"><span className="inline-flex items-center gap-2"><CalendarDays className="h-3.5 w-3.5 text-violet-300" />{formatDate(payment.payment_date)}</span></td><td className="px-5 py-4"><p className="font-semibold text-white">{payment.member?.full_name ?? "Unknown member"}</p>{payment.notes && <p className="mt-1 max-w-[220px] truncate text-xs text-slate-500">{payment.notes}</p>}</td><td className="whitespace-nowrap px-5 py-4 font-bold text-emerald-300">{formatCurrency(Number(payment.amount))}</td><td className="px-5 py-4"><span className="rounded-full bg-white/10 px-2.5 py-1 text-xs font-semibold text-slate-200">{payment.payment_method}</span></td><td className="px-5 py-4 text-slate-300">{payment.collection_period?.period_key ?? "Unassigned"}</td><td className="px-5 py-4"><span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${periodClosed ? "bg-slate-500/15 text-slate-300" : "bg-emerald-500/15 text-emerald-300"}`}><Clock3 className="h-3 w-3" />{periodClosed ? "Closed period" : "Active period"}</span></td></tr>; })}</tbody></table></div>}
+        {!loading && !error && months.length === 0 && <div className="p-10 text-center text-sm text-slate-400">No payment transactions have been recorded yet.</div>}
+        {!loading && !error && months.length > 0 && <div className="space-y-3 p-4 sm:p-5">
+          {months.map((month) => {
+            const expanded = expandedMonth === month.key;
+            return <div key={month.key} className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.035]">
+              <button type="button" onClick={() => setExpandedMonth(expanded ? null : month.key)} className="flex w-full items-center gap-4 p-4 text-left transition-colors hover:bg-white/[0.05] sm:p-5">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-violet-500/15 text-violet-300"><CalendarDays className="h-5 w-5" /></div>
+                <div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h3 className="font-bold text-white">{month.label}</h3><span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${month.status === "closed" ? "bg-slate-500/15 text-slate-300" : "bg-emerald-500/15 text-emerald-300"}`}>{month.status === "closed" ? "Verified" : "Active"}</span></div><p className="mt-1 text-xs text-slate-400">{month.count} payment{month.count === 1 ? "" : "s"} · Cash {formatCurrency(month.cash)} · UPI {formatCurrency(month.upi)}</p></div>
+                <div className="hidden text-right sm:block"><p className="text-lg font-bold text-emerald-300">{formatCurrency(month.total)}</p><p className="text-[11px] text-slate-500">monthly collection</p></div>
+                <ChevronDown className={`h-5 w-5 shrink-0 text-slate-400 transition-transform ${expanded ? "rotate-180" : ""}`} />
+              </button>
+              {expanded && <div className="border-t border-white/10 bg-slate-950/25 px-4 py-3 sm:px-5"><div className="mb-3 flex items-center justify-between"><p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Payment details</p><p className="text-sm font-bold text-emerald-300 sm:hidden">{formatCurrency(month.total)}</p></div><div className="space-y-2">{month.payments.map((payment) => <div key={payment.id} className="flex flex-wrap items-center gap-3 rounded-xl border border-white/5 bg-white/[0.03] px-3 py-3 sm:px-4"><div className="min-w-[150px] flex-1"><p className="font-semibold text-white">{payment.member?.full_name ?? "Unknown member"}</p><p className="mt-1 text-xs text-slate-500">{payment.notes || "Membership payment"}</p></div><span className="inline-flex items-center gap-1.5 text-xs text-slate-400"><CalendarDays className="h-3.5 w-3.5" />{formatDate(payment.payment_date)}</span><span className="rounded-full bg-white/10 px-2.5 py-1 text-xs font-semibold text-slate-300">{payment.payment_method}</span><span className="font-bold text-emerald-300">{formatCurrency(Number(payment.amount))}</span></div>)}</div></div>}
+            </div>;
+          })}
+        </div>}
       </CardContent>
     </Card>
   );
