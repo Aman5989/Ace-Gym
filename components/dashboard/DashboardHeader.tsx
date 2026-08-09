@@ -3,7 +3,7 @@
 
 import { Button } from "@/components/ui/button";
 
-import { Plus, LogOut, Flame, Upload, Image as ImageIcon, Loader2 } from "lucide-react";
+import { Plus, LogOut, Flame, Upload, Image as ImageIcon, Loader2, Trash2 } from "lucide-react";
 
 import { useRef, useState } from "react";
 
@@ -57,6 +57,23 @@ export default function DashboardHeader({ canCloseMonth = false, paymentCount = 
       router.refresh();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Unable to upload image");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function handleImageRemove() {
+    if (!imageUrl) return;
+    setUploading(true);
+    try {
+      const response = await fetch("/api/dashboard-image", { method: "DELETE" });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error ?? "Unable to remove image");
+      setImageUrl(null);
+      toast.success("Dashboard image removed");
+      router.refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to remove image");
     } finally {
       setUploading(false);
     }
@@ -266,15 +283,29 @@ export default function DashboardHeader({ canCloseMonth = false, paymentCount = 
 
 
           {/* Admin image upload */}
-          <div className="flex w-full flex-col items-stretch gap-3 md:w-auto md:min-w-[360px] md:items-end">
+          <div className="flex w-full flex-col items-stretch gap-3 md:w-auto md:min-w-[440px] md:items-end">
             {canCloseMonth ? (
-              <div className="flex items-center justify-end gap-3">
-                {imageUrl ? <img src={imageUrl} alt="Dashboard gym visual" className="h-14 w-24 rounded-xl border border-white/15 object-cover shadow-lg" /> : <div className="flex h-14 w-24 items-center justify-center rounded-xl border border-dashed border-white/20 bg-white/5 text-slate-500"><ImageIcon className="h-5 w-5" /></div>}
+              <div className="flex flex-wrap items-center justify-end gap-3">
+                {imageUrl ? (
+                  <img src={imageUrl} alt="Dashboard gym visual" className="h-28 w-48 rounded-2xl border border-white/15 object-cover shadow-xl shadow-black/20 md:h-32 md:w-56" />
+                ) : (
+                  <div className="flex h-28 w-48 items-center justify-center rounded-2xl border border-dashed border-white/20 bg-white/5 text-slate-500 md:h-32 md:w-56">
+                    <ImageIcon className="h-8 w-8" />
+                  </div>
+                )}
                 <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
-                <Button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="h-10 rounded-xl border border-white/15 bg-white/10 px-4 text-xs font-semibold text-white backdrop-blur hover:bg-white/15">
-                  {uploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-                  {uploading ? "Uploading…" : "Update image"}
-                </Button>
+                <div className="flex flex-col gap-2">
+                  <Button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="h-10 rounded-xl border border-white/15 bg-white/10 px-4 text-xs font-semibold text-white backdrop-blur hover:bg-white/15">
+                    {uploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                    {uploading ? "Uploading…" : "Update image"}
+                  </Button>
+                  {imageUrl ? (
+                    <Button type="button" onClick={handleImageRemove} disabled={uploading} variant="outline" className="h-10 rounded-xl border-red-400/25 bg-red-500/10 px-4 text-xs font-semibold text-red-200 hover:bg-red-500/20 hover:text-red-100">
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Remove image
+                    </Button>
+                  ) : null}
+                </div>
               </div>
             ) : null}
           </div>
