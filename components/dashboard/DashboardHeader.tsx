@@ -296,14 +296,12 @@ export default function DashboardHeader({ canCloseMonth = false, paymentCount = 
                   )}
                   <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
                   <div className="mt-2 flex w-full gap-2">
-                    <Button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="h-6 min-w-0 flex-1 rounded-md border border-white/15 bg-white/10 px-1.5 text-[9px] font-semibold text-white backdrop-blur hover:bg-white/15">
-                      {uploading ? <Loader2 className="mr-0.5 h-2.5 w-2.5 animate-spin" /> : <Upload className="mr-0.5 h-2.5 w-2.5" />}
-                      {uploading ? "Uploading…" : "Update image"}
+                    <Button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading} aria-label={uploading ? "Uploading dashboard image" : "Update dashboard image"} title={uploading ? "Uploading dashboard image" : "Update dashboard image"} className="h-6 min-w-0 flex-1 rounded-md border border-white/15 bg-white/10 px-1.5 text-white backdrop-blur hover:bg-white/15">
+                      {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
                     </Button>
                     {imageUrl ? (
-                      <Button type="button" onClick={handleImageRemove} disabled={uploading} variant="outline" className="h-6 min-w-0 flex-1 rounded-md border-red-400/25 bg-red-500/10 px-1.5 text-[9px] font-semibold text-red-200 hover:bg-red-500/20 hover:text-red-100">
-                        <Trash2 className="mr-0.5 h-2.5 w-2.5" />
-                        Remove image
+                      <Button type="button" onClick={handleImageRemove} disabled={uploading} variant="outline" aria-label="Remove dashboard image" title="Remove dashboard image" className="h-6 min-w-0 flex-1 rounded-md border-red-400/25 bg-red-500/10 px-1.5 text-red-200 hover:bg-red-500/20 hover:text-red-100">
+                        <Trash2 className="h-3 w-3" />
                       </Button>
                     ) : null}
                   </div>
