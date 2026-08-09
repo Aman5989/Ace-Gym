@@ -5,21 +5,23 @@ import { advanceDueDate } from "@/lib/payment-utils";
 
 export async function GET(request: NextRequest) {
   const memberId = request.nextUrl.searchParams.get("member_id");
+  const showAll = request.nextUrl.searchParams.get("all") === "true";
 
-  if (!memberId) {
-    return NextResponse.json({ error: "member_id is required" }, { status: 400 });
+  if (!memberId && !showAll) {
+    return NextResponse.json({ error: "member_id or all=true is required" }, { status: 400 });
   }
 
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Administrator access required" }, { status: 403 });
 
   const supabase = admin.supabase;
-  const { data, error } = await supabase
+  let query = supabase
     .from("payments")
-    .select("*")
-    .eq("member_id", memberId)
+    .select("*, member:members(full_name, phone), collection_period:collection_periods(period_key, status)")
     .order("payment_date", { ascending: false })
     .order("created_at", { ascending: false });
+  if (memberId) query = query.eq("member_id", memberId);
+  const { data, error } = await query;
 
   if (error) {
     console.error("PAYMENT HISTORY ERROR:", error);

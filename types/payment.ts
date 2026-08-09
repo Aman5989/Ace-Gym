@@ -16,4 +16,8 @@ export interface PaymentWithMember extends Payment {
     full_name: string;
     phone: string;
   } | null;
+  collection_period?: {
+    period_key: string;
+    status: "open" | "closed";
+  } | null;
 }
