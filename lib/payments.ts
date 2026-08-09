@@ -15,13 +15,23 @@ export async function getPaymentsSummary() {
 
   if (error) {
     console.error("PAYMENT SUMMARY ERROR:", error);
-    return { payments: [] as Payment[], monthTotal: 0, count: 0 };
+    return { payments: [] as Payment[], monthTotal: 0, cashTotal: 0, upiTotal: 0, count: 0 };
   }
 
   const payments = (data ?? []) as Payment[];
+  const monthTotal = payments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+  const cashTotal = payments
+    .filter((payment) => payment.payment_method.toLowerCase() === "cash")
+    .reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+  const upiTotal = payments
+    .filter((payment) => payment.payment_method.toLowerCase() === "upi")
+    .reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+
   return {
     payments,
-    monthTotal: payments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0),
+    monthTotal,
+    cashTotal,
+    upiTotal,
     count: payments.length,
   };
 }

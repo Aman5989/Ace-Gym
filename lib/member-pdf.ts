@@ -123,6 +123,7 @@ export function downloadMemberPdf(member: Member) {
   labelValue(pdf, "Gender", member.gender || "Not provided", margin + 132, y, 45);
   y += 30;
   labelValue(pdf, "Emergency contact", member.emergency_contact || "Not provided", margin, y, 75);
+  labelValue(pdf, "Training timing", member.timing || "Not provided", margin + 100, y, 70);
   y += 28;
 
   setColor(pdf, NAVY, "text");

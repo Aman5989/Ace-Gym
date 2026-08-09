@@ -505,6 +505,7 @@ export default function MembersTable({
                         "Email",
                         "Emergency Contact",
                         "Gender",
+                        "Timing",
                         "Monthly Fee",
                         "Join Date",
                         "Notes",
@@ -690,6 +691,13 @@ export default function MembersTable({
 
                           </td>
 
+                          <td className="px-6 py-4">
+                            <Badge
+                              className="rounded-full bg-cyan-500/15 font-medium text-cyan-300 hover:bg-cyan-500/15"
+                            >
+                              {member.timing || "-"}
+                            </Badge>
+                          </td>
 
                           <td className="px-6 py-4">
 

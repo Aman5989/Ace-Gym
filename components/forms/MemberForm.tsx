@@ -40,6 +40,11 @@ const genders = [
   "Other",
 ];
 
+const timings = [
+  "Morning",
+  "Evening",
+] as const;
+
 function defaultDueDate(plan: string, joinDate: string) {
   const date = new Date(`${joinDate}T00:00:00`);
   date.setMonth(date.getMonth() + getPlanMonths(plan));
@@ -70,6 +75,9 @@ export default function MemberForm({
 
     gender:
       member?.gender ?? "",
+
+    timing:
+      member?.timing ?? "Morning",
 
     membership_plan: initialPlan,
 
@@ -112,6 +120,7 @@ export default function MemberForm({
         email: formData.email || null,
         emergency_contact: formData.emergency_contact || null,
         gender: formData.gender || null,
+        timing: formData.timing,
         membership_plan: formData.membership_plan,
         monthly_fee: Number(formData.monthly_fee),
         join_date: formData.join_date,
@@ -221,6 +230,29 @@ export default function MemberForm({
                     key={item}
                     value={item}
                   >
+                    {item}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+
+          <Field label="Training Timing">
+            <Select
+              value={formData.timing}
+              onValueChange={(value) =>
+                setFormData((current) => ({
+                  ...current,
+                  timing: value as (typeof timings)[number],
+                }))
+              }
+            >
+              <SelectTrigger className="inputStyle">
+                <SelectValue placeholder="Select timing" />
+              </SelectTrigger>
+              <SelectContent>
+                {timings.map((item) => (
+                  <SelectItem key={item} value={item}>
                     {item}
                   </SelectItem>
                 ))}

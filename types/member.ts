@@ -6,6 +6,8 @@ export interface Member {
     phone: string;
   
     gender: string | null;
+
+    timing: "Morning" | "Evening" | null;
   
     join_date: string;
 
