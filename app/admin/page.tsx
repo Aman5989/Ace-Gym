@@ -5,6 +5,7 @@ import { getMembers } from "@/lib/members";
 import { getPaymentsSummary } from "@/lib/payments";
 import { getCurrentAppUser } from "@/lib/authorization";
 import AdminPaymentLedger from "@/components/payments/AdminPaymentLedger";
+import RoleManagement from "@/components/admin/RoleManagement";
 
 export default async function Home() {
   const [{ role }, members, paymentSummary] = await Promise.all([
@@ -39,9 +40,14 @@ export default async function Home() {
           <MembersTable members={members} canViewPayments={canViewPayments} />
         </div>
         {canViewPayments ? (
-          <div className="ace-reveal ace-reveal-4">
-            <AdminPaymentLedger />
-          </div>
+          <>
+            <div className="ace-reveal ace-reveal-4">
+              <AdminPaymentLedger />
+            </div>
+            <div className="ace-reveal ace-reveal-4">
+              <RoleManagement />
+            </div>
+          </>
         ) : null}
       </div>
     </main>
