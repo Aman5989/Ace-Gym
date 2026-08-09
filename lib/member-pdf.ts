@@ -37,7 +37,7 @@ function formatDate(value: string | null | undefined) {
   return date.toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 function money(value: number | null | undefined) {
-  return `₹${Number(value ?? 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
+  return Number(value ?? 0).toLocaleString("en-IN", { maximumFractionDigits: 0 });
 }
 function line(pdf: jsPDF, x1: number, y: number, x2: number) {
   pdf.setDrawColor(BORDER);
