@@ -9,17 +9,19 @@ export async function getCurrentAppUser() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { supabase, user: null, role: null as AppRole | null };
 
+  const normalizedEmail = (user.email ?? user.user_metadata?.email ?? "").trim().toLowerCase();
+  // Keep the initial administrator available while role-table RLS is being repaired.
+  if (normalizedEmail === PRIMARY_ADMIN_EMAIL) {
+    return { supabase, user, role: "admin" as AppRole };
+  }
+
   const { data: roleRecord } = await supabase
     .from("user_roles")
     .select("role")
     .eq("user_id", user.id)
     .maybeSingle();
 
-  const role: AppRole = roleRecord?.role === "admin"
-    ? "admin"
-    : user.email?.toLowerCase() === PRIMARY_ADMIN_EMAIL
-      ? "admin"
-      : "trainer";
+  const role: AppRole = roleRecord?.role === "admin" ? "admin" : "trainer";
   return { supabase, user, role };
 }
 
