@@ -3,9 +3,9 @@
 
 import { Button } from "@/components/ui/button";
 
-import { Plus, LogOut, Flame } from "lucide-react";
+import { Plus, LogOut, Flame, Upload, Image as ImageIcon, Loader2 } from "lucide-react";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { useRouter } from "next/navigation";
 
@@ -27,16 +27,40 @@ import {
 
 
 
-export default function DashboardHeader({ canCloseMonth = false, paymentCount = 0, total = 0 }: { canCloseMonth?: boolean; paymentCount?: number; total?: number }) {
+export default function DashboardHeader({ canCloseMonth = false, paymentCount = 0, total = 0, heroImageUrl = null }: { canCloseMonth?: boolean; paymentCount?: number; total?: number; heroImageUrl?: string | null }) {
 
 
   const [open, setOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [imageUrl, setImageUrl] = useState(heroImageUrl);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
 
   const router = useRouter();
 
 
 
+
+  async function handleImageUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    setUploading(true);
+    try {
+      const body = new FormData();
+      body.append("image", file);
+      const response = await fetch("/api/dashboard-image", { method: "POST", body });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error ?? "Unable to upload image");
+      setImageUrl(result.url);
+      toast.success("Dashboard image updated");
+      router.refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to upload image");
+    } finally {
+      setUploading(false);
+    }
+  }
 
   async function handleLogout() {
 
@@ -242,14 +266,19 @@ export default function DashboardHeader({ canCloseMonth = false, paymentCount = 
 
 
           {/* Actions */}
-          <div
-            className="
-              flex
-              items-center
-              gap-3
-            "
-          >
-            {canCloseMonth ? <MonthCloseButton paymentCount={paymentCount} total={total} /> : null}
+          <div className="flex w-full flex-col items-stretch gap-3 md:w-auto md:min-w-[360px] md:items-end">
+            {canCloseMonth ? (
+              <div className="flex items-center justify-end gap-3">
+                {imageUrl ? <img src={imageUrl} alt="Dashboard gym visual" className="h-14 w-24 rounded-xl border border-white/15 object-cover shadow-lg" /> : <div className="flex h-14 w-24 items-center justify-center rounded-xl border border-dashed border-white/20 bg-white/5 text-slate-500"><ImageIcon className="h-5 w-5" /></div>}
+                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                <Button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="h-10 rounded-xl border border-white/15 bg-white/10 px-4 text-xs font-semibold text-white backdrop-blur hover:bg-white/15">
+                  {uploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                  {uploading ? "Uploading…" : "Update image"}
+                </Button>
+              </div>
+            ) : null}
+            <div className="flex flex-wrap items-center justify-end gap-3">
+              {canCloseMonth ? <MonthCloseButton paymentCount={paymentCount} total={total} /> : null}
 
             <Button
 
@@ -327,6 +356,7 @@ export default function DashboardHeader({ canCloseMonth = false, paymentCount = 
 
 
 
+            </div>
           </div>
 
 
@@ -359,9 +389,6 @@ export default function DashboardHeader({ canCloseMonth = false, paymentCount = 
 
           </div>
 
-          <span className="hidden text-xs text-slate-600 sm:inline">
-            Real-time member & dues management
-          </span>
 
         </div>
 

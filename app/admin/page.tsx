@@ -6,12 +6,14 @@ import { getPaymentsSummary } from "@/lib/payments";
 import { getCurrentAppUser } from "@/lib/authorization";
 import AdminPaymentLedger from "@/components/payments/AdminPaymentLedger";
 import RoleManagement from "@/components/admin/RoleManagement";
+import { getHeroImageUrl } from "@/lib/gym-settings";
 
 export default async function Home() {
-  const [{ role }, members, paymentSummary] = await Promise.all([
+  const [{ role }, members, paymentSummary, heroImageUrl] = await Promise.all([
     getCurrentAppUser(),
     getMembers(),
     getPaymentsSummary(),
+    getHeroImageUrl(),
   ]);
   const canViewPayments = role === "admin";
 
@@ -24,6 +26,7 @@ export default async function Home() {
             canCloseMonth={canViewPayments}
             paymentCount={canViewPayments ? paymentSummary.count : 0}
             total={canViewPayments ? paymentSummary.monthTotal : 0}
+            heroImageUrl={heroImageUrl}
           />
         </div>
         <div className="ace-reveal ace-reveal-2">
