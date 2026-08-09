@@ -287,21 +287,21 @@ export default function DashboardHeader({ canCloseMonth = false, paymentCount = 
             {canCloseMonth ? (
               <div className="w-full max-w-xl">
                 {imageUrl ? (
-                  <img src={imageUrl} alt="Dashboard gym visual" className="h-36 w-full rounded-2xl border border-white/15 object-cover shadow-xl shadow-black/20 md:h-40" />
+                  <img src={imageUrl} alt="Dashboard gym visual" className="h-32 w-32 rounded-2xl border border-white/15 object-cover shadow-xl shadow-black/20 md:h-36 md:w-36" />
                 ) : (
-                  <div className="flex h-36 w-full items-center justify-center rounded-2xl border border-dashed border-white/20 bg-white/5 text-slate-500 md:h-40">
+                  <div className="flex h-32 w-32 items-center justify-center rounded-2xl border border-dashed border-white/20 bg-white/5 text-slate-500 md:h-36 md:w-36">
                     <ImageIcon className="h-8 w-8" />
                   </div>
                 )}
                 <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
                 <div className="mt-2 flex flex-wrap justify-end gap-2">
-                  <Button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="h-8 rounded-lg border border-white/15 bg-white/10 px-3 text-[11px] font-semibold text-white backdrop-blur hover:bg-white/15">
-                    {uploading ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Upload className="mr-1.5 h-3.5 w-3.5" />}
+                  <Button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="h-7 rounded-lg border border-white/15 bg-white/10 px-2.5 text-[10px] font-semibold text-white backdrop-blur hover:bg-white/15">
+                    {uploading ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Upload className="mr-1 h-3 w-3" />}
                     {uploading ? "Uploading…" : "Update image"}
                   </Button>
                   {imageUrl ? (
-                    <Button type="button" onClick={handleImageRemove} disabled={uploading} variant="outline" className="h-8 rounded-lg border-red-400/25 bg-red-500/10 px-3 text-[11px] font-semibold text-red-200 hover:bg-red-500/20 hover:text-red-100">
-                      <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                    <Button type="button" onClick={handleImageRemove} disabled={uploading} variant="outline" className="h-7 rounded-lg border-red-400/25 bg-red-500/10 px-2.5 text-[10px] font-semibold text-red-200 hover:bg-red-500/20 hover:text-red-100">
+                      <Trash2 className="mr-1 h-3 w-3" />
                       Remove image
                     </Button>
                   ) : null}
