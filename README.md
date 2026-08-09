@@ -1,77 +1,82 @@
 # ACE々GYM
 
-ACE々GYM is a production-oriented gym administration dashboard for managing members, membership plans, due dates, payments, and day-to-day gym operations. It is a private Next.js application backed by Supabase Auth and Supabase Postgres.
+ACE々GYM is a professional gym management system for member registration, membership administration, payment collection, financial period verification, role-based access, and branded membership documentation. It is built for the day-to-day workflow of a gym owner and trainer: quickly find members, maintain accurate membership records, collect payments, review financial activity, and keep the dashboard operationally simple.
 
-This README is intentionally written as an **AI-friendly project guide**. It explains the application’s purpose, boundaries, data flow, important files, business rules, development commands, and deployment expectations so future contributors or coding agents can work safely without rediscovering the architecture.
+This README is an **AI-friendly project guide**. It documents the product scope, current business rules, data model, security boundaries, UI conventions, Supabase migrations, development workflow, and deployment expectations. Future contributors should read this file together with `AGENTS.md`, `CLAUDE.md`, and the relevant caller/component files before making changes.
 
-## Product scope
+## Product overview
 
-The application is designed for gym administrators. The primary workflow is:
+The core workflow is:
 
-> Sign in → find a member → record a payment or update membership information → review dues and collections from the dashboard.
+> Sign in → review the dashboard → add or update a member → record a payment → monitor dues and collections → verify and archive the month as an administrator.
 
-The application currently supports the following capabilities:
+The application currently includes the following capabilities:
 
-| Capability | Current behavior |
+| Area | Current behavior |
 |---|---|
-| Administrator authentication | Supabase email/password authentication through `/login` |
-| Password change | Available directly from the login page; verifies the current password and updates the new password without sending an email |
-| Member management | Create, edit, search, filter, and delete member records |
-| Membership plans | Monthly, Quarterly, Half Yearly, and Yearly plans |
-| Payment logging | Record amount, method, date, and notes for a member |
-| Due-date advancement | A successful payment advances `next_due_date` according to the member’s plan |
-| Payment history | Load a member’s recorded payments on demand |
-| Dashboard metrics | Total members, collected amount for the current month, due-today count, overdue count, and payment count |
-| Reminders | Generate a WhatsApp reminder link from a member’s phone number and due-date information |
-| Visual system | Premium dark glassmorphism interface with ambient gradients, staggered reveals, hover motion, and reduced-motion support |
+| Authentication | Supabase email/password sign-in through `/login`. |
+| Password change | A no-email password-change flow is available from the login page. It verifies the current password before updating the new password. |
+| Role-based access | Admins can manage members, view payment information, manage roles, close collection periods, and manage the dashboard image. Trainers can manage and view members without access to financial administration. |
+| Member management | Create, edit, search, filter, and delete member records. |
+| Member profile | Stores full name, phone, father’s name, address, gender, timing, membership plan, total fee, join date, next due date, and notes. |
+| Membership plans | Monthly, Quarterly, Half Yearly, and Yearly plans with plan-aware due-date advancement. |
+| Payment logging | Record UPI, Cash, or UPI + Cash payments. UPI + Cash stores the two components separately and calculates the total automatically. |
+| Payment history | View individual member payment history and the broader admin payment ledger. |
+| Collection periods | Track the active collection month, verify and close a period, and retain historical monthly payment records without deleting transactions. |
+| Dashboard metrics | Shows member count, current-month collection totals, due and overdue information, and payment counts. |
+| Reminders | Generates a WhatsApp reminder link using a member’s phone number and due-date information. |
+| Membership PDF | Generates a branded client-side PDF using `jspdf`, including member details, ACE々GYM branding, gym terms, and record information. |
+| Dashboard image | Admins can upload, replace, and remove the gym dashboard image. The image preview is compact, square, right-aligned, and uses icon-only controls. |
+| Visual system | Premium dark glassmorphism interface with gradients, ambient effects, motion, compact actions, responsive dialogs, and reduced-motion support. |
 
-Forgot-password email recovery is intentionally **not exposed in the current product flow**. Do not add SMTP requirements or email-reset UI unless the product owner explicitly requests it.
+Forgot-password email recovery is intentionally **not part of the current product flow**. Do not add SMTP requirements or email-reset UI unless the product owner explicitly requests that behavior.
 
 ## Technology stack
 
 | Layer | Technology |
 |---|---|
-| Framework | Next.js 16.3 with App Router |
-| Language | TypeScript |
-| UI | React 19, Tailwind CSS 4, local UI primitives, Lucide icons |
-| Forms | React Hook Form and Zod are available; current forms may also use controlled state |
-| Notifications | Sonner toast notifications |
+| Framework | Next.js 16.3 with App Router and TypeScript |
+| Runtime | React 19 |
+| Styling | Tailwind CSS 4 and project-specific styles in `app/globals.css` |
+| UI primitives | Local shadcn-style components under `components/ui` |
+| Icons | Lucide React |
+| Forms and validation | React Hook Form and Zod are available; current flows also use controlled state where appropriate |
+| Notifications | Sonner |
 | Authentication | Supabase Auth with `@supabase/ssr` |
-| Database | Supabase Postgres |
-| Browser client | `lib/supabase.ts` using a cached `createBrowserClient` |
-| Server auth | `lib/supabase-server.ts` and `proxy.ts` |
+| Database and storage | Supabase Postgres and Supabase Storage |
+| PDF generation | jsPDF in the browser |
 | Deployment | Netlify-compatible Next.js deployment |
 
 ## Quick start
 
 ### Requirements
 
-Use Node.js 18 or newer. The repository includes `package-lock.json`; use npm for deterministic local setup.
-
-### Install and run
+Use Node.js 18 or newer. The repository uses pnpm during current development; npm can also be used when the lockfile and package-manager workflow are intentionally aligned.
 
 ```bash
 cd Ace-Gym
-npm ci
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000). The root route redirects to `/admin`; unauthenticated users are redirected to `/login`.
 
-### Validate before committing
+### Validation commands
+
+Run the following before committing application changes:
 
 ```bash
-npm run lint
-npm run build
+pnpm lint
+pnpm build
 ```
 
-The project currently has a small set of non-blocking lint warnings related to image optimization, an existing internal navigation call, and the Tailwind configuration. New work should not introduce additional warnings or errors.
+The project currently has a small number of non-blocking lint warnings related primarily to raw image elements. New work should not introduce additional warnings or any errors.
 
-### Production run
+To run the production server locally:
 
 ```bash
-npm run build
-npm start
+pnpm build
+pnpm start
 ```
 
 ## Environment configuration
@@ -83,126 +88,112 @@ NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-public-anon-or-publishable-key
 ```
 
-Only browser-safe Supabase values belong in this file. Never commit a `service_role` key, SMTP password, database password, or any other secret. The `.env.local` file must remain untracked.
+Only browser-safe Supabase values belong in this file. Never commit `.env.local`, service-role keys, database passwords, SMTP credentials, or raw account passwords. The public Supabase URL and publishable/anon key are not substitutes for Row Level Security.
 
-For Netlify, configure the same two variables in the site’s build environment before triggering a new deploy. Because these are `NEXT_PUBLIC_` variables, they are embedded into the browser bundle at build time; changing them requires a fresh Netlify build.
+For Netlify, configure the same two `NEXT_PUBLIC_` variables in the site’s build environment before deploying. Because these values are embedded at build time, changing them requires a new Netlify build.
 
-## Routes
+## Routes and APIs
 
 | Route | Type | Purpose |
 |---|---|---|
-| `/` | Static redirect | Sends users to `/admin` |
-| `/login` | Client page | Administrator sign-in and no-email password change |
-| `/register` | Client page | Existing registration flow; use cautiously because the product is intended for private admin access |
-| `/admin` | Dynamic protected page | Main dashboard |
-| `/api/payments` | Dynamic API route | List and create payment records |
-| `/api/register` | Dynamic API route | Existing registration endpoint |
+| `/` | Static redirect | Sends users to `/admin`. |
+| `/login` | Client page | Sign-in and no-email password change. |
+| `/register` | Client page | Public/member registration flow when enabled. |
+| `/admin` | Dynamic protected page | Main dashboard for authenticated users. |
+| `/api/register` | Dynamic API route | Validates and creates registration/member records. |
+| `/api/payments` | Dynamic API route | Lists and creates payment records. |
+| `/api/collection-period` | Dynamic API route | Reads and manages collection-period state, including admin close/reset operations. |
+| `/api/user-roles` | Dynamic API route | Admin role-management operations. |
+| `/api/dashboard-image` | Dynamic API route | Admin-only dashboard image upload and removal. |
 
-The `/admin` route is protected by `proxy.ts`. Anonymous users are redirected to `/login`. Keep this protection intact when adding routes.
+`proxy.ts` protects the dashboard session. Anonymous users should be redirected to `/login`. Keep protected-route behavior intact when adding new pages or APIs.
 
-## Repository structure
+## Role-based access control
 
-```text
-app/
-  admin/page.tsx              Server-rendered dashboard composition
-  api/payments/route.ts       Payment GET/POST API
-  api/register/route.ts       Existing registration API
-  login/page.tsx              Sign-in and no-email password-change UI
-  register/page.tsx            Existing registration UI
-  globals.css                 Global tokens, ambient effects, motion utilities
-  layout.tsx                  Global layout and toast provider
-  page.tsx                    Root redirect
+Supabase Auth remains the source of truth for identity. Application roles are stored in the `public.user_roles` table and resolved through the authorization helpers in `lib/authorization.ts`.
 
-components/
-  auth/LoginForm.tsx           Legacy/auth form code; check usage before editing
-  dashboard/
-    DashboardHeader.tsx        Add member action, logout, dashboard branding
-    MemberActions.tsx          Compact edit, payment, history, reminder, delete actions
-    MembersTable.tsx            Searchable and filterable member list
-    StatsCards.tsx              Dashboard metrics and collection cards
-  forms/MemberForm.tsx          Create/edit member form and date defaults
-  payments/
-    PaymentDialog.tsx           Record-payment dialog
-    PaymentHistory.tsx          On-demand member payment history
-  ui/                           Shared shadcn-style primitives
+| Role | Allowed responsibilities |
+|---|---|
+| Admin | Manage members, view payment information, inspect the financial ledger, manage user roles, verify and close collection periods, and upload or remove the dashboard image. |
+| Trainer | Add, edit, search, filter, and view member records. Trainers do not receive payment collection, financial ledger, role-management, or month-close controls. |
 
-lib/
-  supabase.ts                   Cached browser Supabase client
-  supabase-server.ts            Server-side Supabase client helper
-  members.ts                    Member read helper and member typing boundary
-  payments.ts                   Dashboard payment summary helper
-  payment-utils.ts              Plan-aware date advancement utilities
+The initial administrator account is configured in Supabase Auth and should not be hard-coded into client components. Role checks must happen server-side for sensitive APIs and should also be reflected in the UI for a clear experience.
 
-types/
-  member.ts                     Canonical Member interface
-  payment.ts                    Canonical Payment interface and payment helpers
+When changing RBAC, avoid querying `user_roles` from a policy that recursively references `user_roles`. Use a security-definer helper or a server-side authorization boundary to prevent the previously encountered infinite-recursion policy failure.
 
-proxy.ts                        Auth/session protection for dashboard routes
-public/                         Logos and static assets
-AGENTS.md                       Repository contribution instructions
-CLAUDE.md                       Additional project conventions
-```
+## Authentication and password changes
 
-## Authentication model
+`app/login/page.tsx` uses Supabase Auth email/password authentication. The password-change flow is intentionally available directly from the login page and does not send an email:
 
-The application uses Supabase Auth as the source of truth for administrator credentials. It does not maintain a custom password table.
+1. The user selects **Change password**.
+2. The current password is verified with `signInWithPassword`.
+3. The browser validates the new password and confirmation.
+4. The application calls `supabase.auth.updateUser({ password: newPassword })`.
+5. The form returns to normal sign-in mode after success.
 
-### Sign-in
-
-`app/login/page.tsx` calls `supabase.auth.signInWithPassword({ email, password })`. On success it routes the administrator to `/admin` and refreshes the application.
-
-### Password change
-
-Password changes are intentionally available from the login page rather than the dashboard. The administrator selects **Change password**, enters the account email, current password, new password, and confirmation, and submits the form. The application:
-
-1. Re-authenticates with `signInWithPassword` using the current password.
-2. Rejects short, mismatched, or unchanged passwords in the browser.
-3. Calls `supabase.auth.updateUser({ password: newPassword })`.
-4. Returns the user to the standard sign-in mode after success.
-
-This flow does not send email. Avoid reintroducing email-recovery UI or SMTP dependencies unless explicitly requested.
-
-### Route protection
-
-`proxy.ts` refreshes the Supabase session from cookies and checks the authenticated user before allowing access to protected routes. Any new protected route should be included in the proxy matcher or protected through the same server-side session pattern.
+Never log passwords or tokens. Do not send credentials through a custom API when Supabase Auth can perform the operation directly.
 
 ## Member data model
 
-The application expects a `public.members` table with fields equivalent to:
+The canonical application interface is `types/member.ts`. The current profile contract has replaced the old email and emergency-contact fields with father’s name and address.
+
+Representative columns in `public.members` are:
 
 ```sql
-create table if not exists public.members (
-  id uuid primary key default gen_random_uuid(),
-  full_name text not null,
-  phone text not null,
-  email text,
-  emergency_contact text,
-  gender text,
-  membership_plan text not null,
-  monthly_fee numeric not null check (monthly_fee >= 0),
-  join_date date not null,
-  next_due_date date not null,
-  notes text,
-  created_at timestamptz not null default now()
-);
+id uuid primary key default gen_random_uuid(),
+full_name text not null,
+phone text not null,
+father_name text,
+address text,
+gender text,
+timing text,
+membership_plan text not null,
+monthly_fee numeric not null check (monthly_fee >= 0),
+join_date date not null,
+next_due_date date not null,
+notes text,
+created_at timestamptz not null default now()
 ```
 
-The canonical TypeScript shape is in `types/member.ts`. Preserve the existing snake_case database field names when querying Supabase. Convert only at UI boundaries when there is a clear reason.
+The database key `monthly_fee` is retained for compatibility with the existing schema and code paths, but all current user-facing copy calls it **Total Fee**. Do not rename the physical column casually without a coordinated migration and full application update.
 
-### Supported plans
+The current member form and registration flow collect:
 
-The current plan values are represented in `types/member.ts` and consumed by `lib/payment-utils.ts`. Keep the values consistent across the member form, database rows, date calculations, and UI labels:
+| Field | Purpose |
+|---|---|
+| Full name | Member’s legal/display name. |
+| Phone | Primary contact number and WhatsApp reminder target. |
+| Father’s name | Replaces the retired email-address field in the member profile. |
+| Address | Replaces the retired emergency-contact field. |
+| Gender | Member profile information. |
+| Timing | Morning or Evening workout preference. |
+| Membership plan | Monthly, Quarterly, Half Yearly, or Yearly. |
+| Total Fee | Amount agreed for the selected membership. Stored under `monthly_fee` for compatibility. |
+| Join date | Membership start date. |
+| Next due date | Current payment due date, advanced according to the selected plan after successful payment. |
+| Notes | Additional administrative information. |
 
-- `Monthly`
-- `Quarterly`
-- `Half Yearly`
-- `Yearly`
+Supported plans are `Monthly`, `Quarterly`, `Half Yearly`, and `Yearly`. Keep these values consistent across the form, database, payment utilities, and UI labels.
 
-New member creation pre-fills the join date and derives the first due date from the selected plan. Changing the join date or plan should keep the due-date preview consistent.
+## Payment and collection workflows
 
-## Payment data model
+The payment system is designed to reduce data-entry time while keeping every transaction available for later review.
 
-The payment table is created in Supabase with the following schema:
+### Recording a payment
+
+1. Search for a member in `MembersTable`.
+2. Open the compact payment action in `MemberActions`.
+3. Select the payment method and confirm the date and amount.
+4. For **UPI + Cash**, enter the UPI and Cash components separately. The dialog calculates the combined total.
+5. Submit the payment.
+6. `POST /api/payments` saves the transaction and advances the member’s `next_due_date` according to the plan.
+7. The dashboard refreshes and the member’s `PaymentHistory` can load the updated records.
+
+Payment methods currently supported by the application and database constraints include `UPI`, `Cash`, `UPI + Cash`, `Half UPI + Half Cash` for compatibility with earlier records, `Card`, and `Bank Transfer` where enabled by the existing schema.
+
+### Payment data model
+
+The core table is:
 
 ```sql
 create table if not exists public.payments (
@@ -214,36 +205,25 @@ create table if not exists public.payments (
   notes text,
   created_at timestamptz not null default now()
 );
-
-alter table public.payments enable row level security;
-
-create policy "payments_select_all" on public.payments for select using (true);
-create policy "payments_insert_all" on public.payments for insert with check (true);
-create policy "payments_update_all" on public.payments for update using (true);
-create policy "payments_delete_all" on public.payments for delete using (true);
-
-create index if not exists idx_payments_member_id on public.payments (member_id);
-create index if not exists idx_payments_payment_date on public.payments (payment_date desc);
 ```
 
-The current policies are permissive. For production hardening, replace them with authenticated and role-appropriate policies after confirming the application’s authorization model. Do not silently change database security behavior in a UI-only task.
+The payment-component migration adds fields for separately tracked UPI and Cash values where the deployed schema supports them. Preserve the total amount and component values when updating payment behavior; historical transaction details must not be discarded.
 
-## Payment workflow
+### Financial archives and month close
 
-The daily payment workflow is intentionally short:
+Payments are never reset by deleting rows. Collection periods provide a readable monthly layer over the master transaction history:
 
-1. Search for a member in `MembersTable`.
-2. Click the compact payment action in `MemberActions`.
-3. Confirm or edit the amount, method, date, and note in `PaymentDialog`.
-4. Submit the form.
-5. `POST /api/payments` inserts the payment and updates the member’s `next_due_date`.
-6. The dashboard refreshes and `PaymentHistory` can load the member’s records on demand.
+- The open period represents the current collection month.
+- The admin ledger displays individual payment details and monthly totals.
+- Only an administrator can verify and close the active period.
+- Closing a month preserves all payment rows and creates historical visibility for future review.
+- The reset/next-period operation is intentionally admin-only and should not be triggered automatically by trainers or ordinary UI interactions.
 
-`lib/payment-utils.ts` owns plan-aware due-date advancement. Keep business rules there rather than duplicating date arithmetic in multiple components.
+If the dashboard reports that no open collection period is available, verify the collection-period migration and create/open the period through the admin workflow rather than deleting payment history.
 
-### Payment API contract
+### API contracts
 
-`POST /api/payments` accepts a payload equivalent to:
+A payment creation request is equivalent to:
 
 ```json
 {
@@ -255,109 +235,207 @@ The daily payment workflow is intentionally short:
 }
 ```
 
-`GET /api/payments?member_id=<uuid>` returns payment history for one member. The API must validate the member ID, amount, and date, and it must preserve Supabase error details for server logs without exposing secrets to the browser.
+For a mixed payment, the request may also include the UPI and Cash component values supported by the current route implementation. `GET /api/payments?member_id=<uuid>` returns member history. Validate member IDs, positive amounts, dates, and payment methods at the API boundary.
+
+`lib/payment-utils.ts` owns plan-aware due-date advancement. Keep date arithmetic and payment business rules in shared helpers rather than duplicating them in multiple components.
 
 ## Dashboard data flow
 
-`app/admin/page.tsx` is a server-rendered composition layer. It loads member data and payment summary data, then passes them into client components.
+`app/admin/page.tsx` is the server-rendered dashboard composition layer. It loads members, payment summaries, collection-period information, role state, and the saved gym image, then passes data into client components.
 
-The expected flow is:
+The normal flow is:
 
-1. Request `/admin`.
-2. `proxy.ts` verifies the Supabase session.
-3. `getMembers()` loads members from Supabase.
-4. `getPaymentSummary()` loads current-month payment totals and payment counts.
-5. `StatsCards`, `DashboardHeader`, and `MembersTable` render the page.
-6. Client mutations call Supabase or `/api/payments`, show a toast, and use `router.refresh()` to refresh server-rendered data.
+1. The browser requests `/admin`.
+2. `proxy.ts` refreshes and checks the Supabase session.
+3. Member and payment helpers read the current server-side data.
+4. `StatsCards`, `DashboardHeader`, `MembersTable`, and admin-only financial components render the dashboard.
+5. Client interactions call Supabase or the application APIs.
+6. Successful mutations show a toast and use `router.refresh()` to refresh server-rendered values.
 
-Avoid adding a second competing global data-fetching layer unless there is a clear performance requirement. The current app intentionally uses server rendering for dashboard reads and client components for interactions.
+Avoid introducing a second global data-fetching layer unless a clear performance requirement exists. Server-rendered reads and client-side mutations are intentional in the current architecture.
+
+## Membership PDF
+
+Admins can download a professional membership document from the member actions menu. The action calls `downloadMemberPdf()` from `lib/member-pdf.ts` and generates the file in the browser with jsPDF.
+
+The document includes:
+
+| Section | Information |
+|---|---|
+| Branding | The custom ACE々GYM name and supplied gym logo. |
+| Member profile | Full name, phone, father’s name, address, gender, and other current profile values. |
+| Membership details | Plan, Total Fee, join date, next due date, and relevant notes. |
+| Rules and terms | Non-refundable fee policy, one workout per day, footwear requirements, property conduct, loss/theft disclaimer, and cleanliness requirements. |
+| Footer | Administrative record and gym-terms information. |
+
+The PDF is a client-side document generator. It does not upload member information to an external document service and does not modify the database. Keep the PDF layout professional, preserve the ACE々GYM branding, and update the `rules` content in `lib/member-pdf.ts` if the gym’s terms change.
+
+## Dashboard image management
+
+The admin dashboard supports a gym visual stored in the Supabase Storage bucket configured by the dashboard-image route. Admins can:
+
+- Upload a new image from the device.
+- Replace the current image.
+- Remove the current image, which clears the saved setting and attempts to remove the stored asset.
+
+The current UI uses a compact right-aligned square image tile above two icon-only controls. The controls retain `aria-label` and `title` metadata even though their visible text has been removed. The image API is admin-protected; do not expose upload or delete operations to trainers.
 
 ## UI and design conventions
 
 The visual language is a premium dark administration interface:
 
-- Use the existing `ace-*` classes in `app/globals.css` for ambient backgrounds, glass surfaces, focus rings, reveals, shimmer, and reduced-motion behavior.
-- Prefer the existing `components/ui` primitives over one-off controls.
-- Keep high-frequency actions compact and close to the member row.
-- Use clear hierarchy rather than excessive text or decorative elements.
-- Maintain strong contrast and visible keyboard focus states.
+- Reuse the `ace-*` classes in `app/globals.css` for glass surfaces, ambient gradients, focus rings, reveals, shimmer, and reduced-motion behavior.
+- Prefer the existing components under `components/ui` instead of one-off primitives.
+- Keep high-frequency member and payment actions compact and close to the relevant row.
+- Maintain strong contrast, visible keyboard focus, and responsive behavior.
 - Preserve `prefers-reduced-motion` support when adding animation.
-- Use `lucide-react` icons consistently with the existing dashboard.
-- Avoid exposing technical details such as Supabase, SMTP, RLS, API keys, or internal route names in user-facing production copy.
+- Use Lucide icons consistently.
+- Keep dialogs scrollable on short screens and avoid increasing CRUD time with unnecessary steps.
+- Do not expose Supabase, SMTP, RLS, API keys, or implementation details in production-facing copy.
 
-## Development conventions for AI contributors
+## Repository structure
 
-Before editing, inspect the relevant existing component and its caller. Do not assume a component is unused simply because another component looks similar; search the repository first.
+```text
+app/
+  admin/page.tsx                    Protected server-rendered dashboard
+  api/collection-period/route.ts    Collection-period and close/reset API
+  api/dashboard-image/route.ts      Admin image upload/removal API
+  api/payments/route.ts             Payment GET/POST API
+  api/register/route.ts             Registration/member creation API
+  api/user-roles/route.ts           Admin role-management API
+  login/page.tsx                    Sign-in and password-change page
+  register/page.tsx                 Registration page
+  globals.css                       Global design tokens and motion utilities
 
-For data changes, preserve the database field names and TypeScript types. Add or update helpers in `lib/` when a business rule is reused. Keep client-only code behind a `
-use client` directives only where needed. Keep server-only Supabase helpers out of client components.
+components/
+  admin/RoleManagement.tsx          Admin role controls
+  auth/LoginForm.tsx                Authentication form implementation
+  dashboard/DashboardHeader.tsx     Branding, image controls, member action, logout
+  dashboard/MemberActions.tsx       Edit, payment, history, reminder, PDF, delete actions
+  dashboard/MembersTable.tsx        Searchable and filterable member list
+  dashboard/MonthCloseButton.tsx    Admin collection-period verification/close action
+  dashboard/StatsCards.tsx           Dashboard metrics and collection summaries
+  forms/MemberForm.tsx              Admin create/edit member form
+  payments/AdminPaymentLedger.tsx   Admin financial ledger and archives
+  payments/PaymentDialog.tsx        Record-payment dialog
+  payments/PaymentHistory.tsx       Member payment history
+  public/RegistrationForm.tsx       Public registration form
+  ui/                               Shared UI primitives
 
-When changing forms, preserve fast keyboard and mouse workflows. Member creation and payment recording are high-frequency operations, so prefer sensible defaults, inline validation, and one clear submit action.
+lib/
+  authorization.ts                  Current-user and role authorization helpers
+  gym-settings.ts                   Dashboard settings and image reads
+  member-pdf.ts                     Branded membership PDF generator
+  members.ts                        Member reads and related helpers
+  payment-utils.ts                  Plan-aware due-date logic
+  payments.ts                       Payment summaries and financial reads
+  supabase.ts                       Browser Supabase client
+  supabase-server.ts                Server-side Supabase client
 
-When changing authentication, never log passwords or tokens. Do not send credentials to custom APIs when Supabase Auth can perform the operation directly. Keep the no-email password-change behavior described above unless the product owner explicitly changes the requirement.
+types/
+  member.ts                         Canonical Member interface
+  payment.ts                        Canonical Payment interface
 
-When changing the database, document the SQL in this README or in a migration file and explain any RLS implications. Never add secrets to source control.
+supabase/
+  ace-gym-setup.sql                 Base setup/reference SQL
+  migrations/                       Incremental schema migrations
+  repair-*.sql                      Targeted repair scripts for deployed schemas
 
-Before completing a change, run:
-
-```bash
-npm run lint
-npm run build
-git status --short
+proxy.ts                             Session refresh and protected-route behavior
+public/                              Logos, icons, and static assets
 ```
+
+## Supabase migrations
+
+Apply migrations in order through the Supabase SQL Editor or the project’s chosen migration workflow. The repository currently documents these incremental changes:
+
+| Migration | Purpose |
+|---|---|
+| `20260809000000_add_member_timing.sql` | Adds Morning/Evening member timing support. |
+| `20260809010000_add_collection_periods.sql` | Adds monthly collection-period tracking. |
+| `20260809020000_add_payment_type.sql` | Adds payment-type support. |
+| `20260809030000_add_payment_components.sql` | Adds separate payment-component tracking for mixed payments. |
+| `20260809040000_add_role_management.sql` | Adds application role management. |
+| `20260809050000_allow_member_upi_cash.sql` | Allows the custom UPI + Cash payment method. |
+| `20260809060000_add_dashboard_image.sql` | Adds dashboard image settings/storage support. |
+| `20260809070000_add_member_profile_fields.sql` | Adds `father_name` and `address` to `public.members`. |
+
+Additional repair scripts document deployed-schema fixes:
+
+- `supabase/repair-payment-method-constraint.sql` allows the custom mixed payment method while preserving older compatible methods.
+- `supabase/repair-rbac-and-open-period.sql` addresses role and collection-period deployment issues.
+
+The member profile migration has been applied and verified in the Ace-Gym Supabase project. The verification query confirmed `address` and `father_name` as `text` columns.
+
+### RLS and security
+
+The original payment setup includes permissive policies for development. These policies should be tightened for a production multi-role deployment so authenticated users and admin/trainer capabilities are enforced at the database boundary as well as in application code. Do not silently change RLS behavior in a UI-only task; document and test any policy change.
 
 ## Deployment on Netlify
 
-The production site is hosted at:
+The current production site is:
 
 ```text
 https://ace-gym-fitness.netlify.app
 ```
 
-A Netlify deploy should build from the repository’s `master` branch using the standard Next.js build command. Confirm that the deployment uses the latest GitHub commit and that the two public Supabase environment variables are configured in Netlify before diagnosing application behavior.
+Netlify should build from the repository’s `master` branch using the standard Next.js build process. Before diagnosing a stale deployment:
 
-After deploying a UI change, verify the following routes manually:
+1. Confirm the Netlify deploy references the latest GitHub commit.
+2. Confirm both public Supabase environment variables are configured.
+3. Trigger a fresh deploy after changing build-time environment values.
+4. Hard-refresh the browser and test `/login` and `/admin`.
 
-- `/login` in a private browser window.
-- `/login` → **Change password**, without submitting a real password change during visual checks.
-- `/admin` after signing in.
-- The record-payment dialog without saving a test payment unless a real record is intended.
-
-If a deployment appears stale, perform a hard refresh, check the Netlify deploy commit, and confirm that the correct branch is connected. Public environment variables are build-time values, so changing them requires a new deploy.
+After a UI deployment, manually verify sign-in, password-change form presentation, the admin dashboard, member CRUD, the payment dialog, payment history, the admin ledger, month-close controls, PDF download, and dashboard image upload/remove behavior. Do not create test financial records unless a real test transaction is intended.
 
 ## Troubleshooting
 
-### Redirected back to `/login`
+### Redirected to `/login`
 
-The session is missing or expired. Confirm the Supabase URL and public key, sign in again, and verify that the browser accepts Supabase auth cookies. Do not bypass `proxy.ts` to solve an authentication issue.
+The session may be missing or expired. Confirm the Supabase URL and public key, sign in again, and verify that the browser accepts Supabase auth cookies. Do not bypass `proxy.ts` to solve an authentication issue.
 
 ### Payment dialog fails to save
 
-Check that `public.payments` exists, the `member_id` references an existing member, the amount is positive, and the RLS policies permit the requested operation. Inspect the server response from `/api/payments` and the Supabase logs; do not expose service credentials in browser logs.
+Verify that `public.payments` exists, the member ID references an existing member, the amount is positive, the payment method is allowed by the database constraint, and the relevant RLS policies permit the operation. Inspect the API response and Supabase logs without exposing secrets.
 
-### Dashboard totals look stale
+### No open collection period is available
 
-The dashboard uses server-rendered reads. Successful client mutations should call `router.refresh()`. If the browser still shows old data, refresh the page and verify that the mutation actually returned success before changing the data-loading architecture.
+Check the collection-period migration and admin setup. Open or create the period through the admin workflow. Do not delete payment rows to solve a period-state issue.
 
-### Production build fails after a UI change
+### Financial history is missing
 
-Run `npm run lint` and `npm run build` locally. Resolve TypeScript errors first. Existing lint warnings are non-blocking, but new warnings should be reviewed rather than ignored.
+Payment rows should remain in the master `payments` table after month close. Verify that the ledger query includes closed periods and that the collection-period relationship is correct. The reset control must reset the active metrics/period state, not erase historical transactions.
 
-## Security notes
+### Dashboard image does not update
 
-The Supabase publishable/anon key is intended for browser use, but it is not an authorization mechanism by itself. Database access must be governed by Supabase Row Level Security. The current payment policies are permissive and should be tightened when the application gains multiple administrator roles or external users.
+Confirm that the current user is an admin, the `gym-assets` storage bucket exists with the expected access rules, and the `gym_settings` row is writable. After a successful mutation, the UI calls `router.refresh()` to refresh server-rendered dashboard data.
 
-Never commit `.env.local`, service-role keys, SMTP credentials, raw passwords, recovery tokens, or private deployment configuration. Never include user passwords in toast messages, logs, analytics, URLs, or error reports.
+### Production build fails
 
-The current password-change flow verifies the current password with Supabase Auth before calling `updateUser`. It does not send a reset email. If password recovery is added in the future, document the provider, redirect URLs, email templates, and abuse-rate limits before exposing it in the UI.
+Run:
 
-## Suggested future improvements
+```bash
+pnpm lint
+pnpm build
+```
 
-The next safe improvements are to add database migrations for the member and payment tables, tighten RLS policies around authenticated administrators, replace remaining raw `<img>` elements with optimized image components, add automated tests for date advancement and payment validation, and add a small audit log for payment edits and deletions.
+Resolve TypeScript and compilation errors first. Existing image optimization warnings are non-blocking, but new warnings should be reviewed.
+
+## Development rules for AI contributors
+
+Before editing, inspect the relevant component, caller, route, type, migration, and helper. Search the repository before assuming a component is unused.
+
+For data changes, preserve snake_case database names and the canonical TypeScript interfaces. Keep business rules in shared `lib/` helpers. Keep server-only Supabase helpers out of client components.
+
+For forms, preserve fast keyboard and mouse workflows. Member creation and payment recording are high-frequency operations, so use sensible defaults, inline validation, clear errors, and one obvious submit action.
+
+For authentication and authorization, never log credentials or tokens. Protect sensitive APIs server-side and preserve the Admin/Trainer boundary.
+
+For database changes, add a migration or repair script, explain RLS implications, and never commit secrets. Every new route, table, business rule, environment variable, authentication behavior, or deployment requirement should be reflected in this README.
 
 ## Git workflow
 
-Use focused commits with clear messages:
+Use focused commits and push the `master` branch:
 
 ```bash
 git status --short
@@ -366,7 +444,13 @@ git commit -m "Describe the change"
 git push origin master
 ```
 
-Do not commit generated build output, local environment files, screenshots, or credentials. Keep the working tree clean after a completed push.
+Do not commit generated build output, local environment files, screenshots, credentials, or unrelated dependency artifacts.
+
+## Current status
+
+The current implementation includes the premium UI, member and payment workflows, monthly financial archives, Admin/Trainer RBAC, branded PDF export, profile-field replacement, dashboard image upload/removal, and the associated Supabase migrations. The application has been repeatedly validated with ESLint and a successful production build.
+
+The most important remaining production-hardening opportunity is to review and tighten permissive database RLS policies for the final multi-role deployment, followed by automated tests for payment validation, due-date advancement, collection-period transitions, and authorization boundaries.
 
 ## License
 
@@ -376,49 +460,64 @@ This repository currently has no license file. Add a formal `LICENSE` before dis
 
 When asked to modify this project, an AI contributor should:
 
-1. Read `AGENTS.md`, `CLAUDE.md`, this README, and the relevant caller/component files.
-2. Identify whether the requested change is server-side, client-side, database-related, or deployment-related.
-3. Preserve Supabase Auth and the existing protected-route behavior.
-4. Reuse current types, helpers, UI primitives, and motion classes.
+1. Read `AGENTS.md`, `CLAUDE.md`, this README, and the relevant implementation files.
+2. Identify whether the request is client-side, server-side, database-related, security-related, or deployment-related.
+3. Preserve Supabase Auth, protected routes, and Admin/Trainer authorization behavior.
+4. Reuse current types, helpers, UI primitives, storage conventions, and motion classes.
 5. Avoid adding email, SMTP, secrets, or new infrastructure unless explicitly requested.
-6. Validate data changes against the documented schema and RLS behavior.
-7. Run `npm run lint` and `npm run build`.
+6. Validate schema changes against the documented migrations and RLS behavior.
+7. Run `pnpm lint` and `pnpm build`.
 8. Review `git diff` and `git status --short` before committing.
-9. Report exactly what changed, what was verified, and what was not tested with production data.
+9. Report what changed, what was verified, and what was not tested with production data.
+10. Update this README when the product scope, schema, business rules, routes, or deployment requirements change.
 
-The README should be updated whenever a new route, table, business rule, environment variable, authentication behavior, or deployment requirement is introduced.
+_Last updated for the current Ace-Gym implementation._
 
-## Member PDF documents
+## References
 
-Administrators can download a professional membership document from the member table. The download action is available in `components/dashboard/MemberActions.tsx` and calls `downloadMemberPdf()` from `lib/member-pdf.ts`.
+[1]: https://nextjs.org/docs "Next.js Documentation"
+[2]: https://supabase.com/docs "Supabase Documentation"
+[3]: https://docs.netlify.com/frameworks/next-js/overview/ "Netlify Next.js Documentation"
+[4]: https://github.com/parallax/jsPDF "jsPDF Repository"
 
-The PDF is generated in the browser with `jspdf`; it does not upload member data to an external document service and does not modify the database. The downloaded filename follows this pattern:
+---
 
-```text
-ace-gym-<member-name>-membership.pdf
-```
+**Project:** ACE々GYM
 
-Each document includes the following sections:
+**Repository:** `Aman5989/Ace-Gym`
 
-| Section | Included information |
-|---|---|
-| Branded header | ACE GYM name, membership registration title, member ID, and issue date |
-| Personal information | Full name, phone, email, gender, and emergency contact |
-| Membership details | Plan, monthly fee, join date, next due date, and optional notes |
-| Member terms | A clearly formatted acknowledgement and gym rules section |
-| Footer | ACE GYM document label and record-keeping reminder |
+**Production:** [ace-gym-fitness.netlify.app](https://ace-gym-fitness.netlify.app)
 
-The PDF’s rules section currently contains these production terms:
+*Built for fast, clear, and accountable gym operations.*
 
-1. **Fees are non-refundable under any circumstances.**
-2. **Members are permitted one workout visit per day.**
-3. **Proper athletic footwear is required inside the gym premises. Slippers and sandals are not permitted.**
-4. **Any member found defacing or damaging gym premises or property will be subject to disciplinary action.**
-5. **The gym organization is not responsible for lost or stolen articles.**
-6. **Members must follow all gym rules and regulations and maintain proper cleanliness.**
+### Notes for contributors
 
-When changing these rules, update the `rules` constant in `lib/member-pdf.ts` and keep the wording professional and suitable for a signed membership document. Do not place sensitive authentication credentials or payment secrets in the PDF. The document is intended for administrative download and member records only.
+The application’s database field `monthly_fee` is intentionally retained internally while the product language uses **Total Fee**. The member profile UI and PDF use **Father’s Name** and **Address**; legacy `email` and `emergency_contact` member fields are no longer part of the canonical application contract.
 
-To verify this feature manually, sign in to `/admin`, locate a member, click the download icon in the Actions column, and confirm that the browser downloads a readable PDF. Do not submit a payment or modify a member solely for PDF testing.
+The dashboard’s image controls are intentionally icon-only. Keep their `aria-label` and `title` attributes when adjusting the visual design so the compact controls remain accessible.
 
-The PDF generator is client-side code. If it is moved to a server route in the future, ensure that authorization, data minimization, and file retention rules are documented before implementation.
+The no-email password-change flow is intentional. Do not add password-reset email dependencies or SMTP configuration unless the product owner changes that requirement.
+
+The master payment ledger is the source of truth. Month-end verification must preserve historical payment rows and only close or reset the active collection period.
+
+### Final verification reminder
+
+A completed contribution should leave the working tree clean except for intentionally excluded local artifacts and should include a clear commit message. For schema changes, confirm the migration has been applied in Supabase as well as committed to the repository.
+
+---
+
+_End of project guide._
+
+## Additional implementation notes
+
+The dashboard image API uses the `gym-assets` storage bucket and the `gym_settings` row with `id = 'main'`. The admin-only delete operation clears the setting and attempts to remove the stored object. If storage permissions prevent object deletion, the UI setting is still cleared and the failure should be investigated through Supabase logs rather than exposed as a credential or implementation detail.
+
+The payment collection UI intentionally separates UPI and Cash components for mixed payments. Any future payment-method change must update the form, API validation, database constraint, ledger display, dashboard totals, and this README together.
+
+The member PDF is generated locally in the browser. Changes to profile fields must be reflected in `types/member.ts`, `MemberForm`, `RegistrationForm`, `/api/register`, `MembersTable`, and `lib/member-pdf.ts` as one coherent change.
+
+The current project is suitable for continued feature work, but production launch should include a final RLS review, role-boundary verification, and a controlled test of month-end close and historical ledger visibility.
+
+## End of README
+
+ACE々GYM is maintained as a private business application. Keep operational details, credentials, and personal member data out of source control.
