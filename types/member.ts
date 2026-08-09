@@ -1,4 +1,4 @@
-export type PaymentType = "UPI" | "Cash" | "Half UPI + Half Cash";
+export type PaymentType = "UPI" | "Cash" | "UPI + Cash" | "Half UPI + Half Cash";
 
 export interface Member {
     id: string;

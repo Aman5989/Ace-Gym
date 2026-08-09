@@ -47,7 +47,7 @@ const timings = [
 const paymentTypes = [
   "UPI",
   "Cash",
-  "Half UPI + Half Cash",
+  "UPI + Cash",
 ] as const;
 
 function defaultDueDate(plan: string, joinDate: string) {
@@ -84,7 +84,9 @@ export default function MemberForm({
     timing:
       member?.timing ?? "Morning",
 
-    payment_type: member?.payment_type ?? "UPI",
+    payment_type: member?.payment_type === "Half UPI + Half Cash" ? "UPI + Cash" : member?.payment_type ?? "UPI",
+    cash_amount: "",
+    upi_amount: "",
 
     membership_plan: initialPlan,
 
@@ -121,6 +123,18 @@ export default function MemberForm({
     setLoading(true);
 
     try {
+      const isMixedPayment = formData.payment_type === "UPI + Cash";
+      const monthlyFee = Number(formData.monthly_fee);
+      const cashAmount = isMixedPayment ? Number(formData.cash_amount) : formData.payment_type === "Cash" ? monthlyFee : 0;
+      const upiAmount = isMixedPayment ? Number(formData.upi_amount) : formData.payment_type === "UPI" ? monthlyFee : 0;
+      if (!Number.isFinite(monthlyFee) || monthlyFee <= 0) {
+        toast.error("Enter a valid membership fee");
+        return;
+      }
+      if (isMixedPayment && (!Number.isFinite(cashAmount) || !Number.isFinite(upiAmount) || cashAmount <= 0 || upiAmount <= 0 || Math.abs(cashAmount + upiAmount - monthlyFee) > 0.01)) {
+        toast.error("Cash and UPI amounts must be greater than zero and add up to the membership fee");
+        return;
+      }
       const payload = {
         full_name: formData.full_name,
         phone: formData.phone,
@@ -130,28 +144,50 @@ export default function MemberForm({
         timing: formData.timing,
         payment_type: formData.payment_type,
         membership_plan: formData.membership_plan,
-        monthly_fee: Number(formData.monthly_fee),
+        monthly_fee: monthlyFee,
         join_date: formData.join_date,
         next_due_date: formData.next_due_date,
         notes: formData.notes || null,
       };
 
-      const result = member
+            const result = member
         ? await supabase
             .from("members")
             .update(payload)
             .eq("id", member.id)
         : await supabase
             .from("members")
-            .insert(payload);
-
+            .insert(payload)
+            .select("id")
+            .single();
       if (result.error) {
         console.error("MEMBER SAVE ERROR:", result.error);
         toast.error(result.error.message);
         return;
       }
 
-      toast.success(member ? "Member updated" : "Member added");
+      if (!member && result.data?.id) {
+        const paymentResponse = await fetch("/api/payments", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            member_id: result.data.id,
+            amount: monthlyFee,
+            payment_method: formData.payment_type,
+            cash_amount: cashAmount,
+            upi_amount: upiAmount,
+            payment_date: formData.join_date,
+            notes: "Initial membership payment",
+          }),
+        });
+        if (!paymentResponse.ok) {
+          const paymentError = await paymentResponse.json().catch(() => null);
+          toast.error(paymentError?.error ?? "Member added, but the initial payment was not recorded");
+          router.refresh();
+          return;
+        }
+      }
+      toast.success(member ? "Member updated" : "Member and initial payment added");
       router.refresh();
       onSuccess?.();
     } catch (error) {
@@ -332,6 +368,35 @@ export default function MemberForm({
               </SelectContent>
             </Select>
           </Field>
+          {formData.payment_type === "UPI + Cash" ? (
+            <>
+              <Field label="Cash Amount">
+                <InputField
+                  name="cash_amount"
+                  type="number"
+                  min="0"
+                  value={formData.cash_amount}
+                  onChange={handleChange}
+                  placeholder="Enter cash amount"
+                  required={!member}
+                />
+              </Field>
+              <Field label="UPI Amount">
+                <InputField
+                  name="upi_amount"
+                  type="number"
+                  min="0"
+                  value={formData.upi_amount}
+                  onChange={handleChange}
+                  placeholder="Enter UPI amount"
+                  required={!member}
+                />
+              </Field>
+              <div className="md:col-span-2 rounded-xl border border-cyan-300/20 bg-cyan-300/5 px-4 py-3 text-sm text-slate-600">
+                Initial payment total: <span className="font-semibold text-blue-700">₹{(Number(formData.cash_amount || 0) + Number(formData.upi_amount || 0)).toLocaleString("en-IN")}</span>. It must match the membership fee.
+              </div>
+            </>
+          ) : null}
         </div>
       </Section>
 
