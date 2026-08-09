@@ -44,6 +44,11 @@ const timings = [
   "Morning",
   "Evening",
 ] as const;
+const paymentTypes = [
+  "UPI",
+  "Cash",
+  "Half UPI + Half Cash",
+] as const;
 
 function defaultDueDate(plan: string, joinDate: string) {
   const date = new Date(`${joinDate}T00:00:00`);
@@ -78,6 +83,8 @@ export default function MemberForm({
 
     timing:
       member?.timing ?? "Morning",
+
+    payment_type: member?.payment_type ?? "UPI",
 
     membership_plan: initialPlan,
 
@@ -121,6 +128,7 @@ export default function MemberForm({
         emergency_contact: formData.emergency_contact || null,
         gender: formData.gender || null,
         timing: formData.timing,
+        payment_type: formData.payment_type,
         membership_plan: formData.membership_plan,
         monthly_fee: Number(formData.monthly_fee),
         join_date: formData.join_date,
@@ -307,6 +315,22 @@ export default function MemberForm({
               placeholder="1500"
               required
             />
+          </Field>
+          <Field label="Payment Type">
+            <Select
+              value={formData.payment_type}
+              onValueChange={(value) =>
+                setFormData((current) => ({
+                  ...current,
+                  payment_type: value as (typeof paymentTypes)[number],
+                }))
+              }
+            >
+              <SelectTrigger className="inputStyle"><SelectValue placeholder="Select payment type" /></SelectTrigger>
+              <SelectContent>
+                {paymentTypes.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </Field>
         </div>
       </Section>

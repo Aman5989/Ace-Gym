@@ -42,6 +42,7 @@ const genders = [
   "Female",
   "Other",
 ];
+const paymentTypes = ["UPI", "Cash", "Half UPI + Half Cash"] as const;
 
 
 
@@ -61,6 +62,7 @@ export default function RegistrationForm() {
     gender: "",
     membership_plan: "Monthly",
     monthly_fee: "",
+    payment_type: "UPI" as (typeof paymentTypes)[number],
     join_date: "",
     next_due_date: "",
     notes: "",
@@ -160,6 +162,7 @@ export default function RegistrationForm() {
         gender: "",
         membership_plan: "Monthly",
         monthly_fee: "",
+        payment_type: "UPI",
         join_date: "",
         next_due_date: "",
         notes: "",
@@ -437,6 +440,16 @@ export default function RegistrationForm() {
 
 
 
+
+      <Field label="Payment Type">
+        <Select
+          value={formData.payment_type}
+          onValueChange={(value) => setFormData({ ...formData, payment_type: value as (typeof paymentTypes)[number] })}
+        >
+          <SelectTrigger className="h-14 w-full rounded-xl border-slate-200 bg-white px-4 text-base text-slate-900 shadow-sm focus:ring-4 focus:ring-blue-500/10"><SelectValue placeholder="Select payment type" /></SelectTrigger>
+          <SelectContent>{paymentTypes.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent>
+        </Select>
+      </Field>
 
       <div className="grid gap-5 md:grid-cols-2">
 

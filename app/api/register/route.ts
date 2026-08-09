@@ -15,6 +15,7 @@ export async function POST(request: Request) {
       monthly_fee,
       join_date,
       next_due_date,
+      payment_type,
       notes,
     } = body;
 
@@ -43,6 +44,7 @@ export async function POST(request: Request) {
         monthly_fee: Number(monthly_fee),
         join_date,
         next_due_date,
+        payment_type: payment_type || "UPI",
         notes: notes || null,
       });
 

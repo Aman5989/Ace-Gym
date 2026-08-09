@@ -508,6 +508,7 @@ export default function MembersTable({
                         "Emergency Contact",
                         "Gender",
                         "Timing",
+                        "Payment Type",
                         "Monthly Fee",
                         "Join Date",
                         "Notes",
@@ -701,13 +702,17 @@ export default function MembersTable({
                             </Badge>
                           </td>
 
+                                                    <td className="px-6 py-4">
+                            <Badge className="rounded-full bg-emerald-500/15 font-medium text-emerald-300 hover:bg-emerald-500/15">
+                              {member.payment_type || "UPI"}
+                            </Badge>
+                          </td>
                           <td className="px-6 py-4">
-
                             <span className="font-semibold text-white">
                               ₹{member.monthly_fee.toLocaleString("en-IN")}
                             </span>
-
                           </td>
+
 
 
                           <td className="px-6 py-4 text-slate-300">

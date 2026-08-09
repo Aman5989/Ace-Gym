@@ -10,6 +10,7 @@ const PLAN_MONTHS: Record<string, number> = {
 export const paymentMethods: PaymentMethod[] = [
   "UPI",
   "Cash",
+  "Half UPI + Half Cash",
   "Card",
   "Bank Transfer",
 ];

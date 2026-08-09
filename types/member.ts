@@ -1,3 +1,5 @@
+export type PaymentType = "UPI" | "Cash" | "Half UPI + Half Cash";
+
 export interface Member {
     id: string;
   
@@ -8,6 +10,8 @@ export interface Member {
     gender: string | null;
 
     timing: "Morning" | "Evening" | null;
+
+    payment_type: PaymentType | null;
   
     join_date: string;
 
