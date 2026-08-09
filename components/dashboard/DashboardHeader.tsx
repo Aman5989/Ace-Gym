@@ -94,6 +94,7 @@ export default function DashboardHeader() {
 
       <div
         className="
+          ace-glass ace-shimmer ace-reveal ace-shell
           relative
           overflow-hidden
           rounded-3xl
@@ -182,6 +183,7 @@ export default function DashboardHeader() {
                 src="/acegym-icon.png"
                 alt="ACE々GYM logo"
                 className="
+                  ace-float
                   h-10
                   w-auto
                   drop-shadow-[0_2px_6px_rgba(251,191,36,0.45)]
@@ -207,6 +209,7 @@ export default function DashboardHeader() {
 
             <h1
               className="
+                ace-reveal ace-reveal-1
                 text-4xl
                 font-black
                 tracking-tight
@@ -253,6 +256,7 @@ export default function DashboardHeader() {
               onClick={() => setOpen(true)}
 
               className="
+                ace-focus-ring
                 rounded-xl
                 bg-gradient-to-r
                 from-amber-400
@@ -293,6 +297,7 @@ export default function DashboardHeader() {
               variant="destructive"
 
               className="
+                ace-focus-ring
                 rounded-xl
                 border
                 border-red-500/30

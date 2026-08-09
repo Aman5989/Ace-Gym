@@ -28,14 +28,14 @@ export default function StatsCards({ members, collectedThisMonth = 0, paymentCou
 
   return (
     <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
-      {cards.map((card) => {
+      {cards.map((card, index) => {
         const Icon = card.icon;
         return (
-          <Card key={card.title} className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 to-slate-900/80 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl">
-            <div aria-hidden className={`pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-gradient-to-br ${card.gradient} opacity-20 blur-2xl`} />
-            <CardContent className="p-6">
+          <Card key={card.title} className={`ace-glass ace-reveal ace-reveal-${index + 1} group relative overflow-hidden rounded-3xl transition-all duration-500 hover:-translate-y-2 hover:border-white/20 hover:shadow-2xl`}>
+            <div aria-hidden className={`pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-gradient-to-br ${card.gradient} opacity-20 blur-2xl transition-transform duration-700 group-hover:scale-150`} />
+            <CardContent className="relative p-6">
               <div className="flex items-center justify-between"><p className="text-sm font-medium text-slate-400">{card.title}</p><div className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${card.gradient} shadow-lg ${card.glow}`}><Icon className="h-5 w-5 text-white" /></div></div>
-              <h2 className="mt-5 text-3xl font-bold tracking-tight text-white md:text-4xl">{card.value}</h2>
+              <h2 className="mt-5 text-3xl font-bold tracking-tight text-white transition-transform duration-500 group-hover:translate-x-1 md:text-4xl">{card.value}</h2>
               <p className="mt-3 text-xs font-medium text-slate-500">{card.trend}</p>
             </CardContent>
           </Card>
