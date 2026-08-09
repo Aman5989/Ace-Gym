@@ -1,4 +1,4 @@
-export type PaymentMethod = "UPI" | "Cash" | "Half UPI + Half Cash" | "Card" | "Bank Transfer";
+export type PaymentMethod = "UPI" | "Cash" | "UPI + Cash" | "Card" | "Bank Transfer";
 
 export interface Payment {
   id: string;

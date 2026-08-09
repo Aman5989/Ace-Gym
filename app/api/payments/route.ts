@@ -39,11 +39,14 @@ export async function POST(request: NextRequest) {
     const paymentMethod = String(body.payment_method ?? "UPI");
     const paymentDate = String(body.payment_date ?? "");
     const notes = body.notes ? String(body.notes) : null;
-    const halfCash = paymentMethod === "Half UPI + Half Cash" ? Math.round((amount / 2) * 100) / 100 : 0;
-    const cashAmount = paymentMethod === "Cash" ? amount : halfCash;
-    const upiAmount = paymentMethod === "UPI" ? amount : paymentMethod === "Half UPI + Half Cash" ? Math.round((amount - halfCash) * 100) / 100 : 0;
+    const requestedCash = Number(body.cash_amount ?? 0);
+    const requestedUpi = Number(body.upi_amount ?? 0);
+    const isMixed = paymentMethod === "UPI + Cash" || paymentMethod === "Half UPI + Half Cash";
+    const cashAmount = isMixed ? requestedCash : paymentMethod === "Cash" ? amount : 0;
+    const upiAmount = isMixed ? requestedUpi : paymentMethod === "UPI" ? amount : 0;
+    const componentTotal = cashAmount + upiAmount;
 
-    if (!memberId || !Number.isFinite(amount) || amount <= 0 || !paymentDate) {
+    if (!memberId || !Number.isFinite(amount) || amount <= 0 || !paymentDate || !Number.isFinite(cashAmount) || !Number.isFinite(upiAmount) || cashAmount < 0 || upiAmount < 0 || (isMixed && (cashAmount <= 0 || upiAmount <= 0 || Math.abs(componentTotal - amount) > 0.01))) {
       return NextResponse.json(
         { error: "member_id, a positive amount, and payment_date are required" },
         { status: 400 },

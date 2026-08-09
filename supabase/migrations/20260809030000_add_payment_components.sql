@@ -10,12 +10,12 @@ SET
   upi_amount = CASE WHEN lower(payment_method) = 'upi' THEN amount ELSE 0 END
 WHERE cash_amount = 0 AND upi_amount = 0;
 
--- Mixed payments created before component storage are conservatively split equally.
+-- Legacy mixed payments created before custom component storage are conservatively split equally.
 UPDATE public.payments
 SET
   cash_amount = ROUND(amount / 2, 2),
   upi_amount = amount - ROUND(amount / 2, 2)
-WHERE lower(payment_method) = 'half upi + half cash'
+WHERE lower(payment_method) IN ('upi + cash', 'half upi + half cash')
   AND cash_amount = 0
   AND upi_amount = 0;
 
