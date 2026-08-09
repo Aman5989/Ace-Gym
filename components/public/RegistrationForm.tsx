@@ -42,7 +42,7 @@ const genders = [
   "Female",
   "Other",
 ];
-const paymentTypes = ["UPI", "Cash", "Half UPI + Half Cash"] as const;
+const paymentTypes = ["UPI", "Cash", "UPI + Cash"] as const;
 
 
 
