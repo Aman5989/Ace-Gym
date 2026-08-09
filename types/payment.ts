@@ -8,6 +8,7 @@ export interface Payment {
   payment_date: string;
   notes: string | null;
   created_at: string;
+  period_id?: string | null;
 }
 
 export interface PaymentWithMember extends Payment {

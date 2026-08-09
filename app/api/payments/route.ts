@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { createClient as createServerClient } from "@/lib/supabase-server";
+import { requireAdmin } from "@/lib/authorization";
 import { advanceDueDate } from "@/lib/payment-utils";
 
 export async function GET(request: NextRequest) {
@@ -10,7 +10,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "member_id is required" }, { status: 400 });
   }
 
-  const supabase = await createServerClient();
+  const admin = await requireAdmin();
+  if (!admin) return NextResponse.json({ error: "Administrator access required" }, { status: 403 });
+
+  const supabase = admin.supabase;
   const { data, error } = await supabase
     .from("payments")
     .select("*")
@@ -42,7 +45,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = await createServerClient();
+    const admin = await requireAdmin();
+    if (!admin) return NextResponse.json({ error: "Administrator access required" }, { status: 403 });
+
+    const supabase = admin.supabase;
     const { data: member, error: memberError } = await supabase
       .from("members")
       .select("id, full_name, membership_plan, next_due_date")
@@ -54,6 +60,18 @@ export async function POST(request: NextRequest) {
         { error: memberError?.message ?? "Member not found" },
         { status: 404 },
       );
+    }
+
+    const { data: period, error: periodError } = await supabase
+      .from("collection_periods")
+      .select("id")
+      .eq("status", "open")
+      .order("opened_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (periodError || !period) {
+      return NextResponse.json({ error: "No open collection period is available" }, { status: 409 });
     }
 
     const nextDueDate = advanceDueDate(
@@ -70,6 +88,7 @@ export async function POST(request: NextRequest) {
         payment_method: paymentMethod,
         payment_date: paymentDate,
         notes,
+        period_id: period.id,
       })
       .select("*")
       .single();

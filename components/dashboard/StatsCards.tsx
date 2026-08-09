@@ -10,9 +10,10 @@ interface Props {
   cashCollectedThisMonth?: number;
   upiCollectedThisMonth?: number;
   paymentCount?: number;
+  canViewPayments?: boolean;
 }
 
-export default function StatsCards({ members, collectedThisMonth = 0, cashCollectedThisMonth = 0, upiCollectedThisMonth = 0, paymentCount = 0 }: Props) {
+export default function StatsCards({ members, collectedThisMonth = 0, cashCollectedThisMonth = 0, upiCollectedThisMonth = 0, paymentCount = 0, canViewPayments = true }: Props) {
   const today = new Date();
   const totalMembers = members.length;
   const overdueMembers = members.filter((member) => new Date(`${member.next_due_date}T23:59:59`) < today).length;
@@ -28,9 +29,11 @@ export default function StatsCards({ members, collectedThisMonth = 0, cashCollec
     { title: "Overdue", value: overdueMembers, icon: AlertTriangle, gradient: "from-rose-500 to-red-600", glow: "shadow-rose-500/30", trend: overdueMembers > 0 ? "needs attention" : "all caught up" },
   ];
 
+  const visibleCards = canViewPayments ? cards : cards.filter((card) => card.title !== "Collected This Month");
+
   return (
     <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
-      {cards.map((card, index) => {
+      {visibleCards.map((card, index) => {
         const Icon = card.icon;
         return (
           <Card key={card.title} className={`ace-glass ace-reveal ace-reveal-${index + 1} group relative overflow-hidden rounded-3xl transition-all duration-500 hover:-translate-y-2 hover:border-white/20 hover:shadow-2xl`}>

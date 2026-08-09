@@ -13,6 +13,7 @@ import { toast } from "sonner";
 
 
 import MemberForm from "@/components/forms/MemberForm";
+import MonthCloseButton from "@/components/dashboard/MonthCloseButton";
 
 import { createClient } from "@/lib/supabase";
 
@@ -26,7 +27,7 @@ import {
 
 
 
-export default function DashboardHeader() {
+export default function DashboardHeader({ canCloseMonth = false, paymentCount = 0, total = 0 }: { canCloseMonth?: boolean; paymentCount?: number; total?: number }) {
 
 
   const [open, setOpen] = useState(false);
@@ -248,8 +249,7 @@ export default function DashboardHeader() {
               gap-3
             "
           >
-
-
+            {canCloseMonth ? <MonthCloseButton paymentCount={paymentCount} total={total} /> : null}
 
             <Button
 

@@ -24,14 +24,14 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-interface Props { member: Member; }
+interface Props { member: Member; canViewPayments?: boolean; }
 
 function whatsappNumber(phone: string) {
   const digits = phone.replace(/\D/g, "");
   return digits.length === 10 ? `91${digits}` : digits;
 }
 
-export default function MemberActions({ member }: Props) {
+export default function MemberActions({ member, canViewPayments = true }: Props) {
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
 
@@ -71,14 +71,16 @@ export default function MemberActions({ member }: Props) {
 
   return (
     <div className="flex items-center gap-1.5">
-      <PaymentDialog member={member} compact onSuccess={() => router.refresh()} />
-      <PaymentHistory member={member} compact />
+      {canViewPayments ? <PaymentDialog member={member} compact onSuccess={() => router.refresh()} /> : null}
+      {canViewPayments ? <PaymentHistory member={member} compact /> : null}
       <Button type="button" variant="ghost" size="icon" onClick={downloadProfile} title="Download member PDF" className="h-9 w-9 rounded-xl text-indigo-500 hover:bg-indigo-50 hover:text-indigo-600">
         <Download className="h-4 w-4" />
       </Button>
-      <Button type="button" variant="ghost" size="icon" onClick={sendReminder} title="Send WhatsApp reminder" className="h-9 w-9 rounded-xl text-emerald-500 hover:bg-emerald-50 hover:text-emerald-600">
-        <MessageCircle className="h-4 w-4" />
-      </Button>
+      {canViewPayments ? (
+        <Button type="button" variant="ghost" size="icon" onClick={sendReminder} title="Send WhatsApp reminder" className="h-9 w-9 rounded-xl text-emerald-500 hover:bg-emerald-50 hover:text-emerald-600">
+          <MessageCircle className="h-4 w-4" />
+        </Button>
+      ) : null}
       <EditMemberDialog member={member} />
       <AlertDialog>
         <AlertDialogTrigger render={<Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-slate-400 hover:bg-red-50 hover:text-red-600" title="Delete member" />}>

@@ -26,12 +26,14 @@ import MemberActions from "./MemberActions";
 
 interface Props {
   members: Member[];
+  canViewPayments?: boolean;
 }
 
 
 
 export default function MembersTable({
   members,
+  canViewPayments = true,
 }: Props) {
 
 
@@ -836,9 +838,7 @@ export default function MembersTable({
 
                           <td className="px-6 py-4">
 
-                            <MemberActions
-                              member={member}
-                            />
+                            <MemberActions member={member} canViewPayments={canViewPayments} />
 
                           </td>
 
