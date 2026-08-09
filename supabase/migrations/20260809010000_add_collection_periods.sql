@@ -38,8 +38,21 @@ CREATE TABLE IF NOT EXISTS public.user_roles (
 );
 
 ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
+
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = auth.uid() AND role = 'admin');
+$$;
+REVOKE ALL ON FUNCTION public.is_admin() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.is_admin() TO authenticated;
+
 CREATE POLICY "user_roles_select_own_or_admin" ON public.user_roles FOR SELECT TO authenticated
-USING (user_id = auth.uid() OR EXISTS (SELECT 1 FROM public.user_roles r WHERE r.user_id = auth.uid() AND r.role = 'admin'));
+USING (user_id = auth.uid() OR public.is_admin());
 
 INSERT INTO public.user_roles (user_id, role)
 SELECT id, 'admin' FROM auth.users
@@ -50,14 +63,14 @@ DROP POLICY IF EXISTS "payments_select_all" ON public.payments;
 DROP POLICY IF EXISTS "payments_insert_all" ON public.payments;
 DROP POLICY IF EXISTS "payments_update_all" ON public.payments;
 DROP POLICY IF EXISTS "payments_delete_all" ON public.payments;
-CREATE POLICY "payments_admin_select" ON public.payments FOR SELECT TO authenticated USING (EXISTS (SELECT 1 FROM public.user_roles r WHERE r.user_id = auth.uid() AND r.role = 'admin'));
-CREATE POLICY "payments_admin_insert" ON public.payments FOR INSERT TO authenticated WITH CHECK (EXISTS (SELECT 1 FROM public.user_roles r WHERE r.user_id = auth.uid() AND r.role = 'admin'));
-CREATE POLICY "payments_admin_update" ON public.payments FOR UPDATE TO authenticated USING (EXISTS (SELECT 1 FROM public.user_roles r WHERE r.user_id = auth.uid() AND r.role = 'admin')) WITH CHECK (EXISTS (SELECT 1 FROM public.user_roles r WHERE r.user_id = auth.uid() AND r.role = 'admin'));
-CREATE POLICY "payments_admin_delete" ON public.payments FOR DELETE TO authenticated USING (EXISTS (SELECT 1 FROM public.user_roles r WHERE r.user_id = auth.uid() AND r.role = 'admin'));
+CREATE POLICY "payments_admin_select" ON public.payments FOR SELECT TO authenticated USING (public.is_admin());
+CREATE POLICY "payments_admin_insert" ON public.payments FOR INSERT TO authenticated WITH CHECK (public.is_admin());
+CREATE POLICY "payments_admin_update" ON public.payments FOR UPDATE TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
+CREATE POLICY "payments_admin_delete" ON public.payments FOR DELETE TO authenticated USING (public.is_admin());
 
 DROP POLICY IF EXISTS "collection_periods_select_authenticated" ON public.collection_periods;
 DROP POLICY IF EXISTS "collection_periods_insert_authenticated" ON public.collection_periods;
 DROP POLICY IF EXISTS "collection_periods_update_authenticated" ON public.collection_periods;
-CREATE POLICY "collection_periods_admin_select" ON public.collection_periods FOR SELECT TO authenticated USING (EXISTS (SELECT 1 FROM public.user_roles r WHERE r.user_id = auth.uid() AND r.role = 'admin'));
-CREATE POLICY "collection_periods_admin_insert" ON public.collection_periods FOR INSERT TO authenticated WITH CHECK (EXISTS (SELECT 1 FROM public.user_roles r WHERE r.user_id = auth.uid() AND r.role = 'admin'));
-CREATE POLICY "collection_periods_admin_update" ON public.collection_periods FOR UPDATE TO authenticated USING (EXISTS (SELECT 1 FROM public.user_roles r WHERE r.user_id = auth.uid() AND r.role = 'admin')) WITH CHECK (EXISTS (SELECT 1 FROM public.user_roles r WHERE r.user_id = auth.uid() AND r.role = 'admin'));
+CREATE POLICY "collection_periods_admin_select" ON public.collection_periods FOR SELECT TO authenticated USING (public.is_admin());
+CREATE POLICY "collection_periods_admin_insert" ON public.collection_periods FOR INSERT TO authenticated WITH CHECK (public.is_admin());
+CREATE POLICY "collection_periods_admin_update" ON public.collection_periods FOR UPDATE TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
