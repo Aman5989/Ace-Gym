@@ -265,7 +265,7 @@ export default function DashboardHeader({ canCloseMonth = false, paymentCount = 
 
 
 
-          {/* Actions */}
+          {/* Admin image upload */}
           <div className="flex w-full flex-col items-stretch gap-3 md:w-auto md:min-w-[360px] md:items-end">
             {canCloseMonth ? (
               <div className="flex items-center justify-end gap-3">
@@ -277,92 +277,8 @@ export default function DashboardHeader({ canCloseMonth = false, paymentCount = 
                 </Button>
               </div>
             ) : null}
-            <div className="flex flex-wrap items-center justify-end gap-3">
-              {canCloseMonth ? <MonthCloseButton paymentCount={paymentCount} total={total} /> : null}
-
-            <Button
-
-              onClick={() => setOpen(true)}
-
-              className="
-                ace-focus-ring
-                rounded-xl
-                bg-gradient-to-r
-                from-amber-400
-                to-orange-500
-                font-semibold
-                text-slate-950
-                shadow-lg
-                shadow-amber-500/30
-                transition-all
-                hover:from-amber-300
-                hover:to-orange-400
-                hover:shadow-amber-500/50
-                h-11
-                px-6
-              "
-
-            >
-
-              <Plus
-                className="
-                  mr-2
-                  h-5
-                  w-5
-                "
-              />
-
-              Add Member
-
-            </Button>
-
-
-
-
-            <Button
-
-              onClick={handleLogout}
-
-              variant="destructive"
-
-              className="
-                ace-focus-ring
-                rounded-xl
-                border
-                border-red-500/30
-                bg-red-500/10
-                font-medium
-                text-red-300
-                backdrop-blur
-                transition-all
-                hover:bg-red-500/20
-                h-11
-                px-6
-              "
-
-            >
-
-              <LogOut
-                className="
-                  mr-2
-                  h-5
-                  w-5
-                "
-              />
-
-              Logout
-
-            </Button>
-
-
-
-            </div>
           </div>
-
-
         </div>
-
-
         {/* Stat strip */}
         <div
           className="
@@ -393,11 +309,18 @@ export default function DashboardHeader({ canCloseMonth = false, paymentCount = 
         </div>
 
 
+        <div className="relative mt-4 flex flex-wrap items-center justify-end gap-3">
+          {canCloseMonth ? <MonthCloseButton paymentCount={paymentCount} total={total} /> : null}
+          <Button onClick={() => setOpen(true)} className="ace-focus-ring h-11 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 px-6 font-semibold text-slate-950 shadow-lg shadow-amber-500/30 transition-all hover:from-amber-300 hover:to-orange-400 hover:shadow-amber-500/50">
+            <Plus className="mr-2 h-5 w-5" />
+            Add Member
+          </Button>
+          <Button onClick={handleLogout} variant="destructive" className="ace-focus-ring h-11 rounded-xl border border-red-500/30 bg-red-500/10 px-6 font-medium text-red-300 backdrop-blur transition-all hover:bg-red-500/20">
+            <LogOut className="mr-2 h-5 w-5" />
+            Logout
+          </Button>
+        </div>
       </div>
-
-
-
-
       <Dialog
         open={open}
         onOpenChange={setOpen}
