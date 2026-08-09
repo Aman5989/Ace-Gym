@@ -1,15 +1,16 @@
 "use client";
 
+import { useState } from "react";
+import { MessageCircle, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Member } from "@/types/member";
 import { createClient } from "@/lib/supabase";
-
 import EditMemberDialog from "./EditMemberDialog";
-
+import PaymentDialog from "@/components/payments/PaymentDialog";
+import PaymentHistory from "@/components/payments/PaymentHistory";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,143 +23,61 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-interface Props {
-  member: Member;
+interface Props { member: Member; }
+
+function whatsappNumber(phone: string) {
+  const digits = phone.replace(/\D/g, "");
+  return digits.length === 10 ? `91${digits}` : digits;
 }
 
-export default function MemberActions({
-  member,
-}: Props) {
+export default function MemberActions({ member }: Props) {
   const router = useRouter();
+  const [deleting, setDeleting] = useState(false);
 
-  const supabase = createClient();
+  function sendReminder() {
+    if (!member.phone) {
+      toast.error("This member does not have a phone number");
+      return;
+    }
+    const dueDate = new Date(`${member.next_due_date}T00:00:00`).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+    const message = `Hi ${member.full_name}, this is a reminder from ACE々GYM. Your membership payment is due on ${dueDate}. Please reply to confirm your payment. Thank you!`;
+    window.open(`https://wa.me/${whatsappNumber(member.phone)}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+  }
 
   async function deleteMember() {
+    setDeleting(true);
     try {
-      const { error } = await supabase
-        .from("members")
-        .delete()
-        .eq("id", member.id);
-
-      if (error) {
-        console.error("MEMBER DELETE ERROR:", error);
-        toast.error(error.message);
-        return;
-      }
-
+      const { error } = await createClient().from("members").delete().eq("id", member.id);
+      if (error) throw error;
       toast.success("Member deleted");
       router.refresh();
     } catch (error) {
-      console.error("MEMBER DELETE REQUEST FAILED:", error);
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Unable to delete member"
-      );
+      toast.error(error instanceof Error ? error.message : "Unable to delete member");
+    } finally {
+      setDeleting(false);
     }
   }
 
   return (
-    <div
-      className="
-        flex
-        items-center
-        gap-2
-      "
-    >
-      <EditMemberDialog
-        member={member}
-      />
-
+    <div className="flex items-center gap-1.5">
+      <PaymentDialog member={member} compact onSuccess={() => router.refresh()} />
+      <PaymentHistory member={member} compact />
+      <Button type="button" variant="ghost" size="icon" onClick={sendReminder} title="Send WhatsApp reminder" className="h-9 w-9 rounded-xl text-emerald-500 hover:bg-emerald-50 hover:text-emerald-600">
+        <MessageCircle className="h-4 w-4" />
+      </Button>
+      <EditMemberDialog member={member} />
       <AlertDialog>
-        <AlertDialogTrigger
-          render={
-            <Button
-              variant="ghost"
-              size="icon"
-              className="
-                h-9
-                w-9
-                rounded-xl
-                text-slate-400
-                transition
-                hover:bg-red-50
-                hover:text-red-600
-              "
-            >
-              <Trash2
-                className="
-                  h-4
-                  w-4
-                "
-              />
-            </Button>
-          }
-        />
-
-        <AlertDialogContent
-          className="
-            rounded-2xl
-            bg-white
-            text-slate-900
-            border
-            border-slate-200
-          "
-        >
+        <AlertDialogTrigger render={<Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-slate-400 hover:bg-red-50 hover:text-red-600" title="Delete member" />}>
+          <Trash2 className="h-4 w-4" />
+        </AlertDialogTrigger>
+        <AlertDialogContent className="rounded-2xl border-slate-200 bg-white text-slate-900">
           <AlertDialogHeader>
-            <AlertDialogTitle
-              className="
-                text-xl
-                font-bold
-              "
-            >
-              Delete Member?
-            </AlertDialogTitle>
-
-            <AlertDialogDescription
-              className="
-                text-slate-500
-              "
-            >
-              Are you sure you want to remove{" "}
-
-              <span
-                className="
-                  font-semibold
-                  text-slate-900
-                "
-              >
-                {member.full_name}
-              </span>
-
-              ?
-
-              <br />
-
-              This action cannot be undone.
-            </AlertDialogDescription>
+            <AlertDialogTitle className="text-xl font-bold">Delete member?</AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-500">This permanently removes <span className="font-semibold text-slate-900">{member.full_name}</span> and their payment history.</AlertDialogDescription>
           </AlertDialogHeader>
-
           <AlertDialogFooter>
-            <AlertDialogCancel
-              className="
-                rounded-xl
-              "
-            >
-              Cancel
-            </AlertDialogCancel>
-
-            <AlertDialogAction
-              onClick={deleteMember}
-              className="
-                rounded-xl
-                bg-red-600
-                hover:bg-red-700
-                text-white
-              "
-            >
-              Delete
-            </AlertDialogAction>
+            <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
+            <AlertDialogAction disabled={deleting} onClick={deleteMember} className="rounded-xl bg-red-600 text-white hover:bg-red-700">{deleting ? "Deleting…" : "Delete"}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

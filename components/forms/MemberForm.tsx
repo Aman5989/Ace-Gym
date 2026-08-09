@@ -20,6 +20,7 @@ import {
 import { createClient } from "@/lib/supabase";
 
 import { Member } from "@/types/member";
+import { getPlanMonths, toDateInputValue } from "@/lib/payment-utils";
 
 interface Props {
   member?: Member;
@@ -39,6 +40,12 @@ const genders = [
   "Other",
 ];
 
+function defaultDueDate(plan: string, joinDate: string) {
+  const date = new Date(`${joinDate}T00:00:00`);
+  date.setMonth(date.getMonth() + getPlanMonths(plan));
+  return toDateInputValue(date);
+}
+
 export default function MemberForm({
   member,
   onSuccess,
@@ -47,6 +54,10 @@ export default function MemberForm({
   const supabase = createClient();
 
   const [loading, setLoading] = useState(false);
+
+  const today = toDateInputValue(new Date());
+  const initialPlan = member?.membership_plan ?? "Monthly";
+  const initialJoinDate = member?.join_date ?? today;
 
   const [formData, setFormData] = useState({
     full_name: member?.full_name ?? "",
@@ -60,17 +71,14 @@ export default function MemberForm({
     gender:
       member?.gender ?? "",
 
-    membership_plan:
-      member?.membership_plan ?? "Monthly",
+    membership_plan: initialPlan,
 
     monthly_fee:
       member?.monthly_fee?.toString() ?? "",
 
-    join_date:
-      member?.join_date ?? "",
+    join_date: initialJoinDate,
 
-    next_due_date:
-      member?.next_due_date ?? "",
+    next_due_date: member?.next_due_date ?? defaultDueDate(initialPlan, initialJoinDate),
 
     notes:
       member?.notes ?? "",
@@ -81,10 +89,13 @@ export default function MemberForm({
       HTMLInputElement | HTMLTextAreaElement
     >
   ) {
-    setFormData({
-      ...formData,
+    setFormData((current) => ({
+      ...current,
       [e.target.name]: e.target.value,
-    });
+      ...( !member && e.target.name === "join_date"
+        ? { next_due_date: defaultDueDate(current.membership_plan, e.target.value) }
+        : {}),
+    }));
   }
 
   async function handleSubmit(
@@ -231,11 +242,11 @@ export default function MemberForm({
             <Select
               value={formData.membership_plan || null}
               onValueChange={(value) =>
-                setFormData({
-                  ...formData,
-                  membership_plan:
-                    value ?? "",
-                })
+                setFormData((current) => ({
+                  ...current,
+                  membership_plan: value ?? "",
+                  ...(!member && value ? { next_due_date: defaultDueDate(value, current.join_date) } : {}),
+                }))
               }
             >
               <SelectTrigger className="inputStyle">
