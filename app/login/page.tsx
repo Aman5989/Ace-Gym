@@ -68,9 +68,7 @@ export default function LoginPage() {
 
         <div>
           <div className="flex items-center gap-3 mb-4">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg shadow-amber-500/40">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-slate-950"><path d="M6.5 6.5h11"/><path d="M6.5 17.5h11"/><path d="M6 20V4"/><path d="M18 20V4"/><path d="M4 10v4"/><path d="M20 10v4"/></svg>
-            </div>
+            <img src="/acegym-icon.png" alt="ACE々GYM logo" className="h-12 w-auto drop-shadow-[0_2px_8px_rgba(251,191,36,0.45)]" />
             <h1 className="text-3xl font-black tracking-tight text-white">
               ACE<span className="text-amber-400">々</span>GYM
             </h1>

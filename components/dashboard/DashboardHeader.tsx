@@ -3,7 +3,7 @@
 
 import { Button } from "@/components/ui/button";
 
-import { Plus, LogOut, Dumbbell, Flame } from "lucide-react";
+import { Plus, LogOut, Flame } from "lucide-react";
 
 import { useState } from "react";
 
@@ -178,31 +178,15 @@ export default function DashboardHeader() {
               "
             >
 
-              <div
+              <img
+                src="/acegym-icon.png"
+                alt="ACE々GYM logo"
                 className="
-                  flex
-                  h-8
-                  w-8
-                  items-center
-                  justify-center
-                  rounded-lg
-                  bg-gradient-to-br
-                  from-amber-400
-                  to-orange-500
-                  shadow-lg
-                  shadow-amber-500/40
+                  h-10
+                  w-auto
+                  drop-shadow-[0_2px_6px_rgba(251,191,36,0.45)]
                 "
-              >
-
-                <Dumbbell
-                  className="
-                    h-4
-                    w-4
-                    text-slate-950
-                  "
-                />
-
-              </div>
+              />
 
 
               <span

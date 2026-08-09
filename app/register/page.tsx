@@ -33,6 +33,17 @@ export default function RegisterPage() {
           "
         >
 
+          <img
+            src="/acegym-logo.png"
+            alt="ACE々GYM logo"
+            className="
+              mx-auto
+              h-40
+              w-auto
+              drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)]
+            "
+          />
+
           <h1
             className="
               text-4xl
