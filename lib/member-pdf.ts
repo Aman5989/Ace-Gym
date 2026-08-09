@@ -109,7 +109,7 @@ export async function downloadMemberPdf(member: Member) {
   pdf.text("Address: __________________________", width - margin - 8, y + 16, { align: "right" });
 
   pdf.setFontSize(30);
-  pdf.text("ACE GYM", width / 2, y + 27, { align: "center" });
+  pdf.text("ACE々GYM", width / 2, y + 27, { align: "center" });
   pdf.setFontSize(13);
   pdf.text("FITNESS", width / 2, y + 35, { align: "center" });
   pdf.setFontSize(9);
