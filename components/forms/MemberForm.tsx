@@ -149,62 +149,46 @@ export default function MemberForm({
         notes: formData.notes || null,
       };
 
-            const result = member
-        ? await supabase
-            .from("members")
-            .update(payload)
-            .eq("id", member.id)
-        : await supabase
-            .from("members")
-            .insert(payload)
-            .select("id")
-            .single();
-      if (result.error) {
-        console.error("MEMBER SAVE ERROR:", result.error);
-        toast.error(result.error.message);
-        return;
-      }
-
-      let apiResponse;
+      // Editing an existing member: a single update. The database trigger keeps
+      // the registration payment (and therefore the monthly collection) in sync
+      // when the fee is corrected, as long as the month is still open.
       if (member) {
         const updateResult = await supabase
           .from("members")
           .update(payload)
           .eq("id", member.id);
         if (updateResult.error) {
+          console.error("MEMBER SAVE ERROR:", updateResult.error);
           toast.error(updateResult.error.message);
           return;
         }
-        apiResponse = null;
-      } else {
-        apiResponse = await fetch("/api/members", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...payload,
-            cash_amount: cashAmount,
-            upi_amount: upiAmount,
-          }),
-        });
-      }
-
-      if (apiResponse && !apiResponse.ok) {
-        const apiError = await apiResponse.json().catch(() => null);
-        toast.error(apiError?.error ?? "Unable to save member");
+        toast.success("Member updated. Collection totals recalculated.");
+        router.refresh();
+        onSuccess?.();
         return;
       }
 
-      if (apiResponse) {
-        const result = await apiResponse.json();
-        if (result.warning) {
-          toast.warning(result.warning);
-        } else {
-          toast.success(member ? "Member updated" : "Member and initial payment added");
-        }
-      } else {
-        toast.success("Member updated");
+      // Creating a new member: one server call that inserts the member and the
+      // registration fee together, so no duplicate rows can be created.
+      const response = await fetch("/api/members", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...payload,
+          cash_amount: cashAmount,
+          upi_amount: upiAmount,
+        }),
+      });
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        toast.error(result?.error ?? "Unable to save member");
+        return;
       }
-      
+
+      if (result?.warning) toast.warning(result.warning);
+      else toast.success("Member added and registration fee recorded");
+
       router.refresh();
       onSuccess?.();
     } catch (error) {

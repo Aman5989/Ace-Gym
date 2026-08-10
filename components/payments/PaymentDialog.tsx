@@ -88,8 +88,9 @@ export default function PaymentDialog({ member, onSuccess, compact = false }: Pr
           cash_amount: isMixed ? Number(cashAmount) : paymentMethod === "Cash" ? totalAmount : 0,
           upi_amount: isMixed ? Number(upiAmount) : paymentMethod === "UPI" ? totalAmount : 0,
           payment_method: paymentMethod,
+          fee_category: "renewal",
           payment_date: paymentDate,
-          notes,
+          notes: notes || "Renewal fee",
         }),
       });
       const result = await response.json();
@@ -116,7 +117,7 @@ export default function PaymentDialog({ member, onSuccess, compact = false }: Pr
       <DialogContent className="w-[calc(100%-1rem)] max-h-[calc(100dvh-1rem)] overflow-y-auto overscroll-contain rounded-3xl border-slate-200 bg-white p-4 text-slate-900 shadow-2xl sm:max-h-[calc(100dvh-2rem)] sm:max-w-lg sm:p-6">
         <DialogHeader className="pr-8">
           <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600 sm:h-11 sm:w-11"><WalletCards className="h-5 w-5" /></div>
-          <DialogTitle className="text-xl font-bold sm:text-2xl">Record payment</DialogTitle>
+          <DialogTitle className="text-xl font-bold sm:text-2xl">Record renewal fee</DialogTitle>
           <DialogDescription className="text-slate-500">{member.full_name} · {member.membership_plan} plan</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="mt-3 space-y-4 sm:space-y-5">

@@ -41,12 +41,8 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
-    // Both Admin and Trainer can create members
-    const admin = await requireAdmin();
-    
-    // We use the server-side client to bypass RLS for the initial payment if it's a trainer,
-    // but we still need to check if the user is authenticated.
-    // Actually, let's just use the server-side client for everything here to ensure consistency.
+    // Both admins and trainers may create members, so we only need an
+    // authenticated session here rather than an admin check.
     const supabase = await createClient();
 
     const { full_name, phone, father_name, address, gender, timing, payment_type, membership_plan, monthly_fee, join_date, next_due_date, notes, cash_amount, upi_amount } = body;
@@ -90,16 +86,17 @@ export async function POST(request: NextRequest) {
 
     // Record Initial Payment
     // First, check if there is an open collection period
-    let { data: period, error: periodError } = await supabase
+    const { data: openPeriod } = await supabase
       .from("collection_periods")
       .select("id")
       .eq("status", "open")
       .order("opened_at", { ascending: false })
       .limit(1)
       .maybeSingle();
+    let period = openPeriod;
 
     // If no open period exists, create one for the current month
-    if (periodError || !period) {
+    if (!period) {
       const periodKey = new Date().toISOString().slice(0, 7);
       const { data: newPeriod, error: newPeriodError } = await supabase
         .from("collection_periods")
@@ -121,8 +118,9 @@ export async function POST(request: NextRequest) {
         payment_method: payment_type || "UPI",
         cash_amount: cashAmount,
         upi_amount: upiAmount,
+        fee_category: "registration",
         payment_date: join_date,
-        notes: "Initial membership payment",
+        notes: notes || "Registration fee",
         period_id: period.id,
       })
       .select("*")

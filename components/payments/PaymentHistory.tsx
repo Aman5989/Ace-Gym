@@ -55,7 +55,16 @@ export default function PaymentHistory({ member, compact = false }: Props) {
     return () => { cancelled = true; };
   }, [member.id, open]);
 
+  function isRegistration(payment: Payment) {
+    const category = String(payment.fee_category ?? "").toLowerCase();
+    if (category === "registration") return true;
+    if (category === "renewal" || category === "adjustment") return false;
+    return String(payment.notes ?? "").toLowerCase().includes("initial membership payment");
+  }
+
   const totalPaid = payments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+  const registrationPaid = payments.filter(isRegistration).reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+  const renewalPaid = totalPaid - registrationPaid;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -81,9 +90,21 @@ export default function PaymentHistory({ member, compact = false }: Props) {
           <DialogDescription className="text-slate-500">{member.full_name} · {payments.length} recorded payment{payments.length === 1 ? "" : "s"}</DialogDescription>
         </DialogHeader>
 
-        <div className="mt-2 flex items-center justify-between rounded-2xl bg-slate-950 px-4 py-3 text-white">
-          <span className="text-sm text-slate-300">Total recorded</span>
-          <span className="text-xl font-bold">{formatCurrency(totalPaid)}</span>
+        <div className="mt-2 space-y-2">
+          <div className="flex items-center justify-between rounded-2xl bg-slate-950 px-4 py-3 text-white">
+            <span className="text-sm text-slate-300">Total recorded</span>
+            <span className="text-xl font-bold">{formatCurrency(totalPaid)}</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-2xl border border-violet-100 bg-violet-50 px-3 py-2">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-violet-500">Registration Fee</p>
+              <p className="text-base font-bold text-violet-900">{formatCurrency(registrationPaid)}</p>
+            </div>
+            <div className="rounded-2xl border border-amber-100 bg-amber-50 px-3 py-2">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-600">Renewal Fee</p>
+              <p className="text-base font-bold text-amber-900">{formatCurrency(renewalPaid)}</p>
+            </div>
+          </div>
         </div>
 
         <div className="mt-1 max-h-[52vh] space-y-2 overflow-y-auto pr-1">
@@ -100,7 +121,7 @@ export default function PaymentHistory({ member, compact = false }: Props) {
                 </div>
                 {payment.notes && <p className="mt-1 truncate text-xs text-slate-400">{payment.notes}</p>}
               </div>
-              <span className="shrink-0 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">Paid</span>
+              <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${isRegistration(payment) ? "bg-violet-100 text-violet-700" : "bg-amber-100 text-amber-700"}`}>{isRegistration(payment) ? "Registration Fee" : "Renewal Fee"}</span>
             </div>
           ))}
         </div>

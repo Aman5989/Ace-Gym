@@ -37,6 +37,10 @@ export default async function Home() {
             collectedThisMonth={canViewPayments ? paymentSummary.monthTotal : 0}
             cashCollectedThisMonth={canViewPayments ? paymentSummary.cashTotal : 0}
             upiCollectedThisMonth={canViewPayments ? paymentSummary.upiTotal : 0}
+            registrationCollectedThisMonth={canViewPayments ? paymentSummary.registrationTotal : 0}
+            renewalCollectedThisMonth={canViewPayments ? paymentSummary.renewalTotal : 0}
+            registrationCount={canViewPayments ? paymentSummary.registrationCount : 0}
+            renewalCount={canViewPayments ? paymentSummary.renewalCount : 0}
             paymentCount={canViewPayments ? paymentSummary.count : 0}
             canViewPayments={canViewPayments}
           />

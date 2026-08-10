@@ -39,6 +39,10 @@ export async function POST(request: NextRequest) {
     const paymentMethod = String(body.payment_method ?? "UPI");
     const paymentDate = String(body.payment_date ?? "");
     const notes = body.notes ? String(body.notes) : null;
+    const requestedCategory = String(body.fee_category ?? "renewal").toLowerCase();
+    const feeCategory = ["registration", "renewal", "adjustment"].includes(requestedCategory)
+      ? requestedCategory
+      : "renewal";
     const requestedCash = Number(body.cash_amount ?? 0);
     const requestedUpi = Number(body.upi_amount ?? 0);
     const isMixed = paymentMethod === "UPI + Cash" || paymentMethod === "Half UPI + Half Cash";
@@ -96,6 +100,7 @@ export async function POST(request: NextRequest) {
         payment_method: paymentMethod,
         cash_amount: cashAmount,
         upi_amount: upiAmount,
+        fee_category: feeCategory,
         payment_date: paymentDate,
         notes,
         period_id: period.id,

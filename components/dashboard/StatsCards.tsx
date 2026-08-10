@@ -1,4 +1,4 @@
-import { AlertTriangle, Banknote, CalendarClock, CircleDollarSign, CreditCard, Users } from "lucide-react";
+import { AlertTriangle, Banknote, CalendarClock, CircleDollarSign, CreditCard, RefreshCw, UserPlus, Users } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/payment-utils";
@@ -9,11 +9,15 @@ interface Props {
   collectedThisMonth?: number;
   cashCollectedThisMonth?: number;
   upiCollectedThisMonth?: number;
+  registrationCollectedThisMonth?: number;
+  renewalCollectedThisMonth?: number;
+  registrationCount?: number;
+  renewalCount?: number;
   paymentCount?: number;
   canViewPayments?: boolean;
 }
 
-export default function StatsCards({ members, collectedThisMonth = 0, cashCollectedThisMonth = 0, upiCollectedThisMonth = 0, paymentCount = 0, canViewPayments = true }: Props) {
+export default function StatsCards({ members, collectedThisMonth = 0, cashCollectedThisMonth = 0, upiCollectedThisMonth = 0, registrationCollectedThisMonth = 0, renewalCollectedThisMonth = 0, registrationCount = 0, renewalCount = 0, paymentCount = 0, canViewPayments = true }: Props) {
   const today = new Date();
   const totalMembers = members.length;
   const overdueMembers = members.filter((member) => new Date(`${member.next_due_date}T23:59:59`) < today).length;
@@ -42,19 +46,39 @@ export default function StatsCards({ members, collectedThisMonth = 0, cashCollec
               <div className="flex items-center justify-between"><p className="text-sm font-medium text-slate-400">{card.title}</p><div className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${card.gradient} shadow-lg ${card.glow}`}><Icon className="h-5 w-5 text-white" /></div></div>
               <h2 className="mt-5 text-3xl font-bold tracking-tight text-white transition-transform duration-500 group-hover:translate-x-1 md:text-4xl">{card.value}</h2>
               {card.title === "Collected This Month" ? (
-                <div className="mt-4 grid grid-cols-2 gap-2 border-t border-white/10 pt-3">
-                  <div className="flex items-center gap-2 rounded-xl bg-white/5 px-2.5 py-2">
-                    <Banknote className="h-3.5 w-3.5 text-emerald-300" />
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wide text-slate-500">Cash</p>
-                      <p className="text-xs font-semibold text-emerald-200">{formatCurrency(cashCollectedThisMonth)}</p>
+                <div className="mt-4 space-y-2 border-t border-white/10 pt-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="flex items-center gap-2 rounded-xl bg-white/5 px-2.5 py-2">
+                      <Banknote className="h-3.5 w-3.5 text-emerald-300" />
+                      <div>
+                        <p className="text-[10px] uppercase tracking-wide text-slate-500">Cash</p>
+                        <p className="text-xs font-semibold text-emerald-200">{formatCurrency(cashCollectedThisMonth)}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 rounded-xl bg-white/5 px-2.5 py-2">
+                      <CreditCard className="h-3.5 w-3.5 text-cyan-300" />
+                      <div>
+                        <p className="text-[10px] uppercase tracking-wide text-slate-500">UPI</p>
+                        <p className="text-xs font-semibold text-cyan-200">{formatCurrency(upiCollectedThisMonth)}</p>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 rounded-xl bg-white/5 px-2.5 py-2">
-                    <CreditCard className="h-3.5 w-3.5 text-cyan-300" />
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wide text-slate-500">UPI</p>
-                      <p className="text-xs font-semibold text-cyan-200">{formatCurrency(upiCollectedThisMonth)}</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="flex items-center gap-2 rounded-xl bg-white/5 px-2.5 py-2">
+                      <UserPlus className="h-3.5 w-3.5 text-violet-300" />
+                      <div>
+                        <p className="text-[10px] uppercase tracking-wide text-slate-500">Registration</p>
+                        <p className="text-xs font-semibold text-violet-200">{formatCurrency(registrationCollectedThisMonth)}</p>
+                        <p className="text-[10px] text-slate-500">{registrationCount} new</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 rounded-xl bg-white/5 px-2.5 py-2">
+                      <RefreshCw className="h-3.5 w-3.5 text-amber-300" />
+                      <div>
+                        <p className="text-[10px] uppercase tracking-wide text-slate-500">Renewal</p>
+                        <p className="text-xs font-semibold text-amber-200">{formatCurrency(renewalCollectedThisMonth)}</p>
+                        <p className="text-[10px] text-slate-500">{renewalCount} renewed</p>
+                      </div>
                     </div>
                   </div>
                 </div>
