@@ -53,23 +53,15 @@ function drawAcePrefix(pdf: jsPDF, x: number, y: number, suffix: string, size = 
   const markX = x + aceWidth + 1;
   const scale = size / 10;
   pdf.setDrawColor(INK);
-  pdf.setLineWidth(Math.max(0.35, size * 0.075));
-  pdf.lines(
-    [[3.8 * scale, -2.8 * scale], [2.2 * scale, 2.4 * scale], [-2.5 * scale, 1.8 * scale]],
-    markX,
-    y - 5.8 * scale,
-    1,
-    "S",
-    false,
-  );
-  pdf.lines(
-    [[2.7 * scale, -1.9 * scale], [1.8 * scale, 1.8 * scale], [-2.1 * scale, 1.5 * scale]],
-    markX + 0.8 * scale,
-    y - 1.1 * scale,
-    1,
-    "S",
-    false,
-  );
+  pdf.setLineWidth(Math.max(0.8, size * 0.12));
+  const top = y - 0.78 * size;
+  const bottom = y + 0.08 * size;
+  pdf.line(markX, top, markX + 0.42 * size, top + 0.18 * size);
+  pdf.line(markX + 0.42 * size, top + 0.18 * size, markX + 0.1 * size, y - 0.08 * size);
+  pdf.line(markX + 0.18 * size, y - 0.1 * size, markX + 0.58 * size, y + 0.04 * size);
+  pdf.line(markX + 0.58 * size, y + 0.04 * size, markX + 0.22 * size, bottom);
+  pdf.line(markX + 0.38 * size, y - 0.42 * size, markX + 0.62 * size, y - 0.32 * size);
+  pdf.line(markX + 0.62 * size, y - 0.32 * size, markX + 0.42 * size, y - 0.12 * size);
   pdf.text(suffix, markX + 5.6 * scale, y);
 }
 function line(pdf: jsPDF, x1: number, y: number, x2: number) {
