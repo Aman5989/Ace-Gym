@@ -262,9 +262,10 @@ The document includes:
 
 | Section | Information |
 |---|---|
-| Branding | The custom ACE々GYM name and supplied gym logo. |
+| Branding | The custom ACE々GYM name and supplied gym logo, with **Shubham Verma** and **Mob.: +91 7717728536** in the top-left header. |
 | Member profile | Full name, phone, father’s name, address, gender, and other current profile values. |
-| Membership details | Plan, Total Fee, join date, next due date, and relevant notes. |
+| Membership details | Plan, Total Fee, join date, next due date, and relevant notes; the Membership No. field is intentionally omitted. |
+| Header layout | The top-right audience and address text is intentionally blank, and the tagline is **BUILT NOT BORN**. |
 | Rules and terms | Non-refundable fee policy, one workout per day, footwear requirements, property conduct, loss/theft disclaimer, and cleanliness requirements. |
 | Footer | Administrative record and gym-terms information. |
 

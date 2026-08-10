@@ -103,21 +103,18 @@ export async function downloadMemberPdf(member: Member) {
   pdf.setTextColor(INK);
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(10);
-  pdf.text("ACE GYM FITNESS", margin + 8, y + 8);
+  pdf.text("Shubham Verma", margin + 8, y + 8);
   pdf.setFontSize(8);
-  pdf.text("Mob.: ____________________", margin + 8, y + 14);
-  pdf.text("For Men & Women", width - margin - 8, y + 10, { align: "right" });
-  pdf.text("Address: __________________________", width - margin - 8, y + 16, { align: "right" });
+  pdf.text("Mob.: +91 7717728536", margin + 8, y + 14);
 
   if (wordmark) {
     pdf.addImage(wordmark, "PNG", width / 2 - 31, y + 24, 62, 12, undefined, "FAST");
   }
   pdf.setFontSize(9);
-  pdf.text("FUTURE TO YOUR FITNESS", width / 2, y + 42, { align: "center" });
+  pdf.text("BUILT NOT BORN", width / 2, y + 42, { align: "center" });
   y += 50;
   line(pdf, margin + 1, y, width - margin - 1);
 
-  labelLine(pdf, "Membership No.:", member.id.slice(0, 8).toUpperCase(), margin + 7, y + 8, 77);
   checkbox(pdf, "Admission", margin + 92, y + 10, true);
   checkbox(pdf, "Renewal", margin + 138, y + 10, false);
   y += 20;
