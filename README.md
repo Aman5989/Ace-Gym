@@ -262,7 +262,7 @@ The document includes:
 
 | Section | Information |
 |---|---|
-| Branding | The ACE々GYM wordmark with an inline vector **ACE々Shubham** treatment and **7717728536** in the upper-left header, plus **For Men & Women** in the upper-right. |
+| Branding | The ACE々GYM wordmark with a Noto Sans JP-backed **ACE々Shubham** treatment and **7717728536** in the upper-left header, plus **For Men & Women** in the upper-right. |
 | Membership ID | Displays beside the Admission/Renewal controls and generates `ACE々` + the first four alphabetic characters of the member name + the last two digits of the phone number. |
 | Member profile | Full name, phone, father’s name, address, gender, and other current profile values. |
 | Membership details | Plan, Total Fee, join date, next due date, and relevant notes; the previous Membership No. field is replaced by Membership ID in the header. |
@@ -272,7 +272,7 @@ The document includes:
 | Rules and terms | Non-refundable fee policy, one workout per day, footwear requirements, property conduct, loss/theft disclaimer, and cleanliness requirements. |
 | Footer | Administrative record and gym-terms information. |
 
-The PDF is a client-side document generator. It does not upload member information to an external document service and does not modify the database. Keep the PDF layout professional, preserve the ACE々GYM branding, and update the `rules` content in `lib/member-pdf.ts` if the gym’s terms change.
+The PDF is a client-side document generator. It does not upload member information to an external document service and does not modify the database. The embedded `public/assets/NotoSansJP-Regular.otf` font is registered with jsPDF so the ACE々 symbol renders correctly in exported documents. Keep the PDF layout professional, preserve the ACE々GYM branding, and update the `rules` content in `lib/member-pdf.ts` if the gym’s terms change.
 
 ## Dashboard image management
 

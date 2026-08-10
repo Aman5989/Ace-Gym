@@ -44,25 +44,11 @@ function membershipIdSuffix(member: Member) {
   const phoneDigits = (member.phone ?? "").replace(/\D/g, "");
   return `${namePart}${phoneDigits.slice(-2).padStart(2, "0")}`;
 }
-function drawAcePrefix(pdf: jsPDF, x: number, y: number, suffix: string, size = 8) {
+function drawAcePrefix(pdf: jsPDF, fontName: string, x: number, y: number, suffix: string, size = 8) {
   pdf.setTextColor(INK);
-  pdf.setFont("helvetica", "bold");
+  pdf.setFont(fontName, "normal");
   pdf.setFontSize(size);
-  pdf.text("ACE", x, y);
-  const aceWidth = pdf.getTextWidth("ACE");
-  const markX = x + aceWidth + 1;
-  const scale = size / 10;
-  pdf.setDrawColor(INK);
-  pdf.setLineWidth(Math.max(0.8, size * 0.12));
-  const top = y - 0.78 * size;
-  const bottom = y + 0.08 * size;
-  pdf.line(markX, top, markX + 0.42 * size, top + 0.18 * size);
-  pdf.line(markX + 0.42 * size, top + 0.18 * size, markX + 0.1 * size, y - 0.08 * size);
-  pdf.line(markX + 0.18 * size, y - 0.1 * size, markX + 0.58 * size, y + 0.04 * size);
-  pdf.line(markX + 0.58 * size, y + 0.04 * size, markX + 0.22 * size, bottom);
-  pdf.line(markX + 0.38 * size, y - 0.42 * size, markX + 0.62 * size, y - 0.32 * size);
-  pdf.line(markX + 0.62 * size, y - 0.32 * size, markX + 0.42 * size, y - 0.12 * size);
-  pdf.text(suffix, markX + 5.6 * scale, y);
+  pdf.text(`ACE々${suffix}`, x, y);
 }
 function line(pdf: jsPDF, x1: number, y: number, x2: number) {
   pdf.setDrawColor(BORDER);
@@ -112,6 +98,18 @@ export async function downloadMemberPdf(member: Member) {
   const pdf = new jsPDF({ unit: "mm", format: "a4" });
   const headerFigure = await loadAssetDataUrl("/assets/ace-gym-header-figure.png");
   const wordmark = await loadAssetDataUrl("/assets/ace-gym-wordmark.png");
+  const notoFontDataUrl = await loadAssetDataUrl("/assets/NotoSansJP-Regular.otf");
+  let aceFont = "helvetica";
+  if (notoFontDataUrl) {
+    try {
+      const base64 = notoFontDataUrl.split(",")[1];
+      pdf.addFileToVFS("NotoSansJP-Regular.otf", base64);
+      pdf.addFont("NotoSansJP-Regular.otf", "NotoSansJP", "normal");
+      aceFont = "NotoSansJP";
+    } catch {
+      aceFont = "helvetica";
+    }
+  }
   const width = pdf.internal.pageSize.getWidth();
   const height = pdf.internal.pageSize.getHeight();
   const margin = 10;
@@ -126,7 +124,7 @@ export async function downloadMemberPdf(member: Member) {
     pdf.addImage(headerFigure, "PNG", width / 2 - 10, y + 3, 20, 18, undefined, "FAST");
   }
   pdf.setTextColor(INK);
-  drawAcePrefix(pdf, margin + 8, y + 8, "Shubham", 10);
+  drawAcePrefix(pdf, aceFont, margin + 8, y + 8, "Shubham", 10);
   pdf.setFontSize(8);
   pdf.text("7717728536", margin + 8, y + 14);
 
@@ -143,7 +141,7 @@ export async function downloadMemberPdf(member: Member) {
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(7);
   pdf.text("Membership ID:", margin + 8, y + 10);
-  drawAcePrefix(pdf, margin + 33, y + 10, membershipIdSuffix(member), 7);
+  drawAcePrefix(pdf, aceFont, margin + 33, y + 10, membershipIdSuffix(member), 7);
   checkbox(pdf, "Admission", margin + 92, y + 10, false);
   checkbox(pdf, "Renewal", margin + 138, y + 10, false);
   y += 20;
