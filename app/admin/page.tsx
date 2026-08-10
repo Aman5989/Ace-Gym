@@ -2,19 +2,17 @@ import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import StatsCards from "@/components/dashboard/StatsCards";
 import MembersTable from "@/components/dashboard/MembersTable";
 import { getMembers } from "@/lib/members";
-import { getPaymentsSummary, getMyCollectionSummary } from "@/lib/payments";
+import { getPaymentsSummary } from "@/lib/payments";
 import { getCurrentAppUser } from "@/lib/authorization";
 import AdminPaymentLedger from "@/components/payments/AdminPaymentLedger";
 import RoleManagement from "@/components/admin/RoleManagement";
-import TrainerCollectionPanel from "@/components/payments/TrainerCollectionPanel";
 import { getHeroImageUrl } from "@/lib/gym-settings";
 
 export default async function Home() {
-  const [{ role }, members, paymentSummary, myCollection, heroImageUrl] = await Promise.all([
+  const [{ role }, members, paymentSummary, heroImageUrl] = await Promise.all([
     getCurrentAppUser(),
     getMembers(),
     getPaymentsSummary(),
-    getMyCollectionSummary(),
     getHeroImageUrl(),
   ]);
   const canViewPayments = role === "admin";
@@ -45,18 +43,11 @@ export default async function Home() {
             renewalCount={canViewPayments ? paymentSummary.renewalCount : 0}
             paymentCount={canViewPayments ? paymentSummary.count : 0}
             canViewPayments={canViewPayments}
-            myCollectedThisMonth={myCollection.total}
-            myAdmissionCount={myCollection.count}
           />
         </div>
         <div className="ace-reveal ace-reveal-3">
           <MembersTable members={members} canViewPayments={canViewPayments} canEditMembers={canViewPayments} canDeleteMembers={canViewPayments} />
         </div>
-        {isTrainer ? (
-          <div className="ace-reveal ace-reveal-4">
-            <TrainerCollectionPanel payments={myCollection.payments} members={members} total={myCollection.total} />
-          </div>
-        ) : null}
         {canViewPayments ? (
           <>
             <div className="ace-reveal ace-reveal-4">

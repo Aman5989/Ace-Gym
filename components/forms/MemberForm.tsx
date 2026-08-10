@@ -119,10 +119,6 @@ export default function MemberForm({
   ) {
     e.preventDefault();
 
-    // A second click before the first request returns is what created duplicate
-    // members, so refuse re-entry outright rather than relying on the disabled
-    // attribute alone.
-    if (loading) return;
     setLoading(true);
 
     try {

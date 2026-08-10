@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CalendarDays, ChevronDown, History, Loader2, ReceiptText, RefreshCw, UserCircle2, UserPlus, WalletCards } from "lucide-react";
+import { CalendarDays, ChevronDown, History, Loader2, ReceiptText, RefreshCw, UserPlus, WalletCards } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PaymentWithMember, StaffDirectory, staffLabel } from "@/types/payment";
+import { PaymentWithMember } from "@/types/payment";
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(value);
@@ -65,8 +65,6 @@ type MonthGroup = {
   renewalCount: number;
   count: number;
   payments: PaymentWithMember[];
-  /** Who collected the money this month, highest first. */
-  byStaff: { userId: string; total: number; count: number }[];
 };
 
 export default function AdminPaymentLedger() {
@@ -74,7 +72,6 @@ export default function AdminPaymentLedger() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedMonth, setExpandedMonth] = useState<string | null>(null);
-  const [staff, setStaff] = useState<StaffDirectory>({});
 
   async function loadPayments() {
     setLoading(true);
@@ -91,26 +88,8 @@ export default function AdminPaymentLedger() {
     }
   }
 
-  // Attribution is stored as a user id. Resolve it to readable staff names so
-  // the ledger can show who took each admission.
-  async function loadStaff() {
-    try {
-      const response = await fetch("/api/user-roles", { cache: "no-store" });
-      if (!response.ok) return;
-      const result = await response.json();
-      const directory: StaffDirectory = {};
-      for (const row of result.users ?? []) {
-        const id = row.user_id ?? row.id;
-        if (id) directory[id] = { email: row.email ?? "", role: row.role ?? "trainer" };
-      }
-      setStaff(directory);
-    } catch {
-      // Attribution labels are a convenience; the ledger still works without them.
-    }
-  }
-
   useEffect(() => {
-    const timer = window.setTimeout(() => { void loadPayments(); void loadStaff(); }, 0);
+    const timer = window.setTimeout(() => { void loadPayments(); }, 0);
     return () => window.clearTimeout(timer);
   }, []);
 
@@ -133,7 +112,6 @@ export default function AdminPaymentLedger() {
         renewalCount: 0,
         count: 0,
         payments: [],
-        byStaff: [],
       };
       const amount = Number(payment.amount || 0);
       const { cash, upi } = splitPayment(payment);
@@ -154,15 +132,6 @@ export default function AdminPaymentLedger() {
     }
     for (const group of groups.values()) {
       group.payments.sort((a, b) => b.payment_date.localeCompare(a.payment_date) || b.created_at.localeCompare(a.created_at));
-      const tally = new Map<string, { userId: string; total: number; count: number }>();
-      for (const payment of group.payments) {
-        const key = payment.recorded_by ?? "unattributed";
-        const entry = tally.get(key) ?? { userId: key, total: 0, count: 0 };
-        entry.total += Number(payment.amount || 0);
-        entry.count += 1;
-        tally.set(key, entry);
-      }
-      group.byStaff = [...tally.values()].sort((a, b) => b.total - a.total);
     }
     return Array.from(groups.values()).sort((a, b) => b.key.localeCompare(a.key));
   }, [payments]);
@@ -211,16 +180,6 @@ export default function AdminPaymentLedger() {
                   </div>
                   <p className="mt-1 text-xs text-slate-400">{month.count} payment{month.count === 1 ? "" : "s"} · Cash {formatCurrency(month.cash)} · UPI {formatCurrency(month.upi)}</p>
                   <p className="mt-1 text-xs text-slate-400"><span className="text-violet-300">Registration {formatCurrency(month.registration)}</span> ({month.registrationCount}) · <span className="text-amber-300">Renewal {formatCurrency(month.renewal)}</span> ({month.renewalCount})</p>
-                  {month.byStaff.length > 1 ? (
-                    <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-slate-500">
-                      <UserCircle2 className="h-3 w-3" />
-                      {month.byStaff.map((entry) => (
-                        <span key={entry.userId} className="rounded-full bg-white/5 px-2 py-0.5">
-                          {entry.userId === "unattributed" ? "Not attributed" : staffLabel(staff, entry.userId)} {formatCurrency(entry.total)}
-                        </span>
-                      ))}
-                    </p>
-                  ) : null}
                 </div>
                 <div className="hidden text-right sm:block"><p className="text-lg font-bold text-emerald-300">{formatCurrency(month.total)}</p><p className="text-[11px] text-slate-500">monthly collection</p></div>
                 <ChevronDown className={`h-5 w-5 shrink-0 text-slate-400 transition-transform ${expanded ? "rotate-180" : ""}`} />
@@ -244,10 +203,6 @@ export default function AdminPaymentLedger() {
                         <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${registration ? "bg-violet-500/15 text-violet-300" : "bg-amber-500/15 text-amber-300"}`}>{registration ? "Registration Fee" : "Renewal Fee"}</span>
                         <span className="inline-flex items-center gap-1.5 text-xs text-slate-400"><CalendarDays className="h-3.5 w-3.5" />{formatDate(payment.payment_date)}</span>
                         <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs font-semibold text-slate-300">{methodLabel(String(payment.payment_method))}</span>
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/5 px-2.5 py-1 text-[11px] text-slate-400" title="Recorded by">
-                          <UserCircle2 className="h-3.5 w-3.5" />
-                          {payment.recorded_by ? staffLabel(staff, payment.recorded_by) : "Not attributed"}
-                        </span>
                         <span className="text-right">
                           <span className="block font-bold text-emerald-300">{formatCurrency(Number(payment.amount))}</span>
                           {mixed ? <span className="block text-[10px] text-slate-500">Cash {formatCurrency(cash)} · UPI {formatCurrency(upi)}</span> : null}
