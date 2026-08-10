@@ -98,14 +98,14 @@ export async function downloadMemberPdf(member: Member) {
   const pdf = new jsPDF({ unit: "mm", format: "a4" });
   const headerFigure = await loadAssetDataUrl("/assets/ace-gym-header-figure.png");
   const wordmark = await loadAssetDataUrl("/assets/ace-gym-wordmark.png");
-  const notoFontDataUrl = await loadAssetDataUrl("/assets/NotoSansJP-Regular.otf");
+  const aceFontDataUrl = await loadAssetDataUrl("/assets/AceSymbol.ttf");
   let aceFont = "helvetica";
-  if (notoFontDataUrl) {
+  if (aceFontDataUrl) {
     try {
-      const base64 = notoFontDataUrl.split(",")[1];
-      pdf.addFileToVFS("NotoSansJP-Regular.otf", base64);
-      pdf.addFont("NotoSansJP-Regular.otf", "NotoSansJP", "normal");
-      aceFont = "NotoSansJP";
+      const base64 = aceFontDataUrl.split(",")[1];
+      pdf.addFileToVFS("AceSymbol.ttf", base64);
+      pdf.addFont("AceSymbol.ttf", "AceSymbol", "normal");
+      aceFont = "AceSymbol";
     } catch {
       aceFont = "helvetica";
     }
