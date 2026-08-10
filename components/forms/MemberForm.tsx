@@ -165,28 +165,46 @@ export default function MemberForm({
         return;
       }
 
-      if (!member && result.data?.id) {
-        const paymentResponse = await fetch("/api/payments", {
+      let apiResponse;
+      if (member) {
+        const updateResult = await supabase
+          .from("members")
+          .update(payload)
+          .eq("id", member.id);
+        if (updateResult.error) {
+          toast.error(updateResult.error.message);
+          return;
+        }
+        apiResponse = null;
+      } else {
+        apiResponse = await fetch("/api/members", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            member_id: result.data.id,
-            amount: monthlyFee,
-            payment_method: formData.payment_type,
+            ...payload,
             cash_amount: cashAmount,
             upi_amount: upiAmount,
-            payment_date: formData.join_date,
-            notes: "Initial membership payment",
           }),
         });
-        if (!paymentResponse.ok) {
-          const paymentError = await paymentResponse.json().catch(() => null);
-          toast.error(paymentError?.error ?? "Member added, but the initial payment was not recorded");
-          router.refresh();
-          return;
-        }
       }
-      toast.success(member ? "Member updated" : "Member and initial payment added");
+
+      if (apiResponse && !apiResponse.ok) {
+        const apiError = await apiResponse.json().catch(() => null);
+        toast.error(apiError?.error ?? "Unable to save member");
+        return;
+      }
+
+      if (apiResponse) {
+        const result = await apiResponse.json();
+        if (result.warning) {
+          toast.warning(result.warning);
+        } else {
+          toast.success(member ? "Member updated" : "Member and initial payment added");
+        }
+      } else {
+        toast.success("Member updated");
+      }
+      
       router.refresh();
       onSuccess?.();
     } catch (error) {
