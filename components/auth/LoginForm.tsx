@@ -2,8 +2,6 @@
 
 
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-
 import { toast } from "sonner";
 
 
@@ -31,7 +29,6 @@ export default function LoginForm() {
     () => createClient(),
     []
   );
-  const router = useRouter();
 
 
 
@@ -95,9 +92,8 @@ export default function LoginForm() {
 
 
 
-            toast.success("Login successful");
-      router.replace("/admin");
-      router.refresh();
+      toast.success("Login successful");
+      window.location.replace("/admin");
 
 
     } catch (error) {
@@ -130,20 +126,6 @@ export default function LoginForm() {
 
 
     return (
-    <>
-      {loading ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-md">
-          <div className="flex flex-col items-center gap-4 rounded-3xl border border-white/10 bg-white/10 px-10 py-8 text-center shadow-2xl">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-300 to-orange-500 shadow-lg shadow-amber-500/25">
-              <span className="h-6 w-6 animate-spin rounded-full border-2 border-slate-950/30 border-t-slate-950" />
-            </div>
-            <div>
-              <p className="font-semibold text-white">Entering ACE々GYM</p>
-              <p className="mt-1 text-sm text-slate-300">Preparing your dashboard…</p>
-            </div>
-          </div>
-        </div>
-      ) : null}
       <Card
       className="
         w-full
@@ -335,7 +317,6 @@ export default function LoginForm() {
 
 
       </Card>
-    </>
 
   );
 

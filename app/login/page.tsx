@@ -3,14 +3,12 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 
 function passwordScore(password: string) {
   return [password.length >= 8, password.length >= 12, /[A-Z]/.test(password), /[0-9]/.test(password), /[^A-Za-z0-9]/.test(password)].filter(Boolean).length;
 }
 
 export default function LoginPage() {
-  const router = useRouter();
   const [mode, setMode] = useState<"login" | "change">("login");
   const [email, setEmail] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
@@ -35,8 +33,7 @@ export default function LoginPage() {
         return;
       }
       toast.success("Login successful");
-      router.push("/admin");
-      router.refresh();
+      window.location.replace("/admin");
     } catch {
       toast.error("Unable to sign in right now.");
     } finally {
@@ -95,20 +92,6 @@ export default function LoginPage() {
       <div aria-hidden className="ace-grid-overlay pointer-events-none absolute inset-0 opacity-60" />
       <div aria-hidden className="ace-float pointer-events-none absolute -left-24 top-1/4 h-72 w-72 rounded-full bg-violet-500/15 blur-3xl" />
       <div aria-hidden className="pointer-events-none absolute -right-24 bottom-1/4 h-80 w-80 rounded-full bg-amber-400/10 blur-3xl" />
-
-      {loading ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 px-4 backdrop-blur-md">
-          <div className="flex flex-col items-center gap-4 rounded-3xl border border-white/10 bg-white/10 px-10 py-8 text-center shadow-2xl">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-300 to-orange-500 shadow-lg shadow-amber-500/25">
-              <span className="h-6 w-6 animate-spin rounded-full border-2 border-slate-950/30 border-t-slate-950" />
-            </div>
-            <div>
-              <p className="font-semibold text-white">Entering ACE々GYM</p>
-              <p className="mt-1 text-sm text-slate-300">Preparing your dashboard…</p>
-            </div>
-          </div>
-        </div>
-      ) : null}
 
       <form onSubmit={mode === "login" ? handleLogin : handleChangePassword} className="ace-glass ace-shimmer ace-reveal relative w-full max-w-md space-y-5 rounded-3xl border border-white/10 p-8 shadow-2xl shadow-black/40">
         <div className="ace-reveal ace-reveal-1">

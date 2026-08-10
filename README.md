@@ -449,7 +449,7 @@ Do not commit generated build output, local environment files, screenshots, cred
 
 ## Current status
 
-The current implementation includes the premium UI, member and payment workflows, monthly financial archives, Admin/Trainer RBAC, admin-only member deletion, trainer read-only member PDF access, the focused Trainer Dashboard table, professional login transition screens, branded PDF export, profile-field replacement, dashboard image upload/removal, and the associated Supabase migrations. The application has been repeatedly validated with ESLint and a successful production build.
+The current implementation includes the premium UI, member and payment workflows, monthly financial archives, Admin/Trainer RBAC, admin-only member deletion, trainer read-only member PDF access, the focused Trainer Dashboard table, a non-blocking login submit state with direct dashboard redirect, branded PDF export, profile-field replacement, dashboard image upload/removal, and the associated Supabase migrations. The application has been repeatedly validated with ESLint and a successful production build.
 
 The most important remaining production-hardening opportunity is to review and tighten permissive database RLS policies for the final multi-role deployment, followed by automated tests for payment validation, due-date advancement, collection-period transitions, and authorization boundaries.
 
