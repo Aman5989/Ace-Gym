@@ -44,16 +44,33 @@ function membershipIdSuffix(member: Member) {
   const phoneDigits = (member.phone ?? "").replace(/\D/g, "");
   return `${namePart}${phoneDigits.slice(-2).padStart(2, "0")}`;
 }
-function drawAcePrefix(pdf: jsPDF, symbol: string | null, x: number, y: number, suffix: string, size = 8) {
+function drawAcePrefix(pdf: jsPDF, x: number, y: number, suffix: string, size = 8) {
   pdf.setTextColor(INK);
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(size);
   pdf.text("ACE", x, y);
   const aceWidth = pdf.getTextWidth("ACE");
-  if (symbol) {
-    pdf.addImage(symbol, "PNG", x + aceWidth + 0.8, y - size * 0.78, size * 0.52, size * 0.72, undefined, "FAST");
-  }
-  pdf.text(suffix, x + aceWidth + size * 0.62, y);
+  const markX = x + aceWidth + 1;
+  const scale = size / 10;
+  pdf.setDrawColor(INK);
+  pdf.setLineWidth(Math.max(0.35, size * 0.075));
+  pdf.lines(
+    [[3.8 * scale, -2.8 * scale], [2.2 * scale, 2.4 * scale], [-2.5 * scale, 1.8 * scale]],
+    markX,
+    y - 5.8 * scale,
+    1,
+    "S",
+    false,
+  );
+  pdf.lines(
+    [[2.7 * scale, -1.9 * scale], [1.8 * scale, 1.8 * scale], [-2.1 * scale, 1.5 * scale]],
+    markX + 0.8 * scale,
+    y - 1.1 * scale,
+    1,
+    "S",
+    false,
+  );
+  pdf.text(suffix, markX + 5.6 * scale, y);
 }
 function line(pdf: jsPDF, x1: number, y: number, x2: number) {
   pdf.setDrawColor(BORDER);
@@ -103,7 +120,6 @@ export async function downloadMemberPdf(member: Member) {
   const pdf = new jsPDF({ unit: "mm", format: "a4" });
   const headerFigure = await loadAssetDataUrl("/assets/ace-gym-header-figure.png");
   const wordmark = await loadAssetDataUrl("/assets/ace-gym-wordmark.png");
-  const aceSymbol = await loadAssetDataUrl("/assets/ace-symbol.png");
   const width = pdf.internal.pageSize.getWidth();
   const height = pdf.internal.pageSize.getHeight();
   const margin = 10;
@@ -118,7 +134,7 @@ export async function downloadMemberPdf(member: Member) {
     pdf.addImage(headerFigure, "PNG", width / 2 - 10, y + 3, 20, 18, undefined, "FAST");
   }
   pdf.setTextColor(INK);
-  drawAcePrefix(pdf, aceSymbol, margin + 8, y + 8, "Shubham", 10);
+  drawAcePrefix(pdf, margin + 8, y + 8, "Shubham", 10);
   pdf.setFontSize(8);
   pdf.text("7717728536", margin + 8, y + 14);
 
@@ -135,7 +151,7 @@ export async function downloadMemberPdf(member: Member) {
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(7);
   pdf.text("Membership ID:", margin + 8, y + 10);
-  drawAcePrefix(pdf, aceSymbol, margin + 33, y + 10, membershipIdSuffix(member), 7);
+  drawAcePrefix(pdf, margin + 33, y + 10, membershipIdSuffix(member), 7);
   checkbox(pdf, "Admission", margin + 92, y + 10, false);
   checkbox(pdf, "Renewal", margin + 138, y + 10, false);
   y += 20;

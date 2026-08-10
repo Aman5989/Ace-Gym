@@ -262,7 +262,7 @@ The document includes:
 
 | Section | Information |
 |---|---|
-| Branding | The ACE々GYM wordmark with a symbol-safe **ACE々Shubham** treatment and **7717728536** in the upper-left header, plus **For Men & Women** in the upper-right. |
+| Branding | The ACE々GYM wordmark with an inline vector **ACE々Shubham** treatment and **7717728536** in the upper-left header, plus **For Men & Women** in the upper-right. |
 | Membership ID | Displays beside the Admission/Renewal controls and generates `ACE々` + the first four alphabetic characters of the member name + the last two digits of the phone number. |
 | Member profile | Full name, phone, father’s name, address, gender, and other current profile values. |
 | Membership details | Plan, Total Fee, join date, next due date, and relevant notes; the previous Membership No. field is replaced by Membership ID in the header. |
