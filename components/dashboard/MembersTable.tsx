@@ -27,6 +27,7 @@ import MemberActions from "./MemberActions";
 interface Props {
   members: Member[];
   canViewPayments?: boolean;
+  canDeleteMembers?: boolean;
 }
 
 
@@ -34,6 +35,7 @@ interface Props {
 export default function MembersTable({
   members,
   canViewPayments = true,
+  canDeleteMembers = true,
 }: Props) {
 
 
@@ -843,7 +845,7 @@ export default function MembersTable({
 
                           <td className="px-6 py-4">
 
-                            <MemberActions member={member} canViewPayments={canViewPayments} />
+                            <MemberActions member={member} canViewPayments={canViewPayments} canDelete={canDeleteMembers} />
 
                           </td>
 
@@ -888,7 +890,7 @@ export default function MembersTable({
           </p>
 
           <p className="text-xs font-medium text-slate-500">
-            ACE々GYM · Admin
+            ACE々GYM · {canDeleteMembers ? "Admin" : "Trainer"} Dashboard
           </p>
 
         </div>

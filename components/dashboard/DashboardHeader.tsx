@@ -27,7 +27,7 @@ import {
 
 
 
-export default function DashboardHeader({ canCloseMonth = false, paymentCount = 0, total = 0, heroImageUrl = null }: { canCloseMonth?: boolean; paymentCount?: number; total?: number; heroImageUrl?: string | null }) {
+export default function DashboardHeader({ canCloseMonth = false, paymentCount = 0, total = 0, heroImageUrl = null, isTrainer = false }: { canCloseMonth?: boolean; paymentCount?: number; total?: number; heroImageUrl?: string | null; isTrainer?: boolean }) {
 
 
   const [open, setOpen] = useState(false);
@@ -242,7 +242,7 @@ export default function DashboardHeader({ canCloseMonth = false, paymentCount = 
                   text-amber-400/90
                 "
               >
-                Admin Dashboard
+                {isTrainer ? "Trainer Dashboard" : "Admin Dashboard"}
               </span>
 
 

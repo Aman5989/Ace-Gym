@@ -7,7 +7,6 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Member } from "@/types/member";
-import { createClient } from "@/lib/supabase";
 import EditMemberDialog from "./EditMemberDialog";
 import PaymentDialog from "@/components/payments/PaymentDialog";
 import PaymentHistory from "@/components/payments/PaymentHistory";
@@ -24,14 +23,14 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-interface Props { member: Member; canViewPayments?: boolean; }
+interface Props { member: Member; canViewPayments?: boolean; canDelete?: boolean; }
 
 function whatsappNumber(phone: string) {
   const digits = phone.replace(/\D/g, "");
   return digits.length === 10 ? `91${digits}` : digits;
 }
 
-export default function MemberActions({ member, canViewPayments = true }: Props) {
+export default function MemberActions({ member, canViewPayments = true, canDelete = true }: Props) {
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
 
@@ -58,8 +57,9 @@ export default function MemberActions({ member, canViewPayments = true }: Props)
   async function deleteMember() {
     setDeleting(true);
     try {
-      const { error } = await createClient().from("members").delete().eq("id", member.id);
-      if (error) throw error;
+      const response = await fetch(`/api/members/${member.id}`, { method: "DELETE" });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error ?? "Unable to delete member");
       toast.success("Member deleted");
       router.refresh();
     } catch (error) {
@@ -82,21 +82,23 @@ export default function MemberActions({ member, canViewPayments = true }: Props)
         </Button>
       ) : null}
       <EditMemberDialog member={member} />
-      <AlertDialog>
-        <AlertDialogTrigger render={<Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-slate-400 hover:bg-red-50 hover:text-red-600" title="Delete member" />}>
-          <Trash2 className="h-4 w-4" />
-        </AlertDialogTrigger>
-        <AlertDialogContent className="rounded-2xl border-slate-200 bg-white text-slate-900">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl font-bold">Delete member?</AlertDialogTitle>
-            <AlertDialogDescription className="text-slate-500">This permanently removes <span className="font-semibold text-slate-900">{member.full_name}</span> and their payment history.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
-            <AlertDialogAction disabled={deleting} onClick={deleteMember} className="rounded-xl bg-red-600 text-white hover:bg-red-700">{deleting ? "Deleting…" : "Delete"}</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {canDelete ? (
+        <AlertDialog>
+          <AlertDialogTrigger render={<Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-slate-400 hover:bg-red-50 hover:text-red-600" title="Delete member" />}>
+            <Trash2 className="h-4 w-4" />
+          </AlertDialogTrigger>
+          <AlertDialogContent className="rounded-2xl border-slate-200 bg-white text-slate-900">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-xl font-bold">Delete member?</AlertDialogTitle>
+              <AlertDialogDescription className="text-slate-500">This permanently removes <span className="font-semibold text-slate-900">{member.full_name}</span> and their payment history.</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
+              <AlertDialogAction disabled={deleting} onClick={deleteMember} className="rounded-xl bg-red-600 text-white hover:bg-red-700">{deleting ? "Deleting…" : "Delete"}</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      ) : null}
     </div>
   );
 }
