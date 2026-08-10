@@ -89,7 +89,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Record Initial Payment
-    const { data: period, error: periodError } = await supabase
+    // First, check if there is an open collection period
+    let { data: period, error: periodError } = await supabase
       .from("collection_periods")
       .select("id")
       .eq("status", "open")
@@ -97,10 +98,19 @@ export async function POST(request: NextRequest) {
       .limit(1)
       .maybeSingle();
 
+    // If no open period exists, create one for the current month
     if (periodError || !period) {
-      // If no open period, we can either fail or just add the member without payment.
-      // For now, let's just add the member and not fail the whole process.
-      return NextResponse.json({ member, warning: "Member added, but initial payment was not recorded due to no open collection period." }, { status: 201 });
+      const periodKey = new Date().toISOString().slice(0, 7);
+      const { data: newPeriod, error: newPeriodError } = await supabase
+        .from("collection_periods")
+        .insert({ period_key: periodKey, status: "open" })
+        .select("id")
+        .maybeSingle();
+      
+      if (newPeriodError || !newPeriod) {
+        return NextResponse.json({ member, warning: "Member added, but initial payment was not recorded due to no open collection period." }, { status: 201 });
+      }
+      period = newPeriod;
     }
 
     const { data: payment, error: paymentError } = await supabase
