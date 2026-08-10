@@ -30,6 +30,41 @@ export interface PaymentTotals {
   renewalCount: number;
 }
 
+/** Per-staff-member contribution to a month's collection. */
+export interface StaffContribution {
+  userId: string;
+  total: number;
+  registrationTotal: number;
+  renewalTotal: number;
+  count: number;
+}
+
+/**
+ * Groups a month's payments by the staff member who recorded them, so an admin
+ * can see which admissions came from the trainers at the desk. Rows predating
+ * attribution are grouped under "unattributed" rather than being dropped.
+ */
+export function aggregateByStaff(payments: Payment[]): StaffContribution[] {
+  const byStaff = new Map<string, StaffContribution>();
+  for (const payment of payments) {
+    const key = payment.recorded_by ?? "unattributed";
+    const entry = byStaff.get(key) ?? {
+      userId: key,
+      total: 0,
+      registrationTotal: 0,
+      renewalTotal: 0,
+      count: 0,
+    };
+    const amount = Number(payment.amount || 0);
+    entry.total += amount;
+    entry.count += 1;
+    if (isRegistration(payment)) entry.registrationTotal += amount;
+    else entry.renewalTotal += amount;
+    byStaff.set(key, entry);
+  }
+  return [...byStaff.values()].sort((a, b) => b.total - a.total);
+}
+
 const MIXED_METHODS = new Set(["upi + cash", "half upi + half cash"]);
 
 /**
@@ -140,6 +175,56 @@ export async function getPaymentsSummary() {
   }
   const payments = (data ?? []) as Payment[];
   return { payments, ...aggregate(payments), period: period as CollectionPeriod | null };
+}
+
+/**
+ * The signed-in staff member's own takings for the open month.
+ *
+ * A trainer cannot read the full ledger, but RLS does let them read the rows
+ * they recorded themselves, so this works for both roles without leaking the
+ * gym's total collection to a trainer.
+ */
+export async function getMyCollectionSummary() {
+  const supabase = await createServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { total: 0, count: 0, registrationTotal: 0, payments: [] as Payment[] };
+
+  const { data: period } = await supabase
+    .from("collection_periods")
+    .select("id")
+    .eq("status", "open")
+    .order("opened_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  let query = supabase
+    .from("payments")
+    .select("*")
+    .eq("recorded_by", user.id)
+    .order("payment_date", { ascending: false });
+
+  if (period?.id) {
+    query = query.eq("period_id", period.id);
+  } else {
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    query = query.gte("payment_date", startOfMonth.toISOString().slice(0, 10));
+  }
+
+  const { data, error } = await query;
+  if (error) {
+    console.error("MY COLLECTION SUMMARY ERROR:", error);
+    return { total: 0, count: 0, registrationTotal: 0, payments: [] as Payment[] };
+  }
+
+  const payments = (data ?? []) as Payment[];
+  const totals = aggregate(payments);
+  return {
+    total: totals.monthTotal,
+    count: totals.count,
+    registrationTotal: totals.registrationTotal,
+    payments,
+  };
 }
 
 export { aggregate as aggregatePaymentTotals };

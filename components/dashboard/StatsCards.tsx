@@ -15,9 +15,12 @@ interface Props {
   renewalCount?: number;
   paymentCount?: number;
   canViewPayments?: boolean;
+  /** Registration fees this trainer personally collected this month. */
+  myCollectedThisMonth?: number;
+  myAdmissionCount?: number;
 }
 
-export default function StatsCards({ members, collectedThisMonth = 0, cashCollectedThisMonth = 0, upiCollectedThisMonth = 0, registrationCollectedThisMonth = 0, renewalCollectedThisMonth = 0, registrationCount = 0, renewalCount = 0, paymentCount = 0, canViewPayments = true }: Props) {
+export default function StatsCards({ members, collectedThisMonth = 0, cashCollectedThisMonth = 0, upiCollectedThisMonth = 0, registrationCollectedThisMonth = 0, renewalCollectedThisMonth = 0, registrationCount = 0, renewalCount = 0, paymentCount = 0, canViewPayments = true, myCollectedThisMonth = 0, myAdmissionCount = 0 }: Props) {
   const today = new Date();
   const totalMembers = members.length;
   const overdueMembers = members.filter((member) => new Date(`${member.next_due_date}T23:59:59`) < today).length;
@@ -33,7 +36,24 @@ export default function StatsCards({ members, collectedThisMonth = 0, cashCollec
     { title: "Overdue", value: overdueMembers, icon: AlertTriangle, gradient: "from-rose-500 to-red-600", glow: "shadow-rose-500/30", trend: overdueMembers > 0 ? "needs attention" : "all caught up" },
   ];
 
-  const visibleCards = canViewPayments ? cards : cards.filter((card) => card.title !== "Collected This Month");
+  // A trainer must not see the gym's whole collection, but they should be able
+  // to confirm that the admissions they took were actually banked. Showing them
+  // their own figure is the difference between trusting the system and keying a
+  // member in twice because nothing appeared to happen.
+  const trainerCard = {
+    title: "My Admissions This Month",
+    value: formatCurrency(myCollectedThisMonth),
+    icon: UserPlus,
+    gradient: "from-violet-500 to-fuchsia-600",
+    glow: "shadow-violet-500/30",
+    trend: `${myAdmissionCount} admission${myAdmissionCount === 1 ? "" : "s"} recorded by you`,
+  };
+
+  const visibleCards = canViewPayments
+    ? cards
+    : cards.map((card) => (card.title === "Collected This Month" ? trainerCard : card));
+
+  const highlightTitle = canViewPayments ? "Collected This Month" : trainerCard.title;
 
   return (
     <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
@@ -45,7 +65,7 @@ export default function StatsCards({ members, collectedThisMonth = 0, cashCollec
             <CardContent className="relative p-6">
               <div className="flex items-center justify-between"><p className="text-sm font-medium text-slate-400">{card.title}</p><div className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${card.gradient} shadow-lg ${card.glow}`}><Icon className="h-5 w-5 text-white" /></div></div>
               <h2 className="mt-5 text-3xl font-bold tracking-tight text-white transition-transform duration-500 group-hover:translate-x-1 md:text-4xl">{card.value}</h2>
-              {card.title === "Collected This Month" ? (
+              {card.title === highlightTitle && canViewPayments ? (
                 <div className="mt-4 space-y-2 border-t border-white/10 pt-3">
                   <div className="grid grid-cols-2 gap-2">
                     <div className="flex items-center gap-2 rounded-xl bg-white/5 px-2.5 py-2">

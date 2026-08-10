@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
   if (!admin) return NextResponse.json({ error: "Administrator access required" }, { status: 403 });
 
   const supabase = admin.supabase;
+  // recorded_by is included by the wildcard; the join adds member and period context.
   let query = supabase
     .from("payments")
     .select("*, member:members(full_name, phone), collection_period:collection_periods(period_key, status)")
@@ -104,6 +105,7 @@ export async function POST(request: NextRequest) {
         payment_date: paymentDate,
         notes,
         period_id: period.id,
+        recorded_by: admin.user.id,
       })
       .select("*")
       .single();

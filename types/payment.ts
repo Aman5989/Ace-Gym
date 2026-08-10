@@ -33,6 +33,20 @@ export interface Payment {
   notes: string | null;
   created_at: string;
   period_id?: string | null;
+  /** The staff member who keyed this payment in. */
+  recorded_by?: string | null;
+}
+
+/** Maps a staff user id to a readable label for the collection screens. */
+export type StaffDirectory = Record<string, { email: string; role: string }>;
+
+export function staffLabel(directory: StaffDirectory, userId?: string | null): string {
+  if (!userId) return "Not attributed";
+  const entry = directory[userId];
+  if (!entry) return "Staff member";
+  const name = entry.email.split("@")[0].replace(/[._-]+/g, " ");
+  const pretty = name.charAt(0).toUpperCase() + name.slice(1);
+  return entry.role === "admin" ? `${pretty} (Admin)` : `${pretty} (Trainer)`;
 }
 
 export interface PaymentWithMember extends Payment {

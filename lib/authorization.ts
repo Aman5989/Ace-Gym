@@ -30,3 +30,15 @@ export async function requireAdmin() {
   if (!context.user || context.role !== "admin") return null;
   return context;
 }
+
+/**
+ * Any signed-in staff member (admin or trainer).
+ * Used by endpoints a trainer is allowed to reach, such as taking an admission.
+ * The narrower rules about what a trainer may actually write are enforced by
+ * row-level security in the database, not just here.
+ */
+export async function requireStaff() {
+  const context = await getCurrentAppUser();
+  if (!context.user) return null;
+  return context;
+}
