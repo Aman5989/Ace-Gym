@@ -39,10 +39,21 @@ function formatDate(value: string | null | undefined) {
 function money(value: number | null | undefined) {
   return Number(value ?? 0).toLocaleString("en-IN", { maximumFractionDigits: 0 });
 }
-function membershipId(member: Member) {
+function membershipIdSuffix(member: Member) {
   const namePart = member.full_name.replace(/[^a-z]/gi, "").slice(0, 4).toUpperCase().padEnd(4, "X");
   const phoneDigits = (member.phone ?? "").replace(/\D/g, "");
-  return `ACE々${namePart}${phoneDigits.slice(-2).padStart(2, "0")}`;
+  return `${namePart}${phoneDigits.slice(-2).padStart(2, "0")}`;
+}
+function drawAcePrefix(pdf: jsPDF, symbol: string | null, x: number, y: number, suffix: string, size = 8) {
+  pdf.setTextColor(INK);
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(size);
+  pdf.text("ACE", x, y);
+  const aceWidth = pdf.getTextWidth("ACE");
+  if (symbol) {
+    pdf.addImage(symbol, "PNG", x + aceWidth + 0.8, y - size * 0.78, size * 0.52, size * 0.72, undefined, "FAST");
+  }
+  pdf.text(suffix, x + aceWidth + size * 0.62, y);
 }
 function line(pdf: jsPDF, x1: number, y: number, x2: number) {
   pdf.setDrawColor(BORDER);
@@ -92,6 +103,7 @@ export async function downloadMemberPdf(member: Member) {
   const pdf = new jsPDF({ unit: "mm", format: "a4" });
   const headerFigure = await loadAssetDataUrl("/assets/ace-gym-header-figure.png");
   const wordmark = await loadAssetDataUrl("/assets/ace-gym-wordmark.png");
+  const aceSymbol = await loadAssetDataUrl("/assets/ace-symbol.png");
   const width = pdf.internal.pageSize.getWidth();
   const height = pdf.internal.pageSize.getHeight();
   const margin = 10;
@@ -106,16 +118,12 @@ export async function downloadMemberPdf(member: Member) {
     pdf.addImage(headerFigure, "PNG", width / 2 - 10, y + 3, 20, 18, undefined, "FAST");
   }
   pdf.setTextColor(INK);
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(10);
-  pdf.text("ACE々Shubham", margin + 8, y + 8);
+  drawAcePrefix(pdf, aceSymbol, margin + 8, y + 8, "Shubham", 10);
   pdf.setFontSize(8);
   pdf.text("7717728536", margin + 8, y + 14);
 
   pdf.setFontSize(9);
   pdf.text("For Men & Women", width - margin - 8, y + 8, { align: "right" });
-  pdf.setFontSize(8);
-  pdf.text(`Membership ID: ${membershipId(member)}`, width - margin - 8, y + 14, { align: "right" });
   if (wordmark) {
     pdf.addImage(wordmark, "PNG", width / 2 - 31, y + 24, 62, 12, undefined, "FAST");
   }
@@ -124,6 +132,10 @@ export async function downloadMemberPdf(member: Member) {
   y += 50;
   line(pdf, margin + 1, y, width - margin - 1);
 
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(7);
+  pdf.text("Membership ID:", margin + 8, y + 10);
+  drawAcePrefix(pdf, aceSymbol, margin + 33, y + 10, membershipIdSuffix(member), 7);
   checkbox(pdf, "Admission", margin + 92, y + 10, false);
   checkbox(pdf, "Renewal", margin + 138, y + 10, false);
   y += 20;
