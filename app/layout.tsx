@@ -1,4 +1,5 @@
 import { Toaster } from "@/components/ui/sonner";
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import "./globals.css"
 
 export const metadata = {
@@ -19,6 +20,7 @@ export default function RootLayout({
       <body>
         {children}
         <Toaster />
+        <SpeedInsights />
       </body>
     </html>
   );
