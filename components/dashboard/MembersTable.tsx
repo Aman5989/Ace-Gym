@@ -28,6 +28,7 @@ interface Props {
   members: Member[];
   canViewPayments?: boolean;
   canDeleteMembers?: boolean;
+  canEditMembers?: boolean;
 }
 
 
@@ -36,6 +37,7 @@ export default function MembersTable({
   members,
   canViewPayments = true,
   canDeleteMembers = true,
+  canEditMembers = true,
 }: Props) {
 
 
@@ -506,16 +508,14 @@ export default function MembersTable({
                       [
                         "Member",
                         "Phone",
-                        "Father’s Name",
+                        ...(canDeleteMembers ? ["Father’s Name"] : []),
                         "Address",
-                        "Gender",
+                        ...(canDeleteMembers ? ["Gender"] : []),
                         "Timing",
-                        "Payment Type",
+                        ...(canDeleteMembers ? ["Payment Type"] : []),
                         "Total Fee",
                         "Join Date",
-                        "Notes",
-                        "Created",
-                        "Updated",
+                        ...(canDeleteMembers ? ["Notes", "Created", "Updated"] : []),
                         "Plan",
                         "Due Date",
                         "Due Status",
@@ -676,11 +676,11 @@ export default function MembersTable({
                           </td>
 
 
-                          <td className="px-6 py-4 text-slate-300">
-
-                            {member.father_name || "-"}
-
-                          </td>
+                          {canDeleteMembers ? (
+                            <td className="px-6 py-4 text-slate-300">
+                              {member.father_name || "-"}
+                            </td>
+                          ) : null}
 
 
                           <td className="px-6 py-4 text-slate-300">
@@ -690,11 +690,11 @@ export default function MembersTable({
                           </td>
 
 
-                          <td className="px-6 py-4 text-slate-300">
-
-                            {member.gender || "-"}
-
-                          </td>
+                          {canDeleteMembers ? (
+                            <td className="px-6 py-4 text-slate-300">
+                              {member.gender || "-"}
+                            </td>
+                          ) : null}
 
                           <td className="px-6 py-4">
                             <Badge
@@ -704,11 +704,13 @@ export default function MembersTable({
                             </Badge>
                           </td>
 
-                                                    <td className="px-6 py-4">
-                            <Badge className="rounded-full bg-emerald-500/15 font-medium text-emerald-300 hover:bg-emerald-500/15">
-                              {member.payment_type || "UPI"}
-                            </Badge>
-                          </td>
+                          {canDeleteMembers ? (
+                            <td className="px-6 py-4">
+                              <Badge className="rounded-full bg-emerald-500/15 font-medium text-emerald-300 hover:bg-emerald-500/15">
+                                {member.payment_type || "UPI"}
+                              </Badge>
+                            </td>
+                          ) : null}
                           <td className="px-6 py-4">
                             <span className="font-semibold text-white">
                               ₹{member.monthly_fee.toLocaleString("en-IN")}
@@ -724,25 +726,13 @@ export default function MembersTable({
                           </td>
 
 
-                          <td className="px-6 py-4 text-slate-300">
-
-                            {member.notes || "-"}
-
-                          </td>
-
-
-                          <td className="px-6 py-4 text-slate-300">
-
-                            {formatDateTime(member.created_at)}
-
-                          </td>
-
-
-                          <td className="px-6 py-4 text-slate-300">
-
-                            {formatDateTime(member.updated_at)}
-
-                          </td>
+                          {canDeleteMembers ? (
+                            <>
+                              <td className="px-6 py-4 text-slate-300">{member.notes || "-"}</td>
+                              <td className="px-6 py-4 text-slate-300">{formatDateTime(member.created_at)}</td>
+                              <td className="px-6 py-4 text-slate-300">{formatDateTime(member.updated_at)}</td>
+                            </>
+                          ) : null}
 
 
 
@@ -845,7 +835,7 @@ export default function MembersTable({
 
                           <td className="px-6 py-4">
 
-                            <MemberActions member={member} canViewPayments={canViewPayments} canDelete={canDeleteMembers} />
+                            <MemberActions member={member} canViewPayments={canViewPayments} canEdit={canEditMembers} canDelete={canDeleteMembers} />
 
                           </td>
 

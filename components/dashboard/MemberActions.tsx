@@ -23,14 +23,14 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-interface Props { member: Member; canViewPayments?: boolean; canDelete?: boolean; }
+interface Props { member: Member; canViewPayments?: boolean; canEdit?: boolean; canDelete?: boolean; }
 
 function whatsappNumber(phone: string) {
   const digits = phone.replace(/\D/g, "");
   return digits.length === 10 ? `91${digits}` : digits;
 }
 
-export default function MemberActions({ member, canViewPayments = true, canDelete = true }: Props) {
+export default function MemberActions({ member, canViewPayments = true, canEdit = true, canDelete = true }: Props) {
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
 
@@ -81,7 +81,7 @@ export default function MemberActions({ member, canViewPayments = true, canDelet
           <MessageCircle className="h-4 w-4" />
         </Button>
       ) : null}
-      <EditMemberDialog member={member} />
+      {canEdit ? <EditMemberDialog member={member} /> : null}
       {canDelete ? (
         <AlertDialog>
           <AlertDialogTrigger render={<Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-slate-400 hover:bg-red-50 hover:text-red-600" title="Delete member" />}>

@@ -115,7 +115,7 @@ Supabase Auth remains the source of truth for identity. Application roles are st
 | Role | Allowed responsibilities |
 |---|---|
 | Admin | Manage members, view payment information, inspect the financial ledger, manage user roles, verify and close collection periods, and upload or remove the dashboard image. |
-| Trainer | View, add, edit, search, filter, and download member records. Trainers cannot delete members and do not receive payment collection, financial ledger, role-management, month-close, or dashboard-image controls. The header identifies the page as **Trainer Dashboard**. |
+| Trainer | View, search, filter, and download member PDFs from a focused table showing Member, Phone, Address, Timing, Total Fee, Join Date, Plan, Due Date, and Due Status. Trainers cannot edit or delete members and do not receive payment collection, financial ledger, role-management, month-close, or dashboard-image controls. The header identifies the page as **Trainer Dashboard**. |
 
 The initial administrator account is configured in Supabase Auth and should not be hard-coded into client components. Role checks must happen server-side for sensitive APIs and should also be reflected in the UI for a clear experience.
 
@@ -449,7 +449,7 @@ Do not commit generated build output, local environment files, screenshots, cred
 
 ## Current status
 
-The current implementation includes the premium UI, member and payment workflows, monthly financial archives, Admin/Trainer RBAC, admin-only member deletion, trainer view/edit/download permissions, the Trainer Dashboard heading, branded PDF export, profile-field replacement, dashboard image upload/removal, and the associated Supabase migrations. The application has been repeatedly validated with ESLint and a successful production build.
+The current implementation includes the premium UI, member and payment workflows, monthly financial archives, Admin/Trainer RBAC, admin-only member deletion, trainer read-only member PDF access, the focused Trainer Dashboard table, professional login transition screens, branded PDF export, profile-field replacement, dashboard image upload/removal, and the associated Supabase migrations. The application has been repeatedly validated with ESLint and a successful production build.
 
 The most important remaining production-hardening opportunity is to review and tighten permissive database RLS policies for the final multi-role deployment, followed by automated tests for payment validation, due-date advancement, collection-period transitions, and authorization boundaries.
 

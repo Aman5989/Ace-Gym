@@ -42,7 +42,7 @@ export default async function Home() {
           />
         </div>
         <div className="ace-reveal ace-reveal-3">
-          <MembersTable members={members} canViewPayments={canViewPayments} canDeleteMembers={canViewPayments} />
+          <MembersTable members={members} canViewPayments={canViewPayments} canEditMembers={canViewPayments} canDeleteMembers={canViewPayments} />
         </div>
         {canViewPayments ? (
           <>
