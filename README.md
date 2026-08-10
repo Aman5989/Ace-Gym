@@ -262,10 +262,13 @@ The document includes:
 
 | Section | Information |
 |---|---|
-| Branding | The custom ACE々GYM name and supplied gym logo, with **Shubham Verma** and **Mob.: +91 7717728536** in the top-left header. |
+| Branding | The ACE々GYM wordmark with **ACE々Shubham** and **7717728536** in the upper-left header, plus **For Men & Women** in the upper-right. |
+| Membership ID | Generates `ACE々` + the first four alphabetic characters of the member name + the last two digits of the phone number. |
 | Member profile | Full name, phone, father’s name, address, gender, and other current profile values. |
-| Membership details | Plan, Total Fee, join date, next due date, and relevant notes; the Membership No. field is intentionally omitted. |
-| Header layout | The top-right audience and address text is intentionally blank, and the tagline is **BUILT NOT BORN**. |
+| Membership details | Plan, Total Fee, join date, next due date, and relevant notes; the previous Membership No. field is replaced by Membership ID in the header. |
+| Header layout | The ACE々GYM wordmark and **BUILT not BORN** tagline use compact spacing while preserving the existing form structure. |
+| Admission state | The Admission checkbox is intentionally left empty without a checkmark symbol. |
+| Footer | The Generated on date appears beneath the Member Signature area. |
 | Rules and terms | Non-refundable fee policy, one workout per day, footwear requirements, property conduct, loss/theft disclaimer, and cleanliness requirements. |
 | Footer | Administrative record and gym-terms information. |
 

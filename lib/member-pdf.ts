@@ -39,6 +39,11 @@ function formatDate(value: string | null | undefined) {
 function money(value: number | null | undefined) {
   return Number(value ?? 0).toLocaleString("en-IN", { maximumFractionDigits: 0 });
 }
+function membershipId(member: Member) {
+  const namePart = member.full_name.replace(/[^a-z]/gi, "").slice(0, 4).toUpperCase().padEnd(4, "X");
+  const phoneDigits = (member.phone ?? "").replace(/\D/g, "");
+  return `ACE々${namePart}${phoneDigits.slice(-2).padStart(2, "0")}`;
+}
 function line(pdf: jsPDF, x1: number, y: number, x2: number) {
   pdf.setDrawColor(BORDER);
   pdf.setLineWidth(0.3);
@@ -103,19 +108,23 @@ export async function downloadMemberPdf(member: Member) {
   pdf.setTextColor(INK);
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(10);
-  pdf.text("Shubham Verma", margin + 8, y + 8);
+  pdf.text("ACE々Shubham", margin + 8, y + 8);
   pdf.setFontSize(8);
-  pdf.text("Mob.: +91 7717728536", margin + 8, y + 14);
+  pdf.text("7717728536", margin + 8, y + 14);
 
+  pdf.setFontSize(9);
+  pdf.text("For Men & Women", width - margin - 8, y + 8, { align: "right" });
+  pdf.setFontSize(8);
+  pdf.text(`Membership ID: ${membershipId(member)}`, width - margin - 8, y + 14, { align: "right" });
   if (wordmark) {
     pdf.addImage(wordmark, "PNG", width / 2 - 31, y + 24, 62, 12, undefined, "FAST");
   }
-  pdf.setFontSize(9);
-  pdf.text("BUILT NOT BORN", width / 2, y + 42, { align: "center" });
+  pdf.setFontSize(10);
+  pdf.text("BUILT not BORN", width / 2, y + 39, { align: "center" });
   y += 50;
   line(pdf, margin + 1, y, width - margin - 1);
 
-  checkbox(pdf, "Admission", margin + 92, y + 10, true);
+  checkbox(pdf, "Admission", margin + 92, y + 10, false);
   checkbox(pdf, "Renewal", margin + 138, y + 10, false);
   y += 20;
 
@@ -165,7 +174,7 @@ export async function downloadMemberPdf(member: Member) {
   pdf.text("Director", width - margin - 20, y + 13, { align: "right" });
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(7);
-  pdf.text(`Generated ${formatDate(new Date().toISOString().slice(0, 10))}`, margin + 7, height - 14);
+  pdf.text(`Generated on: ${formatDate(new Date().toISOString().slice(0, 10))}`, margin + 10, y + 22);
   pdf.text("Keep this membership form for your records", width - margin - 7, height - 14, { align: "right" });
 
   const safeName = member.full_name.trim().replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase() || "member";
