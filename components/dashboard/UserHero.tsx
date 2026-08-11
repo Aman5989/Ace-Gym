@@ -213,7 +213,7 @@ export default function UserHero({ user, profile, role }: Props) {
           </div>
         </div>
 
-        {/* Right Side: Photo with Aligned Controls */}
+        {/* Right Side: Photo with Aligned Controls (Matches DashboardHeader style) */}
         <div className="flex flex-col items-center gap-2 md:items-end">
           <div className="w-[160px] max-w-full">
             <div className="group relative aspect-square w-full overflow-hidden rounded-2xl border border-white/15 bg-white/5 shadow-xl shadow-black/20">
