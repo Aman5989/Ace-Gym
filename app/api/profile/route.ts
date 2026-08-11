@@ -15,18 +15,26 @@ export async function POST(request: Request) {
 
     console.log(`[API] Profile Update Request: Target ID ${userId} | Caller ${currentUser.email} (${role})`);
 
+    // Security check: Only admins can update other users' profiles
+    if (userId !== currentUser.id && role !== "admin") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const supabase = await createClient();
     
-    // Call the SECURITY DEFINER RPC to bypass RLS issues
-    const { error } = await supabase.rpc("admin_update_user_profile", {
-      target_user_id: userId,
-      new_full_name: full_name,
-      new_phone: phone,
-      new_avatar_url: avatar_url
-    });
+    // Use a direct upsert now that RLS recursion is fixed
+    const { error } = await supabase
+      .from("profiles")
+      .upsert({
+        id: userId,
+        full_name,
+        phone,
+        avatar_url,
+        updated_at: new Date().toISOString(),
+      });
 
     if (error) {
-      console.error(`[API] RPC Error:`, error);
+      console.error(`[API] Supabase Upsert Error:`, error);
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
