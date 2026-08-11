@@ -55,7 +55,10 @@ export default function UserHero({ user, profile, role }: Props) {
     }
     
     setRefreshing(true);
+    const shortId = user.id.substring(0, 5);
     try {
+      console.log(`[UI] Refreshing profile for ID: ${user.id} (${user.email})`);
+      
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
@@ -70,9 +73,9 @@ export default function UserHero({ user, profile, role }: Props) {
           full_name: data.full_name ?? "",
           phone: data.phone ?? "",
         });
-        toast.success("Profile data updated");
+        toast.success(`Data found for ID ending in ...${user.id.slice(-4)}`);
       } else {
-        toast.info(`No profile found for ${user.email || 'this account'}`);
+        toast.info(`No record found in DB for ${user.email} (ID: ...${user.id.slice(-4)})`);
       }
       
       router.refresh();

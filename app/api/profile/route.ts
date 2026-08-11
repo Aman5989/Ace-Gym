@@ -13,6 +13,8 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { userId, full_name, phone, avatar_url } = body;
 
+    console.log(`[API] Profile Update Request: Saving to ID ${userId} by Admin ${currentUser.email}`);
+
     // Security check: Only admins can update other users' profiles
     if (userId !== currentUser.id && role !== "admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -29,7 +31,10 @@ export async function POST(request: Request) {
         updated_at: new Date().toISOString(),
       });
 
-    if (error) throw error;
+    if (error) {
+      console.error(`[API] Supabase Upsert Error:`, error);
+      throw error;
+    }
 
     // Revalidate the admin and home paths to clear server-side cache
     revalidatePath("/admin");
