@@ -23,7 +23,6 @@ export async function getCurrentAppUser() {
       .select("*")
       .eq("id", user.id)
       .maybeSingle()
-      .catch(() => ({ data: null })) // Handle case where table might not exist yet
   ]);
 
   let role: AppRole = roleResult.data?.role === "admin" ? "admin" : "trainer";
