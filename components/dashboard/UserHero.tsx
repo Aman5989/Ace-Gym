@@ -201,7 +201,7 @@ export default function UserHero({ user, profile, role }: Props) {
                 <div className="flex flex-wrap items-center gap-4 text-slate-400">
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-amber-400/60" />
-                    <span className="text-sm font-medium">{role === 'admin' ? 'Administrator' : 'Trainer'}</span>
+                    <span className="text-sm font-medium">Trainer</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Phone className="h-4 w-4 text-amber-400/60" />

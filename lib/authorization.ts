@@ -9,10 +9,8 @@ export const getCurrentAppUser = cache(async () => {
   const supabase = await createClient();
   
   // Optimization: Use getSession for faster initial check, then getUser for security
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) return { supabase, user: null, role: null as AppRole | null, profile: null };
-  
-  const user = session.user;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { supabase, user: null, role: null as AppRole | null, profile: null };
   const normalizedEmail = (user.email ?? user.user_metadata?.email ?? "").trim().toLowerCase();
   
   // Fetch profile and role in parallel

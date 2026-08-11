@@ -1,30 +1,62 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ShieldCheck, UserCog, Users } from "lucide-react";
+import { ShieldCheck, UserCog, Users, Edit2 } from "lucide-react";
+import UserProfileEditor from "./UserProfileEditor";
+import { createClient } from "@/lib/supabase";
 
 type RoleRecord = {
   user_id: string;
   email: string;
   role: "admin" | "trainer";
   created_at: string | null;
+  profile?: {
+    id: string;
+    full_name: string | null;
+    phone: string | null;
+    avatar_url: string | null;
+  } | null;
 };
 
 export default function RoleManagement() {
+  const supabase = createClient();
   const [users, setUsers] = useState<RoleRecord[]>([]);
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<"admin" | "trainer">("trainer");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [editingUser, setEditingUser] = useState<RoleRecord | null>(null);
 
   async function loadUsers() {
     setLoading(true);
-    const response = await fetch("/api/user-roles", { cache: "no-store" });
-    const payload = await response.json();
-    if (response.ok) setUsers(payload.users ?? []);
-    else setMessage(payload.error ?? "Unable to load roles");
-    setLoading(false);
+    try {
+      const response = await fetch("/api/user-roles", { cache: "no-store" });
+      const payload = await response.json();
+      
+      if (response.ok) {
+        const roles = payload.users ?? [];
+        
+        // Fetch profiles for these users in parallel
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("*")
+          .in("id", roles.map((u: any) => u.user_id));
+
+        const usersWithProfiles = roles.map((u: any) => ({
+          ...u,
+          profile: profiles?.find(p => p.id === u.user_id) || null
+        }));
+
+        setUsers(usersWithProfiles);
+      } else {
+        setMessage(payload.error ?? "Unable to load roles");
+      }
+    } catch (err) {
+      setMessage("Error loading user data");
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
@@ -84,16 +116,41 @@ export default function RoleManagement() {
       {message ? <p className="mt-3 text-sm text-cyan-200">{message}</p> : null}
 
       <div className="mt-6 overflow-hidden rounded-2xl border border-white/10">
-        <div className="grid grid-cols-[1fr_110px] gap-3 border-b border-white/10 bg-white/5 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
-          <span>Account</span><span>Role</span>
+        <div className="grid grid-cols-[1fr_110px_40px] gap-3 border-b border-white/10 bg-white/5 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+          <span>Account</span><span>Role</span><span></span>
         </div>
         {loading ? <p className="px-4 py-5 text-sm text-slate-400">Loading roles…</p> : users.length === 0 ? <p className="px-4 py-5 text-sm text-slate-400">No registered accounts found.</p> : users.map((user) => (
-          <div key={user.user_id} className="grid grid-cols-[1fr_110px] items-center gap-3 border-b border-white/5 px-4 py-3 last:border-b-0">
-            <div className="flex min-w-0 items-center gap-3"><Users className="h-4 w-4 shrink-0 text-slate-500" /><span className="truncate text-sm text-slate-200">{user.email}</span></div>
+          <div key={user.user_id} className="grid grid-cols-[1fr_110px_40px] items-center gap-3 border-b border-white/5 px-4 py-3 last:border-b-0">
+            <div className="flex min-w-0 items-center gap-3">
+              <Users className="h-4 w-4 shrink-0 text-slate-500" />
+              <div className="flex flex-col min-w-0">
+                <span className="truncate text-sm text-slate-200">{user.email}</span>
+                {user.profile?.full_name && <span className="text-[10px] text-slate-500 truncate">{user.profile.full_name}</span>}
+              </div>
+            </div>
             <span className={`inline-flex w-fit items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${user.role === "admin" ? "bg-violet-400/15 text-violet-200" : "bg-emerald-400/15 text-emerald-200"}`}><UserCog className="h-3.5 w-3.5" />{user.role}</span>
+            <button 
+              onClick={() => setEditingUser(user)}
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-white/5 hover:text-amber-400 transition-colors"
+              title="Edit Profile"
+            >
+              <Edit2 className="h-4 w-4" />
+            </button>
           </div>
         ))}
       </div>
+
+      {editingUser && (
+        <UserProfileEditor 
+          userId={editingUser.user_id} 
+          email={editingUser.email} 
+          initialProfile={editingUser.profile || null} 
+          onClose={() => {
+            setEditingUser(null);
+            void loadUsers();
+          }} 
+        />
+      )}
     </section>
   );
 }
