@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { User, Phone, Upload, Loader2, Camera, Check, X, Trash2 } from "lucide-react";
+import { User, Phone, Upload, Loader2, Camera, Check, X, Trash2, Fingerprint } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -55,7 +55,7 @@ export default function UserProfileEditor({ userId, email, initialProfile, onClo
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Failed to update profile");
       
-      toast.success(`Profile for ${email} updated`);
+      toast.success(`Profile for ${email} saved`);
       router.refresh();
       onClose();
     } catch (error: any) {
@@ -98,11 +98,16 @@ export default function UserProfileEditor({ userId, email, initialProfile, onClo
       <DialogContent className="max-w-md rounded-3xl bg-slate-900 border-white/10 text-white shadow-2xl">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">Edit Trainer Profile</DialogTitle>
-          <p className="text-sm text-slate-400">{email}</p>
+          <div className="flex flex-col gap-1 mt-1">
+            <p className="text-sm text-slate-400">{email}</p>
+            <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-500 bg-black/20 w-fit px-2 py-0.5 rounded">
+              <Fingerprint className="h-3 w-3" />
+              UID: {userId}
+            </div>
+          </div>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {/* Avatar Section */}
           <div className="flex flex-col items-center gap-4">
             <div className="relative h-32 w-32 overflow-hidden rounded-3xl border-2 border-white/10 bg-white/5 shadow-xl">
               {avatarUrl ? (
@@ -126,7 +131,7 @@ export default function UserProfileEditor({ userId, email, initialProfile, onClo
                 variant="outline" 
                 onClick={() => fileInputRef.current?.click()} 
                 disabled={uploading}
-                className="h-8 rounded-lg border-white/10 bg-white/5 text-xs hover:bg-white/10"
+                className="h-8 rounded-lg border-white/15 bg-white/10 text-xs hover:bg-white/15"
               >
                 <Upload className="mr-1.5 h-3.5 w-3.5" />
                 Upload
@@ -137,7 +142,7 @@ export default function UserProfileEditor({ userId, email, initialProfile, onClo
                   variant="outline" 
                   onClick={() => setAvatarUrl(null)} 
                   disabled={uploading}
-                  className="h-8 rounded-lg border-red-500/20 bg-red-500/10 text-xs text-red-300 hover:bg-red-500/20"
+                  className="h-8 rounded-lg border-red-500/25 bg-red-500/10 text-xs text-red-200 hover:bg-red-500/20"
                 >
                   <Trash2 className="mr-1.5 h-3.5 w-3.5" />
                   Remove
@@ -146,7 +151,6 @@ export default function UserProfileEditor({ userId, email, initialProfile, onClo
             </div>
           </div>
 
-          {/* Form Section */}
           <div className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Full Name</label>

@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { userId, full_name, phone, avatar_url } = body;
 
-    console.log(`[API] Profile Update Request: Saving to ID ${userId} by Admin ${currentUser.email}`);
+    console.log(`[API] Profile Update Request for ID: ${userId}`);
 
     // Security check: Only admins can update other users' profiles
     if (userId !== currentUser.id && role !== "admin") {
@@ -21,19 +21,42 @@ export async function POST(request: Request) {
     }
 
     const supabase = await createClient();
-    const { error } = await supabase
+    
+    // Explicit two-step process to ensure Insert works correctly under RLS
+    const { data: existing } = await supabase
       .from("profiles")
-      .upsert({
-        id: userId,
-        full_name,
-        phone,
-        avatar_url,
-        updated_at: new Date().toISOString(),
-      });
+      .select("id")
+      .eq("id", userId)
+      .maybeSingle();
 
-    if (error) {
-      console.error(`[API] Supabase Upsert Error:`, error);
-      throw error;
+    let result;
+    if (existing) {
+      console.log(`[API] Updating existing profile for ${userId}`);
+      result = await supabase
+        .from("profiles")
+        .update({
+          full_name,
+          phone,
+          avatar_url,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", userId);
+    } else {
+      console.log(`[API] Inserting new profile for ${userId}`);
+      result = await supabase
+        .from("profiles")
+        .insert({
+          id: userId,
+          full_name,
+          phone,
+          avatar_url,
+          updated_at: new Date().toISOString(),
+        });
+    }
+
+    if (result.error) {
+      console.error(`[API] Supabase Error:`, result.error);
+      throw result.error;
     }
 
     // Revalidate the admin and home paths to clear server-side cache
