@@ -125,7 +125,10 @@ export default function RoleManagement() {
               <Users className="h-4 w-4 shrink-0 text-slate-500" />
               <div className="flex flex-col min-w-0">
                 <span className="truncate text-sm text-slate-200">{user.email}</span>
-                {user.profile?.full_name && <span className="text-[10px] text-slate-500 truncate">{user.profile.full_name}</span>}
+                <div className="flex items-center gap-2">
+                  {user.profile?.full_name && <span className="text-[10px] text-slate-500 truncate">{user.profile.full_name}</span>}
+                  <span className="text-[8px] font-mono text-slate-600 truncate">ID: {user.user_id}</span>
+                </div>
               </div>
             </div>
             <span className={`inline-flex w-fit items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${user.role === "admin" ? "bg-violet-400/15 text-violet-200" : "bg-emerald-400/15 text-emerald-200"}`}><UserCog className="h-3.5 w-3.5" />{user.role}</span>
