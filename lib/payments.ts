@@ -116,7 +116,7 @@ const EMPTY_TOTALS: PaymentTotals = {
   renewalCount: 0,
 };
 
-export const getPaymentsSummary = cache(async () => {
+export async function getPaymentsSummary() {
   const supabase = await createServerClient();
   const { data: period } = await supabase
     .from("collection_periods")
@@ -141,6 +141,6 @@ export const getPaymentsSummary = cache(async () => {
   }
   const payments = (data ?? []) as Payment[];
   return { payments, ...aggregate(payments), period: period as CollectionPeriod | null };
-});
+}
 
 export { aggregate as aggregatePaymentTotals };

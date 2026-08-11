@@ -236,13 +236,13 @@ export default function DashboardHeader({ canCloseMonth = false, paymentCount = 
               <span
                 className="
                   text-xs
-                  font-semibold
+                  font-bold
                   uppercase
-                  tracking-[0.25em]
-                  text-amber-400/90
+                  tracking-[0.3em]
+                  text-amber-400/80
                 "
               >
-                {isTrainer ? "Trainer Dashboard" : "Admin Dashboard"}
+                ACE<span className="text-white">々</span>Trainer
               </span>
 
 

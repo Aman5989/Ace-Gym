@@ -2,7 +2,7 @@ import { cache } from "react";
 import { createClient } from "@/lib/supabase-server";
 import { Member } from "@/types/member";
 
-export const getMembers = cache(async (): Promise<Member[]> => {
+export async function getMembers(): Promise<Member[]> {
   const supabase = await createClient();
 
   const {
@@ -26,4 +26,4 @@ export const getMembers = cache(async (): Promise<Member[]> => {
 
 
   return data as Member[];
-});
+}

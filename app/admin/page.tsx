@@ -9,6 +9,8 @@ import AdminPaymentLedger from "@/components/payments/AdminPaymentLedger";
 import RoleManagement from "@/components/admin/RoleManagement";
 import { getHeroImageUrl } from "@/lib/gym-settings";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   const [{ user, role, profile }, members, paymentSummary, heroImageUrl] = await Promise.all([
     getCurrentAppUser(),

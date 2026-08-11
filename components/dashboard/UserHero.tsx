@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { User, Phone, Upload, Loader2, Camera, Check, X, Edit2, Trash2, RefreshCcw, Fingerprint } from "lucide-react";
+import { User, Phone, Upload, Loader2, Camera, Check, X, Edit2, Trash2, RefreshCcw, Fingerprint, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -13,6 +13,7 @@ interface UserProfile {
   full_name: string | null;
   phone: string | null;
   avatar_url: string | null;
+  updated_at?: string;
 }
 
 interface Props {
@@ -31,6 +32,7 @@ export default function UserHero({ user, profile, role }: Props) {
   const [uploading, setUploading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [showId, setShowId] = useState(false);
+  const [lastSync, setLastSync] = useState<string | null>(profile?.updated_at || null);
   
   const [localProfile, setLocalProfile] = useState<UserProfile | null>(profile);
   const [formData, setFormData] = useState({
@@ -46,6 +48,7 @@ export default function UserHero({ user, profile, role }: Props) {
         full_name: profile.full_name ?? "",
         phone: profile.phone ?? "",
       });
+      setLastSync(profile.updated_at || null);
     }
   }, [profile]);
 
@@ -55,7 +58,7 @@ export default function UserHero({ user, profile, role }: Props) {
     if (!user?.id) return;
     setRefreshing(true);
     try {
-      // Direct query to Supabase bypassing server cache
+      // Force a fresh read from the database
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
@@ -70,13 +73,14 @@ export default function UserHero({ user, profile, role }: Props) {
           full_name: data.full_name ?? "",
           phone: data.phone ?? "",
         });
-        toast.success("Profile updated");
+        setLastSync(new Date().toLocaleTimeString());
+        toast.success("Database read successful");
       } else {
-        toast.info("No profile data found in database");
+        toast.info("No profile record found in DB");
       }
       router.refresh();
     } catch (error: any) {
-      toast.error("Refresh failed: " + error.message);
+      toast.error("DB Read failed: " + error.message);
     } finally {
       setRefreshing(false);
     }
@@ -100,10 +104,11 @@ export default function UserHero({ user, profile, role }: Props) {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Failed to save");
       
-      toast.success("Profile saved");
+      toast.success("Saved to database");
       setIsEditing(false);
       router.refresh();
-      setTimeout(() => void handleRefresh(), 500);
+      // Auto-refresh after a short delay to confirm the write
+      setTimeout(() => void handleRefresh(), 800);
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -142,11 +147,11 @@ export default function UserHero({ user, profile, role }: Props) {
         }),
       });
 
-      if (!response.ok) throw new Error("Failed to link photo to profile");
+      if (!response.ok) throw new Error("Failed to link photo");
 
-      toast.success("Photo updated");
+      toast.success("Photo persisted to DB");
       router.refresh();
-      setTimeout(() => void handleRefresh(), 500);
+      setTimeout(() => void handleRefresh(), 800);
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -171,9 +176,9 @@ export default function UserHero({ user, profile, role }: Props) {
 
       if (!response.ok) throw new Error("Failed to remove photo");
 
-      toast.success("Photo removed");
+      toast.success("Photo removed from DB");
       router.refresh();
-      setTimeout(() => void handleRefresh(), 500);
+      setTimeout(() => void handleRefresh(), 800);
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -183,38 +188,44 @@ export default function UserHero({ user, profile, role }: Props) {
 
   return (
     <div className="ace-glass ace-reveal relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#0a0e27] via-[#111740] to-[#1a0d33] p-6 shadow-2xl md:p-8">
-      {/* Decorative Glows */}
       <div aria-hidden className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-amber-400/10 blur-3xl" />
       <div aria-hidden className="pointer-events-none absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-violet-500/10 blur-3xl" />
 
       <div className="relative flex flex-col items-center justify-between gap-6 md:flex-row">
-        {/* Profile Info */}
         <div className="flex-1 space-y-4">
           <div className="space-y-1">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-amber-400/80">
                 ACE<span className="text-white">々</span>Trainer
               </h2>
-              <button 
-                onClick={handleRefresh}
-                disabled={refreshing}
-                className="rounded-full p-1 text-slate-500 transition-colors hover:bg-white/5 hover:text-amber-400"
-                title="Refresh Data"
-              >
-                <RefreshCcw className={`h-3 w-3 ${refreshing ? 'animate-spin' : ''}`} />
-              </button>
-              <button 
-                onClick={() => setShowId(!showId)}
-                className="rounded-full p-1 text-slate-500 transition-colors hover:bg-white/5 hover:text-cyan-400"
-                title="View ID"
-              >
-                <Fingerprint className="h-3 w-3" />
-              </button>
+              <div className="flex items-center gap-1.5">
+                <button 
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  className="rounded-full p-1 text-slate-500 transition-colors hover:bg-white/5 hover:text-amber-400"
+                  title="Force DB Read"
+                >
+                  <RefreshCcw className={`h-3 w-3 ${refreshing ? 'animate-spin' : ''}`} />
+                </button>
+                <button 
+                  onClick={() => setShowId(!showId)}
+                  className="rounded-full p-1 text-slate-500 transition-colors hover:bg-white/5 hover:text-cyan-400"
+                  title="View ID"
+                >
+                  <Fingerprint className="h-3 w-3" />
+                </button>
+              </div>
+              {lastSync && (
+                <div className="flex items-center gap-1 text-[9px] text-slate-500 bg-white/5 px-2 py-0.5 rounded-full">
+                  <Clock className="h-2.5 w-2.5" />
+                  Synced: {lastSync.includes('T') ? new Date(lastSync).toLocaleTimeString() : lastSync}
+                </div>
+              )}
             </div>
             
             {showId && (
-              <p className="text-[9px] font-mono text-slate-500 break-all bg-black/30 p-1.5 rounded-lg border border-white/5">
-                ID: {user.id}
+              <p className="text-[9px] font-mono text-slate-500 break-all bg-black/30 p-1.5 rounded-lg border border-white/5 mt-2">
+                UID: {user.id}
               </p>
             )}
 
@@ -241,7 +252,7 @@ export default function UserHero({ user, profile, role }: Props) {
                 <div className="flex gap-2 pt-1">
                   <Button size="sm" onClick={handleUpdateProfile} disabled={loading} className="h-9 rounded-xl bg-emerald-500 hover:bg-emerald-600">
                     {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5 mr-1" />}
-                    Save
+                    Save to DB
                   </Button>
                   <Button size="sm" variant="ghost" onClick={() => setIsEditing(false)} className="h-9 rounded-xl text-slate-400 hover:text-white">
                     <X className="h-3.5 w-3.5 mr-1" />
@@ -267,11 +278,11 @@ export default function UserHero({ user, profile, role }: Props) {
                 <div className="flex flex-wrap items-center gap-4 text-slate-400">
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-amber-400/60" />
-                    <span className="text-sm font-medium">Trainer</span>
+                    <span className="text-sm font-medium text-slate-300">Trainer</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Phone className="h-4 w-4 text-amber-400/60" />
-                    <span className="text-sm font-medium">{localProfile?.phone || "No phone added"}</span>
+                    <span className="text-sm font-medium text-slate-300">{localProfile?.phone || "No phone added"}</span>
                   </div>
                 </div>
               </div>
@@ -279,7 +290,6 @@ export default function UserHero({ user, profile, role }: Props) {
           </div>
         </div>
 
-        {/* Photo & Controls */}
         <div className="flex flex-col items-center gap-3 md:items-end">
           <div className="w-[160px]">
             <div className="group relative aspect-square w-full overflow-hidden rounded-3xl border border-white/15 bg-white/5 shadow-2xl">
