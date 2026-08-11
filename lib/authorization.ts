@@ -24,8 +24,7 @@ export const getCurrentAppUser = cache(async () => {
       .from("profiles")
       .select("*")
       .eq("id", user.id)
-      .single() // Use single() to ensure we get data or an error
-      .catch(() => ({ data: null }))
+      .maybeSingle()
   ]);
 
   let role: AppRole = roleResult.data?.role === "admin" ? "admin" : "trainer";
