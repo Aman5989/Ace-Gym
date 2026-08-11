@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { User, Phone, Upload, Loader2, Camera, Check, X, Edit2, Trash2 } from "lucide-react";
+import { User, Phone, Upload, Loader2, Camera, Check, X, Edit2, Trash2, RefreshCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -29,7 +29,9 @@ export default function UserHero({ user, profile, role }: Props) {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   
+  const [localProfile, setLocalProfile] = useState<UserProfile | null>(profile);
   const [formData, setFormData] = useState({
     full_name: profile?.full_name ?? "",
     phone: profile?.phone ?? "",
@@ -37,6 +39,7 @@ export default function UserHero({ user, profile, role }: Props) {
 
   // Update local state if profile prop changes
   useEffect(() => {
+    setLocalProfile(profile);
     setFormData({
       full_name: profile?.full_name ?? "",
       phone: profile?.phone ?? "",
@@ -44,6 +47,32 @@ export default function UserHero({ user, profile, role }: Props) {
   }, [profile]);
 
   const canEdit = role === "admin";
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      
+      setLocalProfile(data);
+      setFormData({
+        full_name: data?.full_name ?? "",
+        phone: data?.phone ?? "",
+      });
+      
+      toast.success("Profile data refreshed");
+      router.refresh();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to refresh profile");
+    } finally {
+      setRefreshing(false);
+    }
+  }
 
   async function handleUpdateProfile() {
     if (!canEdit) return;
@@ -56,7 +85,7 @@ export default function UserHero({ user, profile, role }: Props) {
           userId: user.id,
           full_name: formData.full_name,
           phone: formData.phone,
-          avatar_url: profile?.avatar_url,
+          avatar_url: localProfile?.avatar_url,
         }),
       });
 
@@ -117,7 +146,7 @@ export default function UserHero({ user, profile, role }: Props) {
   }
 
   async function handleAvatarRemove() {
-    if (!canEdit || !profile?.avatar_url) return;
+    if (!canEdit || !localProfile?.avatar_url) return;
     setUploading(true);
     try {
       const response = await fetch("/api/profile", {
@@ -153,9 +182,19 @@ export default function UserHero({ user, profile, role }: Props) {
         {/* Left Side: Brand & Details */}
         <div className="flex-1 space-y-4">
           <div className="space-y-1">
-            <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-amber-400/80">
-              ACE<span className="text-white">々</span>Trainer
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-amber-400/80">
+                ACE<span className="text-white">々</span>Trainer
+              </h2>
+              <button 
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="rounded-full p-1 text-slate-500 transition-colors hover:bg-white/5 hover:text-amber-400 disabled:opacity-50"
+                title="Refresh profile data"
+              >
+                <RefreshCcw className={`h-3 w-3 ${refreshing ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
             {isEditing ? (
               <div className="mt-4 space-y-3 max-w-xs">
                 <div className="space-y-1">
@@ -201,7 +240,7 @@ export default function UserHero({ user, profile, role }: Props) {
               <div className="mt-4 space-y-2">
                 <div className="flex items-center gap-3">
                   <h1 className="text-3xl font-black tracking-tight text-white md:text-4xl">
-                    {profile?.full_name || user?.email?.split('@')[0] || "ACE Trainer"}
+                    {localProfile?.full_name || user?.email?.split('@')[0] || "ACE Trainer"}
                   </h1>
                   {canEdit && (
                     <button 
@@ -219,7 +258,7 @@ export default function UserHero({ user, profile, role }: Props) {
                   </div>
                   <div className="flex items-center gap-2">
                     <Phone className="h-4 w-4 text-amber-400/60" />
-                    <span className="text-sm font-medium">{profile?.phone || "No phone added"}</span>
+                    <span className="text-sm font-medium">{localProfile?.phone || "No phone added"}</span>
                   </div>
                 </div>
               </div>
@@ -231,9 +270,9 @@ export default function UserHero({ user, profile, role }: Props) {
         <div className="flex flex-col items-center gap-2 md:items-end">
           <div className="w-[160px] max-w-full">
             <div className="group relative aspect-square w-full overflow-hidden rounded-2xl border border-white/15 bg-white/5 shadow-xl shadow-black/20">
-              {profile?.avatar_url ? (
+              {localProfile?.avatar_url ? (
                 <img 
-                  src={profile.avatar_url} 
+                  src={localProfile.avatar_url} 
                   alt="Profile" 
                   className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" 
                 />
@@ -263,7 +302,7 @@ export default function UserHero({ user, profile, role }: Props) {
                 >
                   {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
                 </Button>
-                {profile?.avatar_url ? (
+                {localProfile?.avatar_url ? (
                   <Button 
                     type="button" 
                     onClick={handleAvatarRemove} 
