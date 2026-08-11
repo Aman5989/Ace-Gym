@@ -45,7 +45,7 @@ export default function RoleManagement() {
 
         const usersWithProfiles = roles.map((u: any) => ({
           ...u,
-          profile: profiles?.find(p => p.id === u.user_id) || null
+          profile: profiles?.find((p: any) => p.id === u.user_id) || null
         }));
 
         setUsers(usersWithProfiles);
