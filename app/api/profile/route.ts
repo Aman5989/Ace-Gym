@@ -13,16 +13,12 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { userId, full_name, phone, avatar_url } = body;
 
-    // CRITICAL LOGGING: Confirm target ID
-    console.log(`[API] DIRECT PATH SAVE:`);
-    console.log(`- TARGET ID: ${userId}`);
-    console.log(`- DATA: Name="${full_name}", Phone="${phone}"`);
-    console.log(`- BY: ${currentUser.email}`);
+    console.log(`[API] Master Access Save: ID ${userId} by ${currentUser.email}`);
 
     const supabase = await createClient();
     
-    // Call the Direct Path RPC
-    const { data: status, error } = await supabase.rpc("direct_path_update_profile", {
+    // Call the Master Access RPC that returns the saved data
+    const { data, error } = await supabase.rpc("master_update_profile_v2", {
       target_id: userId,
       new_name: full_name,
       new_phone: phone,
@@ -34,13 +30,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    console.log(`[API] DB STATUS: ${status} for ${userId}`);
+    const savedRecord = data?.[0];
+    console.log(`[API] DB VERIFIED:`, savedRecord);
 
     // Clear all possible Next.js caches
     revalidatePath("/admin");
     revalidatePath("/");
 
-    return new NextResponse(JSON.stringify({ success: true, status, savedId: userId }), {
+    return new NextResponse(JSON.stringify({ 
+      success: true, 
+      saved: savedRecord 
+    }), {
       status: 200,
       headers: {
         'Cache-Control': 'no-store, max-age=0',

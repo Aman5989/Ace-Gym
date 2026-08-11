@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { User, Phone, Upload, Loader2, Camera, Check, X, Trash2, Fingerprint, ShieldCheck } from "lucide-react";
+import { User, Phone, Upload, Loader2, Camera, Check, X, Trash2, Fingerprint, ShieldCheck, Database } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -55,7 +55,15 @@ export default function UserProfileEditor({ userId, email, initialProfile, onClo
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Failed to save");
       
-      toast.success(`DATA FORCED TO DB: ID ...${userId.slice(-4)}`);
+      const saved = result.saved;
+      toast.success(
+        <div className="flex flex-col gap-1">
+          <span className="font-bold text-emerald-400">Database Verified!</span>
+          <span className="text-[10px] text-slate-300">Name: {saved.full_name}</span>
+          <span className="text-[10px] text-slate-300">Phone: {saved.phone || 'None'}</span>
+        </div>
+      );
+      
       router.refresh();
       onClose();
     } catch (error: any) {
@@ -85,7 +93,7 @@ export default function UserProfileEditor({ userId, email, initialProfile, onClo
         .getPublicUrl(filePath);
 
       setAvatarUrl(publicUrl);
-      toast.success("Photo ready to save");
+      toast.success("Photo uploaded successfully");
     } catch (error: any) {
       toast.error("Upload failed: " + error.message);
     } finally {
@@ -97,25 +105,21 @@ export default function UserProfileEditor({ userId, email, initialProfile, onClo
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="max-w-md rounded-[2rem] bg-slate-900 border-white/10 text-white shadow-2xl p-6 md:p-8">
         <DialogHeader>
-          <div className="flex items-center gap-2 text-emerald-400 mb-2">
-            <ShieldCheck className="h-4 w-4" />
-            <span className="text-[10px] font-bold uppercase tracking-widest">Master Admin Mode</span>
+          <div className="flex items-center gap-2 text-amber-400 mb-2">
+            <Database className="h-4 w-4" />
+            <span className="text-[10px] font-bold uppercase tracking-widest">Verified DB Write</span>
           </div>
           <DialogTitle className="text-2xl font-black tracking-tight">Edit Trainer Profile</DialogTitle>
           <div className="flex flex-col gap-1.5 mt-2">
             <p className="text-sm text-slate-400 font-medium">{email}</p>
-            <div className="flex items-center gap-2 text-[10px] font-mono text-amber-400 bg-amber-400/10 w-fit px-2.5 py-1.5 rounded-lg border border-amber-400/20">
+            <div className="flex items-center gap-2 text-[10px] font-mono text-cyan-400 bg-cyan-400/10 w-fit px-2.5 py-1.5 rounded-lg border border-cyan-400/20">
               <Fingerprint className="h-3 w-3" />
               TARGET ID: {userId}
             </div>
-            <p className="text-[9px] text-slate-500 italic mt-1">
-              Verify this ID matches the one on the Trainer's dashboard.
-            </p>
           </div>
         </DialogHeader>
 
         <div className="space-y-8 py-6">
-          {/* Avatar Section */}
           <div className="flex flex-col items-center gap-4">
             <div className="relative h-36 w-36 overflow-hidden rounded-[2rem] border-2 border-white/10 bg-white/5 shadow-2xl">
               {avatarUrl ? (
@@ -158,7 +162,6 @@ export default function UserProfileEditor({ userId, email, initialProfile, onClo
             </div>
           </div>
 
-          {/* Form Fields */}
           <div className="space-y-5">
             <div className="space-y-2">
               <label className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500 ml-1">Full Name</label>
@@ -180,7 +183,6 @@ export default function UserProfileEditor({ userId, email, initialProfile, onClo
             </div>
           </div>
 
-          {/* Actions */}
           <div className="flex gap-3 pt-4">
             <Button 
               onClick={handleUpdateProfile} 
@@ -188,7 +190,7 @@ export default function UserProfileEditor({ userId, email, initialProfile, onClo
               className="flex-1 h-12 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 font-bold text-slate-950 hover:from-amber-300 hover:to-amber-400 shadow-lg shadow-amber-400/10"
             >
               {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
-              Force Save to DB
+              Verified Save
             </Button>
             <Button 
               variant="ghost" 
