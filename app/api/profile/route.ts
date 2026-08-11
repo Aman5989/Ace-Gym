@@ -13,16 +13,16 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { userId, full_name, phone, avatar_url } = body;
 
-    console.log(`[API] Master Access Save: ID ${userId} by ${currentUser.email}`);
+    console.log(`[API] Fixed Save: ID ${userId} by ${currentUser.email}`);
 
     const supabase = await createClient();
     
-    // Call the Master Access RPC that returns the saved data
-    const { data, error } = await supabase.rpc("master_update_profile_v2", {
-      target_id: userId,
-      new_name: full_name,
+    // Call the v3 RPC that avoids ambiguous ID references
+    const { data, error } = await supabase.rpc("master_update_profile_v3", {
+      target_user_id: userId,
+      new_full_name: full_name,
       new_phone: phone,
-      new_avatar: avatar_url
+      new_avatar_url: avatar_url
     });
 
     if (error) {
@@ -30,7 +30,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    const savedRecord = data?.[0];
+    // Map the renamed DB columns back to the standard profile format
+    const dbRow = data?.[0];
+    const savedRecord = dbRow ? {
+      id: dbRow.profile_id,
+      full_name: dbRow.profile_name,
+      phone: dbRow.profile_phone,
+      avatar_url: dbRow.profile_avatar,
+      updated_at: dbRow.profile_updated_at
+    } : null;
+
     console.log(`[API] DB VERIFIED:`, savedRecord);
 
     // Clear all possible Next.js caches
