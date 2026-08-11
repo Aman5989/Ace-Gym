@@ -38,13 +38,15 @@ export default function UserHero({ user, profile, role }: Props) {
     phone: profile?.phone ?? "",
   });
 
-  // Update local state if profile prop changes
+  // Sync local state when props change
   useEffect(() => {
-    setLocalProfile(profile);
-    setFormData({
-      full_name: profile?.full_name ?? "",
-      phone: profile?.phone ?? "",
-    });
+    if (profile) {
+      setLocalProfile(profile);
+      setFormData({
+        full_name: profile.full_name ?? "",
+        phone: profile.phone ?? "",
+      });
+    }
   }, [profile]);
 
   const canEdit = role === "admin";
@@ -53,6 +55,7 @@ export default function UserHero({ user, profile, role }: Props) {
     if (!user?.id) return;
     setRefreshing(true);
     try {
+      // Direct query to Supabase bypassing server cache
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
@@ -67,13 +70,13 @@ export default function UserHero({ user, profile, role }: Props) {
           full_name: data.full_name ?? "",
           phone: data.phone ?? "",
         });
-        toast.success("Profile data updated");
+        toast.success("Profile updated");
       } else {
-        toast.info(`No record found for ${user.email}`);
+        toast.info("No profile data found in database");
       }
       router.refresh();
     } catch (error: any) {
-      toast.error(error.message || "Refresh failed");
+      toast.error("Refresh failed: " + error.message);
     } finally {
       setRefreshing(false);
     }
@@ -95,14 +98,14 @@ export default function UserHero({ user, profile, role }: Props) {
       });
 
       const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Failed to update profile");
+      if (!response.ok) throw new Error(result.error || "Failed to save");
       
-      toast.success("Profile saved successfully");
+      toast.success("Profile saved");
       setIsEditing(false);
       router.refresh();
       setTimeout(() => void handleRefresh(), 500);
     } catch (error: any) {
-      toast.error(error.message || "Failed to update profile");
+      toast.error(error.message);
     } finally {
       setLoading(false);
     }
@@ -139,14 +142,13 @@ export default function UserHero({ user, profile, role }: Props) {
         }),
       });
 
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Failed to update photo");
+      if (!response.ok) throw new Error("Failed to link photo to profile");
 
       toast.success("Photo updated");
       router.refresh();
       setTimeout(() => void handleRefresh(), 500);
     } catch (error: any) {
-      toast.error(error.message || "Failed to upload photo");
+      toast.error(error.message);
     } finally {
       setUploading(false);
     }
@@ -167,14 +169,13 @@ export default function UserHero({ user, profile, role }: Props) {
         }),
       });
 
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Failed to remove photo");
+      if (!response.ok) throw new Error("Failed to remove photo");
 
       toast.success("Photo removed");
       router.refresh();
       setTimeout(() => void handleRefresh(), 500);
     } catch (error: any) {
-      toast.error(error.message || "Failed to remove photo");
+      toast.error(error.message);
     } finally {
       setUploading(false);
     }
@@ -182,10 +183,12 @@ export default function UserHero({ user, profile, role }: Props) {
 
   return (
     <div className="ace-glass ace-reveal relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#0a0e27] via-[#111740] to-[#1a0d33] p-6 shadow-2xl md:p-8">
+      {/* Decorative Glows */}
       <div aria-hidden className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-amber-400/10 blur-3xl" />
       <div aria-hidden className="pointer-events-none absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-violet-500/10 blur-3xl" />
 
       <div className="relative flex flex-col items-center justify-between gap-6 md:flex-row">
+        {/* Profile Info */}
         <div className="flex-1 space-y-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
@@ -196,51 +199,52 @@ export default function UserHero({ user, profile, role }: Props) {
                 onClick={handleRefresh}
                 disabled={refreshing}
                 className="rounded-full p-1 text-slate-500 transition-colors hover:bg-white/5 hover:text-amber-400"
+                title="Refresh Data"
               >
                 <RefreshCcw className={`h-3 w-3 ${refreshing ? 'animate-spin' : ''}`} />
               </button>
               <button 
                 onClick={() => setShowId(!showId)}
                 className="rounded-full p-1 text-slate-500 transition-colors hover:bg-white/5 hover:text-cyan-400"
-                title="Toggle ID visibility"
+                title="View ID"
               >
                 <Fingerprint className="h-3 w-3" />
               </button>
             </div>
             
             {showId && (
-              <p className="text-[10px] font-mono text-slate-500 break-all bg-black/20 p-1 rounded">
-                UID: {user.id}
+              <p className="text-[9px] font-mono text-slate-500 break-all bg-black/30 p-1.5 rounded-lg border border-white/5">
+                ID: {user.id}
               </p>
             )}
 
             {isEditing ? (
               <div className="mt-4 space-y-3 max-w-xs">
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   <label className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Full Name</label>
                   <Input 
                     value={formData.full_name} 
                     onChange={(e) => setFormData({...formData, full_name: e.target.value})}
-                    className="h-9 rounded-xl border-white/10 bg-white/5 text-white"
-                    placeholder="Trainer Name"
+                    className="h-10 rounded-xl border-white/10 bg-white/5 text-white focus:border-amber-400/50"
+                    placeholder="Enter Name"
                   />
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   <label className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Phone Number</label>
                   <Input 
                     value={formData.phone} 
                     onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                    className="h-9 rounded-xl border-white/10 bg-white/5 text-white"
-                    placeholder="Phone Number"
+                    className="h-10 rounded-xl border-white/10 bg-white/5 text-white focus:border-amber-400/50"
+                    placeholder="Enter Phone"
                   />
                 </div>
                 <div className="flex gap-2 pt-1">
-                  <Button size="sm" onClick={handleUpdateProfile} disabled={loading} className="h-8 rounded-lg bg-emerald-500">
-                    {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3 mr-1" />}
+                  <Button size="sm" onClick={handleUpdateProfile} disabled={loading} className="h-9 rounded-xl bg-emerald-500 hover:bg-emerald-600">
+                    {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5 mr-1" />}
                     Save
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={() => setIsEditing(false)} className="h-8 rounded-lg text-slate-400">
-                    <X className="h-3 w-3 mr-1" />
+                  <Button size="sm" variant="ghost" onClick={() => setIsEditing(false)} className="h-9 rounded-xl text-slate-400 hover:text-white">
+                    <X className="h-3.5 w-3.5 mr-1" />
                     Cancel
                   </Button>
                 </div>
@@ -254,7 +258,7 @@ export default function UserHero({ user, profile, role }: Props) {
                   {canEdit && (
                     <button 
                       onClick={() => setIsEditing(true)}
-                      className="rounded-full p-1.5 text-slate-500 transition-colors hover:bg-white/5 hover:text-amber-400"
+                      className="rounded-full p-2 text-slate-500 transition-colors hover:bg-white/5 hover:text-amber-400"
                     >
                       <Edit2 className="h-4 w-4" />
                     </button>
@@ -275,40 +279,41 @@ export default function UserHero({ user, profile, role }: Props) {
           </div>
         </div>
 
-        <div className="flex flex-col items-center gap-2 md:items-end">
-          <div className="w-[160px] max-w-full">
-            <div className="group relative aspect-square w-full overflow-hidden rounded-2xl border border-white/15 bg-white/5 shadow-xl shadow-black/20">
+        {/* Photo & Controls */}
+        <div className="flex flex-col items-center gap-3 md:items-end">
+          <div className="w-[160px]">
+            <div className="group relative aspect-square w-full overflow-hidden rounded-3xl border border-white/15 bg-white/5 shadow-2xl">
               {localProfile?.avatar_url ? (
-                <img src={localProfile.avatar_url} alt="Profile" className="h-full w-full object-cover" />
+                <img src={localProfile.avatar_url} alt="Profile" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
               ) : (
-                <div className="flex h-full w-full items-center justify-center text-slate-600">
-                  <User className="h-12 w-12" />
+                <div className="flex h-full w-full items-center justify-center text-slate-700">
+                  <User className="h-16 w-16" />
                 </div>
               )}
             </div>
             
             {canEdit && (
-              <div className="mt-2 flex w-full gap-2">
+              <div className="mt-3 flex w-full gap-2">
                 <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
                 <Button 
                   type="button" 
                   onClick={() => fileInputRef.current?.click()} 
                   disabled={uploading} 
-                  className="h-6 min-w-0 flex-1 rounded-md border border-white/15 bg-white/10 px-1.5 text-white backdrop-blur hover:bg-white/15"
+                  className="h-8 flex-1 rounded-xl border border-white/10 bg-white/10 text-white backdrop-blur hover:bg-white/20"
                 >
-                  {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+                  {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
                 </Button>
-                {localProfile?.avatar_url ? (
+                {localProfile?.avatar_url && (
                   <Button 
                     type="button" 
                     onClick={handleAvatarRemove} 
                     disabled={uploading} 
                     variant="outline" 
-                    className="h-6 min-w-0 flex-1 rounded-md border-red-400/25 bg-red-500/10 px-1.5 text-red-200 hover:bg-red-500/20"
+                    className="h-8 flex-1 rounded-xl border-red-500/20 bg-red-500/10 text-red-200 hover:bg-red-500/20"
                   >
-                    <Trash2 className="h-3 w-3" />
+                    <Trash2 className="h-3.5 w-3.5" />
                   </Button>
-                ) : null}
+                )}
               </div>
             )}
           </div>

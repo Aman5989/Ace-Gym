@@ -27,23 +27,10 @@ export async function getCurrentAppUser() {
       .maybeSingle()
   ]);
 
-  // AUTO-FIX: If no profile exists, create one immediately using the service role or upsert
-  // Since this is a server component, we'll try to ensure it exists.
+  // Profile check: The trigger should have created this, but we'll return null if missing
+  // to avoid accidental overwrites from the client side.
   if (!profileResult.data) {
-    console.log(`[AUTH] Auto-creating profile for ${user.email} (${user.id})`);
-    const { data: newProfile } = await supabase
-      .from("profiles")
-      .upsert({ 
-        id: user.id, 
-        full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || "ACE Trainer",
-        updated_at: new Date().toISOString()
-      })
-      .select()
-      .single();
-    
-    if (newProfile) {
-      profileResult.data = newProfile;
-    }
+    console.warn(`[AUTH] Profile missing for ${user.email} (${user.id}). Check database trigger.`);
   }
 
   let role: AppRole = roleResult.data?.role === "admin" ? "admin" : "trainer";

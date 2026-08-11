@@ -53,13 +53,13 @@ export default function UserProfileEditor({ userId, email, initialProfile, onClo
       });
 
       const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Failed to update profile");
+      if (!response.ok) throw new Error(result.error || "Failed to save");
       
-      toast.success(`Profile for ${email} saved`);
+      toast.success(`Profile for ${email} saved successfully`);
       router.refresh();
       onClose();
     } catch (error: any) {
-      toast.error(error.message || "Failed to update profile");
+      toast.error(error.message);
     } finally {
       setLoading(false);
     }
@@ -85,9 +85,9 @@ export default function UserProfileEditor({ userId, email, initialProfile, onClo
         .getPublicUrl(filePath);
 
       setAvatarUrl(publicUrl);
-      toast.success("Photo uploaded. Save to apply changes.");
+      toast.success("Photo uploaded. Click Save to apply.");
     } catch (error: any) {
-      toast.error(error.message || "Failed to upload photo");
+      toast.error("Upload failed: " + error.message);
     } finally {
       setUploading(false);
     }
@@ -95,31 +95,32 @@ export default function UserProfileEditor({ userId, email, initialProfile, onClo
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-md rounded-3xl bg-slate-900 border-white/10 text-white shadow-2xl">
+      <DialogContent className="max-w-md rounded-[2rem] bg-slate-900 border-white/10 text-white shadow-2xl p-6 md:p-8">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Edit Trainer Profile</DialogTitle>
-          <div className="flex flex-col gap-1 mt-1">
-            <p className="text-sm text-slate-400">{email}</p>
-            <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-500 bg-black/20 w-fit px-2 py-0.5 rounded">
+          <DialogTitle className="text-2xl font-black tracking-tight">Edit Trainer Profile</DialogTitle>
+          <div className="flex flex-col gap-1.5 mt-2">
+            <p className="text-sm text-slate-400 font-medium">{email}</p>
+            <div className="flex items-center gap-2 text-[10px] font-mono text-slate-500 bg-black/30 w-fit px-2.5 py-1 rounded-lg border border-white/5">
               <Fingerprint className="h-3 w-3" />
               UID: {userId}
             </div>
           </div>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
+        <div className="space-y-8 py-6">
+          {/* Avatar Section */}
           <div className="flex flex-col items-center gap-4">
-            <div className="relative h-32 w-32 overflow-hidden rounded-3xl border-2 border-white/10 bg-white/5 shadow-xl">
+            <div className="relative h-36 w-36 overflow-hidden rounded-[2rem] border-2 border-white/10 bg-white/5 shadow-2xl">
               {avatarUrl ? (
                 <img src={avatarUrl} alt="Preview" className="h-full w-full object-cover" />
               ) : (
-                <div className="flex h-full w-full items-center justify-center text-slate-600">
+                <div className="flex h-full w-full items-center justify-center text-slate-700">
                   <User className="h-16 w-16" />
                 </div>
               )}
               {uploading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                  <Loader2 className="h-8 w-8 animate-spin text-white" />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                  <Loader2 className="h-8 w-8 animate-spin text-amber-400" />
                 </div>
               )}
             </div>
@@ -131,10 +132,10 @@ export default function UserProfileEditor({ userId, email, initialProfile, onClo
                 variant="outline" 
                 onClick={() => fileInputRef.current?.click()} 
                 disabled={uploading}
-                className="h-8 rounded-lg border-white/15 bg-white/10 text-xs hover:bg-white/15"
+                className="h-9 rounded-xl border-white/10 bg-white/5 px-4 text-xs hover:bg-white/10"
               >
-                <Upload className="mr-1.5 h-3.5 w-3.5" />
-                Upload
+                <Upload className="mr-2 h-3.5 w-3.5" />
+                Upload Photo
               </Button>
               {avatarUrl && (
                 <Button 
@@ -142,41 +143,42 @@ export default function UserProfileEditor({ userId, email, initialProfile, onClo
                   variant="outline" 
                   onClick={() => setAvatarUrl(null)} 
                   disabled={uploading}
-                  className="h-8 rounded-lg border-red-500/25 bg-red-500/10 text-xs text-red-200 hover:bg-red-500/20"
+                  className="h-9 rounded-xl border-red-500/20 bg-red-500/10 px-4 text-xs text-red-200 hover:bg-red-500/20"
                 >
-                  <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-                  Remove
+                  <Trash2 className="h-3.5 w-3.5" />
                 </Button>
               )}
             </div>
           </div>
 
-          <div className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Full Name</label>
+          {/* Form Fields */}
+          <div className="space-y-5">
+            <div className="space-y-2">
+              <label className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500 ml-1">Full Name</label>
               <Input 
                 value={formData.full_name} 
                 onChange={(e) => setFormData({...formData, full_name: e.target.value})}
-                className="h-11 rounded-xl border-white/10 bg-white/5 text-white placeholder:text-slate-600 focus:border-amber-400/50"
-                placeholder="Trainer's display name"
+                className="h-12 rounded-2xl border-white/10 bg-white/5 text-white placeholder:text-slate-600 focus:border-amber-400/50 focus:ring-amber-400/10"
+                placeholder="Enter display name"
               />
             </div>
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Phone Number</label>
+            <div className="space-y-2">
+              <label className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500 ml-1">Phone Number</label>
               <Input 
                 value={formData.phone} 
                 onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                className="h-11 rounded-xl border-white/10 bg-white/5 text-white placeholder:text-slate-600 focus:border-amber-400/50"
-                placeholder="Contact number"
+                className="h-12 rounded-2xl border-white/10 bg-white/5 text-white placeholder:text-slate-600 focus:border-amber-400/50 focus:ring-amber-400/10"
+                placeholder="Enter contact number"
               />
             </div>
           </div>
 
-          <div className="flex gap-3 pt-2">
+          {/* Actions */}
+          <div className="flex gap-3 pt-4">
             <Button 
               onClick={handleUpdateProfile} 
               disabled={loading || uploading}
-              className="flex-1 h-11 rounded-xl bg-amber-400 font-bold text-slate-950 hover:bg-amber-300"
+              className="flex-1 h-12 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 font-bold text-slate-950 hover:from-amber-300 hover:to-amber-400 shadow-lg shadow-amber-400/10"
             >
               {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
               Save Changes
@@ -184,7 +186,7 @@ export default function UserProfileEditor({ userId, email, initialProfile, onClo
             <Button 
               variant="ghost" 
               onClick={onClose}
-              className="h-11 rounded-xl text-slate-400 hover:text-white hover:bg-white/5"
+              className="h-12 rounded-2xl text-slate-400 hover:text-white hover:bg-white/5 px-6"
             >
               Cancel
             </Button>

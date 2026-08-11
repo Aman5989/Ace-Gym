@@ -122,12 +122,18 @@ export default function RoleManagement() {
         {loading ? <p className="px-4 py-5 text-sm text-slate-400">Loading roles…</p> : users.length === 0 ? <p className="px-4 py-5 text-sm text-slate-400">No registered accounts found.</p> : users.map((user) => (
           <div key={user.user_id} className="grid grid-cols-[1fr_110px_40px] items-center gap-3 border-b border-white/5 px-4 py-3 last:border-b-0">
             <div className="flex min-w-0 items-center gap-3">
-              <Users className="h-4 w-4 shrink-0 text-slate-500" />
+              <div className="h-9 w-9 shrink-0 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center">
+                {user.profile?.avatar_url ? (
+                  <img src={user.profile.avatar_url} alt="" className="h-full w-full rounded-xl object-cover" />
+                ) : (
+                  <Users className="h-4 w-4 text-slate-500" />
+                )}
+              </div>
               <div className="flex flex-col min-w-0">
-                <span className="truncate text-sm text-slate-200">{user.email}</span>
-                <div className="flex items-center gap-2">
-                  {user.profile?.full_name && <span className="text-[10px] text-slate-500 truncate">{user.profile.full_name}</span>}
-                  <span className="text-[8px] font-mono text-slate-600 truncate">ID: {user.user_id}</span>
+                <span className="truncate text-sm font-semibold text-slate-200">{user.email}</span>
+                <div className="flex items-center gap-2 overflow-hidden">
+                  {user.profile?.full_name && <span className="text-[10px] text-amber-400/80 truncate font-medium">{user.profile.full_name}</span>}
+                  <span className="text-[8px] font-mono text-slate-600 truncate opacity-60">ID: {user.user_id}</span>
                 </div>
               </div>
             </div>
