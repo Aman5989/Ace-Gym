@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { User, Phone, Upload, Loader2, Camera, Check, X, Edit2, Trash2, RefreshCcw, Fingerprint, Clock, Code } from "lucide-react";
+import { User, Phone, Upload, Loader2, Camera, Check, X, Edit2, Trash2, RefreshCcw, Fingerprint, Clock, Code, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -59,7 +59,6 @@ export default function UserHero({ user, profile, role }: Props) {
     if (!user?.id) return;
     setRefreshing(true);
     try {
-      // Force a fresh read from the database
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
@@ -75,9 +74,9 @@ export default function UserHero({ user, profile, role }: Props) {
           phone: data.phone ?? "",
         });
         setLastSync(new Date().toLocaleTimeString());
-        toast.success("Fresh data loaded from DB");
+        toast.success("Fresh data loaded");
       } else {
-        toast.info("No record found in DB for your ID");
+        toast.info("No record found in DB");
       }
       router.refresh();
     } catch (error: any) {
@@ -105,7 +104,7 @@ export default function UserHero({ user, profile, role }: Props) {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Failed to save");
       
-      toast.success(`Database: ${result.status || 'Success'}`);
+      toast.success(`Updated Your Profile (${user.email})`);
       setIsEditing(false);
       router.refresh();
       setTimeout(() => void handleRefresh(), 800);
@@ -149,7 +148,7 @@ export default function UserHero({ user, profile, role }: Props) {
 
       if (!response.ok) throw new Error("Failed to link photo");
 
-      toast.success("Photo persisted to DB");
+      toast.success("Photo updated");
       router.refresh();
       setTimeout(() => void handleRefresh(), 800);
     } catch (error: any) {
@@ -176,7 +175,7 @@ export default function UserHero({ user, profile, role }: Props) {
 
       if (!response.ok) throw new Error("Failed to remove photo");
 
-      toast.success("Photo removed from DB");
+      toast.success("Photo removed");
       router.refresh();
       setTimeout(() => void handleRefresh(), 800);
     } catch (error: any) {
@@ -194,31 +193,21 @@ export default function UserHero({ user, profile, role }: Props) {
       <div className="relative flex flex-col items-center justify-between gap-6 md:flex-row">
         <div className="flex-1 space-y-4">
           <div className="space-y-1">
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-amber-400/80">
                 ACE<span className="text-white">々</span>Trainer
               </h2>
+              <div className="flex items-center gap-1.5 rounded-full bg-white/5 px-3 py-1 border border-white/5">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">My Profile</span>
+              </div>
               <div className="flex items-center gap-1.5">
-                <button 
-                  onClick={handleRefresh}
-                  disabled={refreshing}
-                  className="rounded-full p-1 text-slate-500 transition-colors hover:bg-white/5 hover:text-amber-400"
-                  title="Force DB Read"
-                >
+                <button onClick={handleRefresh} disabled={refreshing} className="rounded-full p-1 text-slate-500 transition-colors hover:bg-white/5 hover:text-amber-400" title="Refresh Data">
                   <RefreshCcw className={`h-3 w-3 ${refreshing ? 'animate-spin' : ''}`} />
                 </button>
-                <button 
-                  onClick={() => setShowId(!showId)}
-                  className="rounded-full p-1 text-slate-500 transition-colors hover:bg-white/5 hover:text-cyan-400"
-                  title="View ID"
-                >
+                <button onClick={() => setShowId(!showId)} className="rounded-full p-1 text-slate-500 transition-colors hover:bg-white/5 hover:text-cyan-400" title="View ID">
                   <Fingerprint className="h-3 w-3" />
                 </button>
-                <button 
-                  onClick={() => setShowRaw(!showRaw)}
-                  className="rounded-full p-1 text-slate-500 transition-colors hover:bg-white/5 hover:text-emerald-400"
-                  title="View Raw Data"
-                >
+                <button onClick={() => setShowRaw(!showRaw)} className="rounded-full p-1 text-slate-500 transition-colors hover:bg-white/5 hover:text-emerald-400" title="View Raw Data">
                   <Code className="h-3 w-3" />
                 </button>
               </div>
@@ -230,6 +219,11 @@ export default function UserHero({ user, profile, role }: Props) {
               )}
             </div>
             
+            <div className="flex items-center gap-1.5 mt-1 text-[10px] text-slate-500 font-medium">
+              <Mail className="h-3 w-3" />
+              {user?.email}
+            </div>
+
             {showId && (
               <p className="text-[9px] font-mono text-slate-500 break-all bg-black/30 p-1.5 rounded-lg border border-white/5 mt-2">
                 UID: {user.id}

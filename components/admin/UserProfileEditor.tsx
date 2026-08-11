@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { User, Phone, Upload, Loader2, Camera, Check, X, Trash2, Fingerprint, ShieldCheck, Database } from "lucide-react";
+import { User, Phone, Upload, Loader2, Camera, Check, X, Trash2, Fingerprint, Database, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -58,9 +58,9 @@ export default function UserProfileEditor({ userId, email, initialProfile, onClo
       const saved = result.saved;
       toast.success(
         <div className="flex flex-col gap-1">
-          <span className="font-bold text-emerald-400">Database Verified!</span>
+          <span className="font-bold text-emerald-400">Trainer Updated!</span>
+          <span className="text-[10px] text-slate-300">Target: {email}</span>
           <span className="text-[10px] text-slate-300">Name: {saved.full_name}</span>
-          <span className="text-[10px] text-slate-300">Phone: {saved.phone || 'None'}</span>
         </div>
       );
       
@@ -107,14 +107,20 @@ export default function UserProfileEditor({ userId, email, initialProfile, onClo
         <DialogHeader>
           <div className="flex items-center gap-2 text-amber-400 mb-2">
             <Database className="h-4 w-4" />
-            <span className="text-[10px] font-bold uppercase tracking-widest">Verified DB Write</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest">Editing External Account</span>
           </div>
-          <DialogTitle className="text-2xl font-black tracking-tight">Edit Trainer Profile</DialogTitle>
-          <div className="flex flex-col gap-1.5 mt-2">
-            <p className="text-sm text-slate-400 font-medium">{email}</p>
-            <div className="flex items-center gap-2 text-[10px] font-mono text-cyan-400 bg-cyan-400/10 w-fit px-2.5 py-1.5 rounded-lg border border-cyan-400/20">
+          <DialogTitle className="text-2xl font-black tracking-tight flex items-center gap-2">
+            <User className="h-6 w-6 text-amber-400" />
+            Trainer Profile
+          </DialogTitle>
+          <div className="flex flex-col gap-2 mt-3 p-3 rounded-2xl bg-white/5 border border-white/5">
+            <div className="flex items-center gap-2">
+              <Mail className="h-4 w-4 text-amber-400/60" />
+              <p className="text-sm font-bold text-white truncate">{email}</p>
+            </div>
+            <div className="flex items-center gap-2 text-[10px] font-mono text-cyan-400">
               <Fingerprint className="h-3 w-3" />
-              TARGET ID: {userId}
+              UID: {userId}
             </div>
           </div>
         </DialogHeader>
@@ -143,7 +149,7 @@ export default function UserProfileEditor({ userId, email, initialProfile, onClo
                 variant="outline" 
                 onClick={() => fileInputRef.current?.click()} 
                 disabled={uploading}
-                className="h-9 rounded-xl border-white/10 bg-white/5 px-4 text-xs hover:bg-white/10"
+                className="h-9 rounded-xl border-white/10 bg-white/10 px-4 text-xs hover:bg-white/20"
               >
                 <Upload className="mr-2 h-3.5 w-3.5" />
                 Upload Photo
@@ -169,7 +175,7 @@ export default function UserProfileEditor({ userId, email, initialProfile, onClo
                 value={formData.full_name} 
                 onChange={(e) => setFormData({...formData, full_name: e.target.value})}
                 className="h-12 rounded-2xl border-white/10 bg-white/5 text-white placeholder:text-slate-600 focus:border-amber-400/50 focus:ring-amber-400/10"
-                placeholder="Enter display name"
+                placeholder="Enter Trainer's Name"
               />
             </div>
             <div className="space-y-2">
@@ -178,7 +184,7 @@ export default function UserProfileEditor({ userId, email, initialProfile, onClo
                 value={formData.phone} 
                 onChange={(e) => setFormData({...formData, phone: e.target.value})}
                 className="h-12 rounded-2xl border-white/10 bg-white/5 text-white placeholder:text-slate-600 focus:border-amber-400/50 focus:ring-amber-400/10"
-                placeholder="Enter contact number"
+                placeholder="Enter Trainer's Phone"
               />
             </div>
           </div>
@@ -190,7 +196,7 @@ export default function UserProfileEditor({ userId, email, initialProfile, onClo
               className="flex-1 h-12 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 font-bold text-slate-950 hover:from-amber-300 hover:to-amber-400 shadow-lg shadow-amber-400/10"
             >
               {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
-              Verified Save
+              Save Trainer Data
             </Button>
             <Button 
               variant="ghost" 
