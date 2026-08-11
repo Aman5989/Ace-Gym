@@ -67,7 +67,7 @@ export default function UserHero({ user, profile, role }: Props) {
           full_name: data.full_name ?? "",
           phone: data.phone ?? "",
         });
-        toast.success("Profile data found and loaded");
+        toast.success("Profile data updated");
       } else {
         toast.info(`No record found for ${user.email}`);
       }
@@ -221,7 +221,7 @@ export default function UserHero({ user, profile, role }: Props) {
                   <Input 
                     value={formData.full_name} 
                     onChange={(e) => setFormData({...formData, full_name: e.target.value})}
-                    className="h-9 rounded-xl border-white/10 bg-white/5 text-white"
+                    className="h-9 rounded-xl border-white/10 bg-white/5 text-white placeholder:text-slate-600 focus:border-amber-400/50 focus:ring-amber-400/20"
                     placeholder="Trainer Name"
                   />
                 </div>
@@ -230,16 +230,26 @@ export default function UserHero({ user, profile, role }: Props) {
                   <Input 
                     value={formData.phone} 
                     onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                    className="h-9 rounded-xl border-white/10 bg-white/5 text-white"
+                    className="h-9 rounded-xl border-white/10 bg-white/5 text-white placeholder:text-slate-600 focus:border-amber-400/50 focus:ring-amber-400/20"
                     placeholder="Phone Number"
                   />
                 </div>
                 <div className="flex gap-2 pt-1">
-                  <Button size="sm" onClick={handleUpdateProfile} disabled={loading} className="h-8 rounded-lg bg-emerald-500">
+                  <Button 
+                    size="sm" 
+                    onClick={handleUpdateProfile} 
+                    disabled={loading}
+                    className="h-8 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600"
+                  >
                     {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3 mr-1" />}
                     Save
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={() => setIsEditing(false)} className="h-8 rounded-lg text-slate-400">
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    onClick={() => setIsEditing(false)}
+                    className="h-8 rounded-lg text-slate-400 hover:text-white hover:bg-white/5"
+                  >
                     <X className="h-3 w-3 mr-1" />
                     Cancel
                   </Button>
@@ -275,11 +285,16 @@ export default function UserHero({ user, profile, role }: Props) {
           </div>
         </div>
 
+        {/* Right Side: Photo with Aligned Controls */}
         <div className="flex flex-col items-center gap-2 md:items-end">
           <div className="w-[160px] max-w-full">
             <div className="group relative aspect-square w-full overflow-hidden rounded-2xl border border-white/15 bg-white/5 shadow-xl shadow-black/20">
               {localProfile?.avatar_url ? (
-                <img src={localProfile.avatar_url} alt="Profile" className="h-full w-full object-cover" />
+                <img 
+                  src={localProfile.avatar_url} 
+                  alt="Profile" 
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                />
               ) : (
                 <div className="flex h-full w-full items-center justify-center text-slate-600">
                   <User className="h-12 w-12" />
@@ -289,11 +304,19 @@ export default function UserHero({ user, profile, role }: Props) {
             
             {canEdit && (
               <div className="mt-2 flex w-full gap-2">
-                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
+                <input 
+                  ref={fileInputRef}
+                  type="file" 
+                  accept="image/*" 
+                  onChange={handleAvatarUpload} 
+                  className="hidden" 
+                />
                 <Button 
                   type="button" 
                   onClick={() => fileInputRef.current?.click()} 
                   disabled={uploading} 
+                  aria-label="Update profile photo" 
+                  title="Update profile photo" 
                   className="h-6 min-w-0 flex-1 rounded-md border border-white/15 bg-white/10 px-1.5 text-white backdrop-blur hover:bg-white/15"
                 >
                   {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
@@ -304,7 +327,9 @@ export default function UserHero({ user, profile, role }: Props) {
                     onClick={handleAvatarRemove} 
                     disabled={uploading} 
                     variant="outline" 
-                    className="h-6 min-w-0 flex-1 rounded-md border-red-400/25 bg-red-500/10 px-1.5 text-red-200 hover:bg-red-500/20"
+                    aria-label="Remove profile photo" 
+                    title="Remove profile photo" 
+                    className="h-6 min-w-0 flex-1 rounded-md border-red-400/25 bg-red-500/10 px-1.5 text-red-200 hover:bg-red-500/20 hover:text-red-100"
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>
