@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { Check, Edit2, Loader2, Phone, Trash2, Upload, User, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase";
 
@@ -12,6 +13,7 @@ export interface UserProfile {
   full_name: string | null;
   phone: string | null;
   avatar_url: string | null;
+  description: string | null;
   updated_at?: string;
 }
 
@@ -44,12 +46,14 @@ export default function UserHero({ user, profile, role, trainerOptions = [] }: P
   const [formData, setFormData] = useState({
     full_name: initialProfile?.full_name ?? "",
     phone: initialProfile?.phone ?? "",
+    description: initialProfile?.description ?? "",
   });
 
   const selectedTrainer = trainerOptions.find((option) => option.userId === selectedTrainerId);
   const targetUserId = isAdmin ? selectedTrainerId : user?.id;
   const canEdit = isAdmin && Boolean(targetUserId);
   const displayName = localProfile?.full_name || selectedTrainer?.email?.split("@")[0] || user?.email?.split("@")[0] || "Trainer";
+  const firstName = displayName.trim().split(/\s+/)[0] || "Trainer";
 
   function selectTrainer(trainerId: string) {
     const nextTrainer = trainerOptions.find((option) => option.userId === trainerId);
@@ -60,6 +64,7 @@ export default function UserHero({ user, profile, role, trainerOptions = [] }: P
     setFormData({
       full_name: nextProfile?.full_name ?? "",
       phone: nextProfile?.phone ?? "",
+      description: nextProfile?.description ?? "",
     });
     setIsEditing(false);
   }
@@ -77,6 +82,7 @@ export default function UserHero({ user, profile, role, trainerOptions = [] }: P
           full_name: formData.full_name,
           phone: formData.phone,
           avatar_url: localProfile?.avatar_url ?? null,
+          description: formData.description,
         }),
       });
       const result = await response.json();
@@ -116,6 +122,7 @@ export default function UserHero({ user, profile, role, trainerOptions = [] }: P
           full_name: formData.full_name,
           phone: formData.phone,
           avatar_url: publicUrlData.publicUrl,
+          description: formData.description,
         }),
       });
       const result = await response.json();
@@ -152,6 +159,7 @@ export default function UserHero({ user, profile, role, trainerOptions = [] }: P
           full_name: formData.full_name,
           phone: formData.phone,
           avatar_url: null,
+          description: formData.description,
         }),
       });
       const result = await response.json();
@@ -177,8 +185,9 @@ export default function UserHero({ user, profile, role, trainerOptions = [] }: P
       <div className="relative flex flex-col items-center justify-between gap-6 md:flex-row">
         <div className="min-w-0 flex-1 self-stretch">
           <p className="text-xs font-bold uppercase tracking-[0.3em] text-amber-400/80">
-            ACE<span className="text-white">々</span>Trainer
+            ACE<span className="text-white">々</span>{firstName}
           </p>
+          <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.25em] text-slate-400">Trainer</p>
 
           {isAdmin && trainerOptions.length > 0 && (
             <div className="mt-4 max-w-md space-y-1.5">
@@ -218,6 +227,17 @@ export default function UserHero({ user, profile, role, trainerOptions = [] }: P
                   placeholder="Enter trainer phone number"
                 />
               </div>
+              <div className="space-y-1.5">
+                <label htmlFor="trainer-description" className="text-[10px] font-bold uppercase tracking-wider text-slate-500">About the trainer</label>
+                <Textarea
+                  id="trainer-description"
+                  value={formData.description}
+                  onChange={(event) => setFormData({ ...formData, description: event.target.value })}
+                  className="min-h-24 resize-y rounded-xl border-white/10 bg-white/5 text-white"
+                  placeholder="Write 3–4 lines about this trainer"
+                  rows={4}
+                />
+              </div>
               <div className="flex gap-2 pt-1">
                 <Button onClick={saveProfile} disabled={loading} size="sm" className="h-9 rounded-xl bg-emerald-500 font-bold hover:bg-emerald-600">
                   {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="mr-1 h-3.5 w-3.5" />}
@@ -240,6 +260,7 @@ export default function UserHero({ user, profile, role, trainerOptions = [] }: P
                       setFormData({
                         full_name: localProfile?.full_name ?? "",
                         phone: localProfile?.phone ?? "",
+                        description: localProfile?.description ?? "",
                       });
                       setIsEditing(true);
                     }}
@@ -255,6 +276,9 @@ export default function UserHero({ user, profile, role, trainerOptions = [] }: P
                 <Phone className="h-4 w-4 text-amber-400/70" />
                 <span className="text-sm font-medium">{localProfile?.phone || "Phone number not available"}</span>
               </div>
+              <p className="mt-4 max-w-xl whitespace-pre-line text-sm leading-6 text-slate-400">
+                {localProfile?.description || "Trainer description will appear here."}
+              </p>
             </div>
           )}
         </div>

@@ -10,12 +10,13 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { userId, full_name, phone, avatar_url } = body;
+    const { userId, full_name, phone, avatar_url, description } = body;
 
     if (
       typeof userId !== "string" ||
       typeof full_name !== "string" ||
       typeof phone !== "string" ||
+      typeof description !== "string" ||
       (avatar_url !== null && typeof avatar_url !== "string")
     ) {
       return NextResponse.json({ error: "Invalid profile update payload" }, { status: 400 });
@@ -34,6 +35,7 @@ export async function POST(request: Request) {
       new_full_name: full_name,
       new_phone: phone,
       new_avatar_url: avatar_url,
+      new_description: description,
     });
 
     if (error) {
@@ -48,6 +50,7 @@ export async function POST(request: Request) {
           full_name: dbRow.profile_name,
           phone: dbRow.profile_phone,
           avatar_url: dbRow.profile_avatar,
+          description: dbRow.profile_description,
           updated_at: dbRow.profile_updated_at,
         }
       : null;
