@@ -5,18 +5,22 @@ import { ShieldCheck, UserCog, Users, Edit2 } from "lucide-react";
 import UserProfileEditor from "./UserProfileEditor";
 import { createClient } from "@/lib/supabase";
 
+type UserProfile = {
+  id: string;
+  full_name: string | null;
+  phone: string | null;
+  avatar_url: string | null;
+};
+
 type RoleRecord = {
   user_id: string;
   email: string;
   role: "admin" | "trainer";
   created_at: string | null;
-  profile?: {
-    id: string;
-    full_name: string | null;
-    phone: string | null;
-    avatar_url: string | null;
-  } | null;
+  profile?: UserProfile | null;
 };
+
+type RoleApiRecord = Omit<RoleRecord, "profile">;
 
 export default function RoleManagement() {
   const supabase = createClient();
@@ -35,24 +39,25 @@ export default function RoleManagement() {
       const payload = await response.json();
       
       if (response.ok) {
-        const roles = payload.users ?? [];
+        const roles = (payload.users ?? []) as RoleApiRecord[];
         
-        // Fetch profiles for these users in parallel
-        const { data: profiles } = await supabase
+        // Fetch profiles for these users in parallel.
+        const { data } = await supabase
           .from("profiles")
           .select("*")
-          .in("id", roles.map((u: any) => u.user_id));
+          .in("id", roles.map((user) => user.user_id));
+        const profiles = (data ?? []) as UserProfile[];
 
-        const usersWithProfiles = roles.map((u: any) => ({
-          ...u,
-          profile: profiles?.find((p: any) => p.id === u.user_id) || null
+        const usersWithProfiles: RoleRecord[] = roles.map((user) => ({
+          ...user,
+          profile: profiles.find((profile) => profile.id === user.user_id) ?? null,
         }));
 
         setUsers(usersWithProfiles);
       } else {
         setMessage(payload.error ?? "Unable to load roles");
       }
-    } catch (err) {
+    } catch {
       setMessage("Error loading user data");
     } finally {
       setLoading(false);
@@ -89,7 +94,7 @@ export default function RoleManagement() {
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-300">Access control</p>
           <h2 className="mt-2 text-xl font-semibold text-white">Team roles</h2>
-          <p className="mt-1 text-sm text-slate-400">Assign access to registered Ace Gym accounts.</p>
+          <p className="mt-1 text-sm text-slate-400">Assign access and manage trainer names, phone numbers, and photos. Trainer dashboards are read-only.</p>
         </div>
         <div className="rounded-2xl border border-cyan-300/20 bg-cyan-300/10 p-3 text-cyan-200">
           <ShieldCheck className="h-6 w-6" />
@@ -117,7 +122,7 @@ export default function RoleManagement() {
 
       <div className="mt-6 overflow-hidden rounded-2xl border border-white/10">
         <div className="grid grid-cols-[1fr_110px_40px] gap-3 border-b border-white/10 bg-white/5 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
-          <span>Account</span><span>Role</span><span></span>
+          <span>Account</span><span>Role</span><span className="text-right">Details</span>
         </div>
         {loading ? <p className="px-4 py-5 text-sm text-slate-400">Loading roles…</p> : users.length === 0 ? <p className="px-4 py-5 text-sm text-slate-400">No registered accounts found.</p> : users.map((user) => (
           <div key={user.user_id} className="grid grid-cols-[1fr_110px_40px] items-center gap-3 border-b border-white/5 px-4 py-3 last:border-b-0">
@@ -138,13 +143,18 @@ export default function RoleManagement() {
               </div>
             </div>
             <span className={`inline-flex w-fit items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${user.role === "admin" ? "bg-violet-400/15 text-violet-200" : "bg-emerald-400/15 text-emerald-200"}`}><UserCog className="h-3.5 w-3.5" />{user.role}</span>
-            <button 
-              onClick={() => setEditingUser(user)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-white/5 hover:text-amber-400 transition-colors"
-              title="Edit Profile"
-            >
-              <Edit2 className="h-4 w-4" />
-            </button>
+            {user.role === "trainer" ? (
+              <button
+                onClick={() => setEditingUser(user)}
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-white/5 hover:text-amber-400 transition-colors"
+                title="Edit trainer details"
+                aria-label={`Edit trainer details for ${user.email}`}
+              >
+                <Edit2 className="h-4 w-4" />
+              </button>
+            ) : (
+              <span aria-label="Administrator profile is not editable here" />
+            )}
           </div>
         ))}
       </div>

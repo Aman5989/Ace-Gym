@@ -14,7 +14,7 @@ export async function getCurrentAppUser() {
   const normalizedEmail = (user.email ?? user.user_metadata?.email ?? "").trim().toLowerCase();
   
   // Fetch profile and role in parallel
-  let [roleResult, profileResult] = await Promise.all([
+  const [roleResult, profileResult] = await Promise.all([
     supabase
       .from("user_roles")
       .select("role")
