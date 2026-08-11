@@ -8,7 +8,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Member } from "@/types/member";
 import EditMemberDialog from "./EditMemberDialog";
-import PaymentDialog from "@/components/payments/PaymentDialog";
 import PaymentHistory from "@/components/payments/PaymentHistory";
 import { downloadMemberPdf } from "@/lib/member-pdf";
 import {
@@ -71,7 +70,6 @@ export default function MemberActions({ member, canViewPayments = true, canEdit 
 
   return (
     <div className="flex items-center gap-1.5">
-      {canViewPayments ? <PaymentDialog member={member} compact onSuccess={() => router.refresh()} /> : null}
       {canViewPayments ? <PaymentHistory member={member} compact /> : null}
       <Button type="button" variant="ghost" size="icon" onClick={downloadProfile} title="Download member PDF" className="h-9 w-9 rounded-xl text-indigo-500 hover:bg-indigo-50 hover:text-indigo-600">
         <Download className="h-4 w-4" />

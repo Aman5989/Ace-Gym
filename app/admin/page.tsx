@@ -43,6 +43,8 @@ export default async function Home() {
         <div className="ace-reveal">
           <DashboardHeader
             canCloseMonth={canViewPayments}
+            canRecordPayments={role === "admin" || role === "trainer"}
+            members={members}
             paymentCount={canViewPayments ? paymentSummary.count : 0}
             total={canViewPayments ? paymentSummary.monthTotal : 0}
             heroImageUrl={canViewPayments ? heroImageUrl : null}

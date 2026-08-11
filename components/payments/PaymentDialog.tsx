@@ -30,10 +30,15 @@ interface Props {
   member: Member;
   onSuccess?: () => void;
   compact?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  showTrigger?: boolean;
 }
 
-export default function PaymentDialog({ member, onSuccess, compact = false }: Props) {
-  const [open, setOpen] = useState(false);
+export default function PaymentDialog({ member, onSuccess, compact = false, open, onOpenChange, showTrigger = true }: Props) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = open !== undefined;
+  const dialogOpen = open ?? internalOpen;
   const [loading, setLoading] = useState(false);
   const [amount, setAmount] = useState(String(member.monthly_fee ?? ""));
   const [cashAmount, setCashAmount] = useState("");
@@ -48,6 +53,12 @@ export default function PaymentDialog({ member, onSuccess, compact = false }: Pr
     () => advanceDueDate(member.next_due_date, member.membership_plan, paymentDate),
     [member.membership_plan, member.next_due_date, paymentDate],
   );
+
+  function handleOpenChange(nextOpen: boolean) {
+    if (!isControlled) setInternalOpen(nextOpen);
+    onOpenChange?.(nextOpen);
+    if (!nextOpen) reset();
+  }
 
   function reset() {
     setAmount(String(member.monthly_fee ?? ""));
@@ -98,8 +109,7 @@ export default function PaymentDialog({ member, onSuccess, compact = false }: Pr
       toast.success(`Payment recorded for ${member.full_name}`, {
         description: `Next due date: ${new Date(`${result.next_due_date}T00:00:00`).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}`,
       });
-      setOpen(false);
-      reset();
+      handleOpenChange(false);
       onSuccess?.();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Unable to record payment");
@@ -109,11 +119,13 @@ export default function PaymentDialog({ member, onSuccess, compact = false }: Pr
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button type="button" size={compact ? "icon" : "default"} className={compact ? "h-9 w-9 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100" : "h-11 rounded-xl bg-emerald-500 px-5 font-semibold text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-600"} title="Record payment" />}>
-        <Check className={compact ? "h-4 w-4" : "mr-2 h-4 w-4"} />
-        {!compact && "Record Payment"}
-      </DialogTrigger>
+    <Dialog open={dialogOpen} onOpenChange={handleOpenChange}>
+      {showTrigger ? (
+        <DialogTrigger render={<Button type="button" size={compact ? "icon" : "default"} className={compact ? "h-9 w-9 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100" : "h-11 rounded-xl bg-emerald-500 px-5 font-semibold text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-600"} title="Record payment" />}>
+          <Check className={compact ? "h-4 w-4" : "mr-2 h-4 w-4"} />
+          {!compact && "Record Payment"}
+        </DialogTrigger>
+      ) : null}
       <DialogContent className="w-[calc(100%-1rem)] max-h-[calc(100dvh-1rem)] overflow-y-auto overscroll-contain rounded-3xl border-slate-200 bg-white p-4 text-slate-900 shadow-2xl sm:max-h-[calc(100dvh-2rem)] sm:max-w-lg sm:p-6">
         <DialogHeader className="pr-8">
           <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600 sm:h-11 sm:w-11"><WalletCards className="h-5 w-5" /></div>

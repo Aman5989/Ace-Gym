@@ -3,7 +3,7 @@
 
 import { Button } from "@/components/ui/button";
 
-import { Plus, LogOut, Flame, Upload, Image as ImageIcon, Loader2, Trash2 } from "lucide-react";
+import { Plus, LogOut, Flame, Upload, Image as ImageIcon, Loader2, Trash2, RefreshCw, Search } from "lucide-react";
 
 import { useRef, useState } from "react";
 
@@ -14,6 +14,8 @@ import { toast } from "sonner";
 
 import MemberForm from "@/components/forms/MemberForm";
 import MonthCloseButton from "@/components/dashboard/MonthCloseButton";
+import PaymentDialog from "@/components/payments/PaymentDialog";
+import { Member } from "@/types/member";
 
 import { createClient } from "@/lib/supabase";
 
@@ -27,18 +29,36 @@ import {
 
 
 
-export default function DashboardHeader({ canCloseMonth = false, paymentCount = 0, total = 0, heroImageUrl = null }: { canCloseMonth?: boolean; paymentCount?: number; total?: number; heroImageUrl?: string | null }) {
+export default function DashboardHeader({ canCloseMonth = false, canRecordPayments = false, paymentCount = 0, total = 0, heroImageUrl = null, members = [] }: { canCloseMonth?: boolean; canRecordPayments?: boolean; paymentCount?: number; total?: number; heroImageUrl?: string | null; members?: Member[] }) {
 
 
   const [open, setOpen] = useState(false);
+  const [renewalOpen, setRenewalOpen] = useState(false);
+  const [renewalSearch, setRenewalSearch] = useState("");
+  const [renewalMember, setRenewalMember] = useState<Member | null>(null);
+  const [renewalPaymentOpen, setRenewalPaymentOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [imageUrl, setImageUrl] = useState(heroImageUrl);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
 
   const router = useRouter();
+  const matchingRenewalMembers = members.filter((member) => {
+    const query = renewalSearch.trim().toLowerCase();
+    if (!query) return false;
+    return member.full_name.toLowerCase().includes(query) || member.phone.toLowerCase().includes(query);
+  }).slice(0, 8);
 
+  function openRenewalDialog() {
+    setRenewalSearch("");
+    setRenewalOpen(true);
+  }
 
+  function selectRenewalMember(member: Member) {
+    setRenewalMember(member);
+    setRenewalOpen(false);
+    setRenewalPaymentOpen(true);
+  }
 
 
   async function handleImageUpload(event: React.ChangeEvent<HTMLInputElement>) {
@@ -335,6 +355,12 @@ export default function DashboardHeader({ canCloseMonth = false, paymentCount = 
             <Plus className="mr-2 h-5 w-5" />
             Add Member
           </Button>
+          {canRecordPayments ? (
+            <Button onClick={openRenewalDialog} className="ace-focus-ring h-11 rounded-xl bg-gradient-to-r from-emerald-400 to-teal-500 px-6 font-semibold text-slate-950 shadow-lg shadow-emerald-500/20 transition-all hover:from-emerald-300 hover:to-teal-400">
+              <RefreshCw className="mr-2 h-5 w-5" />
+              Renewal
+            </Button>
+          ) : null}
           <Button onClick={handleLogout} variant="destructive" className="ace-focus-ring h-11 rounded-xl border border-red-500/30 bg-red-500/10 px-6 font-medium text-red-300 backdrop-blur transition-all hover:bg-red-500/20">
             <LogOut className="mr-2 h-5 w-5" />
             Logout
@@ -405,6 +431,65 @@ export default function DashboardHeader({ canCloseMonth = false, paymentCount = 
 
       </Dialog>
 
+      <Dialog open={renewalOpen} onOpenChange={setRenewalOpen}>
+        <DialogContent className="w-[calc(100%-1rem)] max-h-[calc(100dvh-1rem)] overflow-y-auto rounded-3xl border-slate-200 bg-white p-4 text-slate-900 shadow-2xl sm:max-w-lg sm:p-6">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-slate-900">Find member for renewal</DialogTitle>
+          </DialogHeader>
+          <div className="mt-3 space-y-4">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input
+                autoFocus
+                value={renewalSearch}
+                onChange={(event) => setRenewalSearch(event.target.value)}
+                placeholder="Search by member name or phone"
+                className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+              />
+            </div>
+            <div className="space-y-2">
+              {!renewalSearch.trim() ? (
+                <p className="rounded-2xl bg-slate-50 p-5 text-center text-sm text-slate-500">Start typing to search existing members.</p>
+              ) : matchingRenewalMembers.length === 0 ? (
+                <p className="rounded-2xl bg-slate-50 p-5 text-center text-sm text-slate-500">No matching member found.</p>
+              ) : (
+                matchingRenewalMembers.map((member) => (
+                  <button
+                    key={member.id}
+                    type="button"
+                    onClick={() => selectRenewalMember(member)}
+                    className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white p-4 text-left transition hover:border-emerald-300 hover:bg-emerald-50"
+                  >
+                    <span>
+                      <span className="block font-semibold text-slate-900">{member.full_name}</span>
+                      <span className="mt-1 block text-xs text-slate-500">{member.phone} · {member.membership_plan}</span>
+                    </span>
+                    <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700">Renew</span>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {renewalMember ? (
+        <PaymentDialog
+          key={renewalMember.id}
+          member={renewalMember}
+          open={renewalPaymentOpen}
+          showTrigger={false}
+          onOpenChange={(nextOpen) => {
+            setRenewalPaymentOpen(nextOpen);
+            if (!nextOpen) setRenewalMember(null);
+          }}
+          onSuccess={() => {
+            setRenewalPaymentOpen(false);
+            setRenewalMember(null);
+            router.refresh();
+          }}
+        />
+      ) : null}
 
 
     </>

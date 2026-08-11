@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { requireAdmin } from "@/lib/authorization";
-import { advanceDueDate } from "@/lib/payment-utils";
+import { getCurrentAppUser, requireAdmin } from "@/lib/authorization";
 
 export async function GET(request: NextRequest) {
   const memberId = request.nextUrl.searchParams.get("member_id");
@@ -39,10 +38,6 @@ export async function POST(request: NextRequest) {
     const paymentMethod = String(body.payment_method ?? "UPI");
     const paymentDate = String(body.payment_date ?? "");
     const notes = body.notes ? String(body.notes) : null;
-    const requestedCategory = String(body.fee_category ?? "renewal").toLowerCase();
-    const feeCategory = ["registration", "renewal", "adjustment"].includes(requestedCategory)
-      ? requestedCategory
-      : "renewal";
     const requestedCash = Number(body.cash_amount ?? 0);
     const requestedUpi = Number(body.upi_amount ?? 0);
     const isMixed = paymentMethod === "UPI + Cash" || paymentMethod === "Half UPI + Half Cash";
@@ -50,87 +45,55 @@ export async function POST(request: NextRequest) {
     const upiAmount = isMixed ? requestedUpi : paymentMethod === "UPI" ? amount : 0;
     const componentTotal = cashAmount + upiAmount;
 
-    if (!memberId || !Number.isFinite(amount) || amount <= 0 || !paymentDate || !Number.isFinite(cashAmount) || !Number.isFinite(upiAmount) || cashAmount < 0 || upiAmount < 0 || (isMixed && (cashAmount <= 0 || upiAmount <= 0 || Math.abs(componentTotal - amount) > 0.01))) {
+    if (
+      !memberId ||
+      !Number.isFinite(amount) ||
+      amount <= 0 ||
+      !paymentDate ||
+      !Number.isFinite(cashAmount) ||
+      !Number.isFinite(upiAmount) ||
+      cashAmount < 0 ||
+      upiAmount < 0 ||
+      (isMixed && (cashAmount <= 0 || upiAmount <= 0 || Math.abs(componentTotal - amount) > 0.01))
+    ) {
       return NextResponse.json(
         { error: "member_id, a positive amount, and payment_date are required" },
         { status: 400 },
       );
     }
 
-    const admin = await requireAdmin();
-    if (!admin) return NextResponse.json({ error: "Administrator access required" }, { status: 403 });
-
-    const supabase = admin.supabase;
-    const { data: member, error: memberError } = await supabase
-      .from("members")
-      .select("id, full_name, membership_plan, next_due_date")
-      .eq("id", memberId)
-      .single();
-
-    if (memberError || !member) {
-      return NextResponse.json(
-        { error: memberError?.message ?? "Member not found" },
-        { status: 404 },
-      );
+    const context = await getCurrentAppUser();
+    if (!context.user || !["admin", "trainer"].includes(context.role ?? "")) {
+      return NextResponse.json({ error: "Admin or trainer access required" }, { status: 403 });
     }
 
-    const { data: period, error: periodError } = await supabase
-      .from("collection_periods")
-      .select("id")
-      .eq("status", "open")
-      .order("opened_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    const { data, error } = await context.supabase.rpc("record_member_renewal", {
+      target_member_id: memberId,
+      target_amount: amount,
+      target_payment_method: paymentMethod,
+      target_cash_amount: cashAmount,
+      target_upi_amount: upiAmount,
+      target_payment_date: paymentDate,
+      target_notes: notes,
+    });
 
-    if (periodError || !period) {
-      return NextResponse.json({ error: "No open collection period is available" }, { status: 409 });
+    if (error) {
+      console.error("RENEWAL RPC ERROR:", error);
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    const nextDueDate = advanceDueDate(
-      member.next_due_date,
-      member.membership_plan,
-      paymentDate,
+    const renewal = Array.isArray(data) ? data[0] : data;
+    if (!renewal?.payment_id || !renewal?.next_due_date) {
+      return NextResponse.json({ error: "Renewal could not be verified" }, { status: 502 });
+    }
+
+    return NextResponse.json(
+      {
+        payment: { id: renewal.payment_id },
+        next_due_date: renewal.next_due_date,
+      },
+      { status: 201 },
     );
-
-    const { data: payment, error: paymentError } = await supabase
-      .from("payments")
-      .insert({
-        member_id: memberId,
-        amount,
-        payment_method: paymentMethod,
-        cash_amount: cashAmount,
-        upi_amount: upiAmount,
-        fee_category: feeCategory,
-        payment_date: paymentDate,
-        notes,
-        period_id: period.id,
-      })
-      .select("*")
-      .single();
-
-    if (paymentError || !payment) {
-      console.error("PAYMENT INSERT ERROR:", paymentError);
-      return NextResponse.json(
-        { error: paymentError?.message ?? "Unable to record payment" },
-        { status: 500 },
-      );
-    }
-
-    const { error: updateError } = await supabase
-      .from("members")
-      .update({ next_due_date: nextDueDate, updated_at: new Date().toISOString() })
-      .eq("id", memberId);
-
-    if (updateError) {
-      await supabase.from("payments").delete().eq("id", payment.id);
-      console.error("DUE DATE UPDATE ERROR:", updateError);
-      return NextResponse.json(
-        { error: "Payment was not completed because the due date could not be updated" },
-        { status: 500 },
-      );
-    }
-
-    return NextResponse.json({ payment, next_due_date: nextDueDate }, { status: 201 });
   } catch (error) {
     console.error("PAYMENT REQUEST FAILED:", error);
     return NextResponse.json({ error: "Invalid payment request" }, { status: 400 });
