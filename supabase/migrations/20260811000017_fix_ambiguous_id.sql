@@ -78,6 +78,7 @@ DROP POLICY IF EXISTS "profiles_authenticated_read" ON public.profiles;
 DROP POLICY IF EXISTS "profiles_permissive_read" ON public.profiles;
 DROP POLICY IF EXISTS "profiles_universal_read" ON public.profiles;
 DROP POLICY IF EXISTS "profiles_select_all" ON public.profiles;
+DROP POLICY IF EXISTS "profiles_authenticated_select" ON public.profiles;
 
 CREATE POLICY "profiles_authenticated_select" ON public.profiles FOR SELECT TO authenticated USING (true);
 
