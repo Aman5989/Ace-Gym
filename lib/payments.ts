@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient as createServerClient } from "@/lib/supabase-server";
 import { Payment } from "@/types/payment";
 
@@ -115,7 +116,7 @@ const EMPTY_TOTALS: PaymentTotals = {
   renewalCount: 0,
 };
 
-export async function getPaymentsSummary() {
+export const getPaymentsSummary = cache(async () => {
   const supabase = await createServerClient();
   const { data: period } = await supabase
     .from("collection_periods")
@@ -140,6 +141,6 @@ export async function getPaymentsSummary() {
   }
   const payments = (data ?? []) as Payment[];
   return { payments, ...aggregate(payments), period: period as CollectionPeriod | null };
-}
+});
 
 export { aggregate as aggregatePaymentTotals };

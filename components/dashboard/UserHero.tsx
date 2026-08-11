@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { User, Phone, Upload, Loader2, Camera, Check, X, Edit2 } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { User, Phone, Upload, Loader2, Camera, Check, X, Edit2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -34,6 +34,14 @@ export default function UserHero({ user, profile, role }: Props) {
     full_name: profile?.full_name ?? "",
     phone: profile?.phone ?? "",
   });
+
+  // Update local state if profile prop changes
+  useEffect(() => {
+    setFormData({
+      full_name: profile?.full_name ?? "",
+      phone: profile?.phone ?? "",
+    });
+  }, [profile]);
 
   const canEdit = role === "admin";
 
@@ -70,11 +78,11 @@ export default function UserHero({ user, profile, role }: Props) {
     setUploading(true);
     try {
       const fileExt = file.name.split('.').pop();
-      const filePath = `${user.id}/${Math.random()}.${fileExt}`;
+      const filePath = `${user.id}/${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file);
+        .upload(filePath, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
@@ -96,6 +104,26 @@ export default function UserHero({ user, profile, role }: Props) {
       router.refresh();
     } catch (error: any) {
       toast.error(error.message || "Failed to upload avatar");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function handleAvatarRemove() {
+    if (!canEdit || !profile?.avatar_url) return;
+    setUploading(true);
+    try {
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: null })
+        .eq("id", user.id);
+
+      if (updateError) throw updateError;
+
+      toast.success("Avatar removed");
+      router.refresh();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to remove avatar");
     } finally {
       setUploading(false);
     }
@@ -173,7 +201,7 @@ export default function UserHero({ user, profile, role }: Props) {
                 <div className="flex flex-wrap items-center gap-4 text-slate-400">
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-amber-400/60" />
-                    <span className="text-sm font-medium">{role === 'admin' ? 'Administrator' : 'Gym Trainer'}</span>
+                    <span className="text-sm font-medium">{role === 'admin' ? 'Administrator' : 'Trainer'}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Phone className="h-4 w-4 text-amber-400/60" />
@@ -185,51 +213,57 @@ export default function UserHero({ user, profile, role }: Props) {
           </div>
         </div>
 
-        {/* Right Side: Photo */}
-        <div className="relative shrink-0">
-          <div className="group relative h-32 w-32 overflow-hidden rounded-3xl border-2 border-white/10 bg-white/5 shadow-2xl md:h-40 md:w-40">
-            {profile?.avatar_url ? (
-              <img 
-                src={profile.avatar_url} 
-                alt="Profile" 
-                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" 
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-slate-600">
-                <User className="h-16 w-16" />
-              </div>
-            )}
+        {/* Right Side: Photo with Aligned Controls */}
+        <div className="flex flex-col items-center gap-2 md:items-end">
+          <div className="w-[160px] max-w-full">
+            <div className="group relative aspect-square w-full overflow-hidden rounded-2xl border border-white/15 bg-white/5 shadow-xl shadow-black/20">
+              {profile?.avatar_url ? (
+                <img 
+                  src={profile.avatar_url} 
+                  alt="Profile" 
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-slate-600">
+                  <User className="h-12 w-12" />
+                </div>
+              )}
+            </div>
             
             {canEdit && (
-              <div 
-                onClick={() => fileInputRef.current?.click()}
-                className="absolute inset-0 flex cursor-pointer flex-col items-center justify-center bg-black/60 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-              >
-                {uploading ? (
-                  <Loader2 className="h-6 w-6 animate-spin text-white" />
-                ) : (
-                  <>
-                    <Camera className="mb-1 h-6 w-6 text-white" />
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-white">Change Photo</span>
-                  </>
-                )}
+              <div className="mt-2 flex w-full gap-2">
+                <input 
+                  ref={fileInputRef}
+                  type="file" 
+                  accept="image/*" 
+                  onChange={handleAvatarUpload} 
+                  className="hidden" 
+                />
+                <Button 
+                  type="button" 
+                  onClick={() => fileInputRef.current?.click()} 
+                  disabled={uploading} 
+                  aria-label="Update profile photo" 
+                  title="Update profile photo" 
+                  className="h-6 min-w-0 flex-1 rounded-md border border-white/15 bg-white/10 px-1.5 text-white backdrop-blur hover:bg-white/15"
+                >
+                  {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+                </Button>
+                {profile?.avatar_url ? (
+                  <Button 
+                    type="button" 
+                    onClick={handleAvatarRemove} 
+                    disabled={uploading} 
+                    variant="outline" 
+                    aria-label="Remove profile photo" 
+                    title="Remove profile photo" 
+                    className="h-6 min-w-0 flex-1 rounded-md border-red-400/25 bg-red-500/10 px-1.5 text-red-200 hover:bg-red-500/20 hover:text-red-100"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                ) : null}
               </div>
             )}
-          </div>
-          
-          {canEdit && (
-            <input 
-              ref={fileInputRef}
-              type="file" 
-              accept="image/*" 
-              onChange={handleAvatarUpload} 
-              className="hidden" 
-            />
-          )}
-          
-          {/* Status Badge */}
-          <div className="absolute -bottom-2 -right-2 rounded-xl bg-emerald-500 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-white shadow-lg shadow-emerald-500/40">
-            Online
           </div>
         </div>
       </div>

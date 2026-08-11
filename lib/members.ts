@@ -1,9 +1,8 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase-server";
-
 import { Member } from "@/types/member";
 
-
-export async function getMembers(): Promise<Member[]> {
+export const getMembers = cache(async (): Promise<Member[]> => {
   const supabase = await createClient();
 
   const {
@@ -27,5 +26,4 @@ export async function getMembers(): Promise<Member[]> {
 
 
   return data as Member[];
-
-}
+});

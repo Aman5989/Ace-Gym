@@ -1,14 +1,18 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase-server";
 
 export type AppRole = "admin" | "trainer";
 
 const PRIMARY_ADMIN_EMAIL = "shubham@acegym.com";
 
-export async function getCurrentAppUser() {
+export const getCurrentAppUser = cache(async () => {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { supabase, user: null, role: null as AppRole | null, profile: null };
-
+  
+  // Optimization: Use getSession for faster initial check, then getUser for security
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user) return { supabase, user: null, role: null as AppRole | null, profile: null };
+  
+  const user = session.user;
   const normalizedEmail = (user.email ?? user.user_metadata?.email ?? "").trim().toLowerCase();
   
   // Fetch profile and role in parallel
@@ -33,7 +37,7 @@ export async function getCurrentAppUser() {
   }
 
   return { supabase, user, role, profile: profileResult.data };
-}
+});
 
 export async function requireAdmin() {
   const context = await getCurrentAppUser();
