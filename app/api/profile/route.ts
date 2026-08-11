@@ -21,7 +21,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid profile update payload" }, { status: 400 });
     }
 
-    if (userId !== context.user.id) {
+    const canManageTrainer = context.role === "admin";
+    if (!canManageTrainer && userId !== context.user.id) {
       return NextResponse.json({ error: "You can only update your own trainer details" }, { status: 403 });
     }
 

@@ -1,7 +1,7 @@
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import StatsCards from "@/components/dashboard/StatsCards";
 import MembersTable from "@/components/dashboard/MembersTable";
-import UserHero from "@/components/dashboard/UserHero";
+import UserHero, { type TrainerHeroOption } from "@/components/dashboard/UserHero";
 import { getMembers } from "@/lib/members";
 import { getPaymentsSummary } from "@/lib/payments";
 import { getCurrentAppUser } from "@/lib/authorization";
@@ -12,13 +12,30 @@ import { getHeroImageUrl } from "@/lib/gym-settings";
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const [{ user, role, profile }, members, paymentSummary, heroImageUrl] = await Promise.all([
+  const [{ user, role, profile, supabase }, members, paymentSummary, heroImageUrl] = await Promise.all([
     getCurrentAppUser(),
     getMembers(),
     getPaymentsSummary(),
     getHeroImageUrl(),
   ]);
   const canViewPayments = role === "admin";
+
+  type RoleRow = { user_id: string; email: string; role: string };
+  let trainerOptions: TrainerHeroOption[] = [];
+
+  if (canViewPayments) {
+    const { data: roleData } = await supabase.rpc("admin_list_user_roles");
+    const trainerRows = ((roleData ?? []) as RoleRow[]).filter((row) => row.role !== "admin");
+    const { data: trainerProfiles } = trainerRows.length
+      ? await supabase.from("profiles").select("*").in("id", trainerRows.map((row) => row.user_id))
+      : { data: [] };
+
+    trainerOptions = trainerRows.map((row) => ({
+      userId: row.user_id,
+      email: row.email,
+      profile: (trainerProfiles ?? []).find((trainerProfile) => trainerProfile.id === row.user_id) ?? null,
+    }));
+  }
   return (
     <main className="ace-shell min-h-screen overflow-hidden bg-linear-to-br from-[#05071a] via-[#0a0e27] to-[#100828]">
       <div className="relative mx-auto max-w-[1600px] space-y-8 px-4 py-6 sm:px-6 sm:py-10">
@@ -32,7 +49,7 @@ export default async function Home() {
           />
         </div>
         <div className="ace-reveal ace-reveal-1-5">
-          <UserHero user={user} profile={profile} role={role!} />
+          <UserHero user={user} profile={profile} role={role!} trainerOptions={trainerOptions} />
         </div>
         <div className="ace-reveal ace-reveal-2">
           <StatsCards

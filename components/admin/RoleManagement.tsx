@@ -99,7 +99,7 @@ export default function RoleManagement() {
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-300">Access control</p>
           <h2 className="mt-2 text-xl font-semibold text-white">Team roles</h2>
-          <p className="mt-1 text-sm text-slate-400">Assign access to registered Ace Gym accounts. Trainer details are edited from the trainer dashboard only.</p>
+          <p className="mt-1 text-sm text-slate-400">Assign access to registered Ace Gym accounts. Manage trainer details from the shared Trainer Detail hero above.</p>
         </div>
         <div className="rounded-2xl border border-cyan-300/20 bg-cyan-300/10 p-3 text-cyan-200">
           <ShieldCheck className="h-6 w-6" />
