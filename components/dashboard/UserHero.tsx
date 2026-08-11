@@ -59,7 +59,7 @@ export default function UserHero({ user, profile, role }: Props) {
     if (!user?.id) return;
     setRefreshing(true);
     try {
-      // Direct query with cache busting timestamp
+      // Force a fresh read from the database
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
@@ -105,7 +105,7 @@ export default function UserHero({ user, profile, role }: Props) {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Failed to save");
       
-      toast.success(`Success: ${result.status || 'Saved'}`);
+      toast.success(`Database: ${result.status || 'Success'}`);
       setIsEditing(false);
       router.refresh();
       setTimeout(() => void handleRefresh(), 800);

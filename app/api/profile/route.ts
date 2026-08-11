@@ -13,12 +13,18 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { userId, full_name, phone, avatar_url } = body;
 
-    console.log(`[API] Triple-Check Update: Target ${userId} | Caller ${currentUser.email}`);
+    // CRITICAL LOGGING: Verify what the server is receiving
+    console.log(`[API] MASTER BYPASS REQUEST:`);
+    console.log(`- Target ID: ${userId}`);
+    console.log(`- New Name: "${full_name}"`);
+    console.log(`- New Phone: "${phone}"`);
+    console.log(`- New Avatar: "${avatar_url}"`);
+    console.log(`- Caller: ${currentUser.email} (${role})`);
 
     const supabase = await createClient();
     
-    // Call the Triple-Check RPC
-    const { data: status, error } = await supabase.rpc("triple_check_update_profile", {
+    // Call the Master Bypass RPC
+    const { data: status, error } = await supabase.rpc("master_bypass_update_profile", {
       target_id: userId,
       new_name: full_name,
       new_phone: phone,
@@ -26,11 +32,11 @@ export async function POST(request: Request) {
     });
 
     if (error) {
-      console.error(`[API] Triple-Check RPC Error:`, error);
+      console.error(`[API] Master Bypass RPC Error:`, error);
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    console.log(`[API] Profile ${status} for ${userId}`);
+    console.log(`[API] DATABASE PERSISTENCE STATUS: ${status}`);
 
     // Clear all possible Next.js caches
     revalidatePath("/admin");
