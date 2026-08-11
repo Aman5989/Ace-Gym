@@ -1,6 +1,7 @@
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import StatsCards from "@/components/dashboard/StatsCards";
 import MembersTable from "@/components/dashboard/MembersTable";
+import UserHero from "@/components/dashboard/UserHero";
 import { getMembers } from "@/lib/members";
 import { getPaymentsSummary } from "@/lib/payments";
 import { getCurrentAppUser } from "@/lib/authorization";
@@ -9,7 +10,7 @@ import RoleManagement from "@/components/admin/RoleManagement";
 import { getHeroImageUrl } from "@/lib/gym-settings";
 
 export default async function Home() {
-  const [{ role }, members, paymentSummary, heroImageUrl] = await Promise.all([
+  const [{ user, role, profile }, members, paymentSummary, heroImageUrl] = await Promise.all([
     getCurrentAppUser(),
     getMembers(),
     getPaymentsSummary(),
@@ -30,6 +31,9 @@ export default async function Home() {
             heroImageUrl={canViewPayments ? heroImageUrl : null}
             isTrainer={isTrainer}
           />
+        </div>
+        <div className="ace-reveal ace-reveal-1-5">
+          <UserHero user={user} profile={profile} role={role!} />
         </div>
         <div className="ace-reveal ace-reveal-2">
           <StatsCards
