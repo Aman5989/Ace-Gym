@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
     const amount = Number(body.amount);
     const paymentMethod = String(body.payment_method ?? "UPI");
     const paymentDate = String(body.payment_date ?? "");
+    const membershipPlan = String(body.membership_plan ?? "");
     const notes = body.notes ? String(body.notes) : null;
     const requestedCash = Number(body.cash_amount ?? 0);
     const requestedUpi = Number(body.upi_amount ?? 0);
@@ -50,6 +51,7 @@ export async function POST(request: NextRequest) {
       !Number.isFinite(amount) ||
       amount <= 0 ||
       !paymentDate ||
+      !["Monthly", "Quarterly", "Half Yearly", "Yearly"].includes(membershipPlan) ||
       !Number.isFinite(cashAmount) ||
       !Number.isFinite(upiAmount) ||
       cashAmount < 0 ||
@@ -75,6 +77,7 @@ export async function POST(request: NextRequest) {
       target_upi_amount: upiAmount,
       target_payment_date: paymentDate,
       target_notes: notes,
+      target_membership_plan: membershipPlan,
     });
 
     if (error) {
@@ -91,6 +94,7 @@ export async function POST(request: NextRequest) {
       {
         payment: { id: renewal.payment_id },
         next_due_date: renewal.next_due_date,
+        membership_plan: renewal.membership_plan,
       },
       { status: 201 },
     );

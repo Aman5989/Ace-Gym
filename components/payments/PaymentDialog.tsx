@@ -44,14 +44,15 @@ export default function PaymentDialog({ member, onSuccess, compact = false, open
   const [cashAmount, setCashAmount] = useState("");
   const [upiAmount, setUpiAmount] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("UPI");
+  const [membershipPlan, setMembershipPlan] = useState(member.membership_plan);
   const [paymentDate, setPaymentDate] = useState(toDateInputValue(new Date()));
   const [notes, setNotes] = useState("");
 
   const isMixed = paymentMethod === "UPI + Cash";
   const totalAmount = isMixed ? Number(cashAmount || 0) + Number(upiAmount || 0) : Number(amount || 0);
   const nextDueDate = useMemo(
-    () => advanceDueDate(member.next_due_date, member.membership_plan, paymentDate),
-    [member.membership_plan, member.next_due_date, paymentDate],
+    () => advanceDueDate(member.next_due_date, membershipPlan, paymentDate),
+    [membershipPlan, member.next_due_date, paymentDate],
   );
 
   function handleOpenChange(nextOpen: boolean) {
@@ -65,6 +66,7 @@ export default function PaymentDialog({ member, onSuccess, compact = false, open
     setCashAmount("");
     setUpiAmount("");
     setPaymentMethod("UPI");
+    setMembershipPlan(member.membership_plan);
     setPaymentDate(toDateInputValue(new Date()));
     setNotes("");
   }
@@ -95,6 +97,7 @@ export default function PaymentDialog({ member, onSuccess, compact = false, open
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           member_id: member.id,
+          membership_plan: membershipPlan,
           amount: totalAmount,
           cash_amount: isMixed ? Number(cashAmount) : paymentMethod === "Cash" ? totalAmount : 0,
           upi_amount: isMixed ? Number(upiAmount) : paymentMethod === "UPI" ? totalAmount : 0,
@@ -130,9 +133,20 @@ export default function PaymentDialog({ member, onSuccess, compact = false, open
         <DialogHeader className="pr-8">
           <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600 sm:h-11 sm:w-11"><WalletCards className="h-5 w-5" /></div>
           <DialogTitle className="text-xl font-bold sm:text-2xl">Record renewal fee</DialogTitle>
-          <DialogDescription className="text-slate-500">{member.full_name} · {member.membership_plan} plan</DialogDescription>
+          <DialogDescription className="text-slate-500">{member.full_name} · Current plan: {member.membership_plan}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="mt-3 space-y-4 sm:space-y-5">
+          <div className="space-y-2">
+            <Label>Renewal membership plan</Label>
+            <Select value={membershipPlan} onValueChange={(value) => setMembershipPlan(value ?? member.membership_plan)}>
+              <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {(["Monthly", "Quarterly", "Half Yearly", "Yearly"] as const).map((plan) => (
+                  <SelectItem key={plan} value={plan}>{plan}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div className="space-y-2">
             <Label>Payment method</Label>
             <Select value={paymentMethod} onValueChange={handleMethodChange}>
