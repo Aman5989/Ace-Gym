@@ -13,12 +13,12 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { userId, full_name, phone, avatar_url } = body;
 
-    console.log(`[API] Force Update Request for ID: ${userId} by ${currentUser.email}`);
+    console.log(`[API] Triple-Check Update: Target ${userId} | Caller ${currentUser.email}`);
 
     const supabase = await createClient();
     
-    // Call the SECURITY DEFINER RPC to bypass all RLS bottlenecks
-    const { error } = await supabase.rpc("final_update_profile", {
+    // Call the Triple-Check RPC
+    const { data: status, error } = await supabase.rpc("triple_check_update_profile", {
       target_id: userId,
       new_name: full_name,
       new_phone: phone,
@@ -26,15 +26,22 @@ export async function POST(request: Request) {
     });
 
     if (error) {
-      console.error(`[API] RPC Error:`, error);
+      console.error(`[API] Triple-Check RPC Error:`, error);
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
+
+    console.log(`[API] Profile ${status} for ${userId}`);
 
     // Clear all possible Next.js caches
     revalidatePath("/admin");
     revalidatePath("/");
 
-    return NextResponse.json({ success: true });
+    return new NextResponse(JSON.stringify({ success: true, status }), {
+      status: 200,
+      headers: {
+        'Cache-Control': 'no-store, max-age=0',
+      },
+    });
   } catch (error: any) {
     console.error("PROFILE UPDATE FATAL ERROR:", error);
     return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });

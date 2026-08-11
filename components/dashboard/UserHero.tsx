@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { User, Phone, Upload, Loader2, Camera, Check, X, Edit2, Trash2, RefreshCcw, Fingerprint, Clock } from "lucide-react";
+import { User, Phone, Upload, Loader2, Camera, Check, X, Edit2, Trash2, RefreshCcw, Fingerprint, Clock, Code } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -32,6 +32,7 @@ export default function UserHero({ user, profile, role }: Props) {
   const [uploading, setUploading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [showId, setShowId] = useState(false);
+  const [showRaw, setShowRaw] = useState(false);
   const [lastSync, setLastSync] = useState<string | null>(profile?.updated_at || null);
   
   const [localProfile, setLocalProfile] = useState<UserProfile | null>(profile);
@@ -58,7 +59,7 @@ export default function UserHero({ user, profile, role }: Props) {
     if (!user?.id) return;
     setRefreshing(true);
     try {
-      // Force a fresh read from the database
+      // Direct query with cache busting timestamp
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
@@ -74,9 +75,9 @@ export default function UserHero({ user, profile, role }: Props) {
           phone: data.phone ?? "",
         });
         setLastSync(new Date().toLocaleTimeString());
-        toast.success("Database read successful");
+        toast.success("Fresh data loaded from DB");
       } else {
-        toast.info("No profile record found in DB");
+        toast.info("No record found in DB for your ID");
       }
       router.refresh();
     } catch (error: any) {
@@ -104,10 +105,9 @@ export default function UserHero({ user, profile, role }: Props) {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Failed to save");
       
-      toast.success("Saved to database");
+      toast.success(`Success: ${result.status || 'Saved'}`);
       setIsEditing(false);
       router.refresh();
-      // Auto-refresh after a short delay to confirm the write
       setTimeout(() => void handleRefresh(), 800);
     } catch (error: any) {
       toast.error(error.message);
@@ -214,6 +214,13 @@ export default function UserHero({ user, profile, role }: Props) {
                 >
                   <Fingerprint className="h-3 w-3" />
                 </button>
+                <button 
+                  onClick={() => setShowRaw(!showRaw)}
+                  className="rounded-full p-1 text-slate-500 transition-colors hover:bg-white/5 hover:text-emerald-400"
+                  title="View Raw Data"
+                >
+                  <Code className="h-3 w-3" />
+                </button>
               </div>
               {lastSync && (
                 <div className="flex items-center gap-1 text-[9px] text-slate-500 bg-white/5 px-2 py-0.5 rounded-full">
@@ -227,6 +234,12 @@ export default function UserHero({ user, profile, role }: Props) {
               <p className="text-[9px] font-mono text-slate-500 break-all bg-black/30 p-1.5 rounded-lg border border-white/5 mt-2">
                 UID: {user.id}
               </p>
+            )}
+
+            {showRaw && (
+              <pre className="text-[8px] font-mono text-emerald-400/80 break-all bg-black/40 p-2 rounded-lg border border-emerald-500/20 mt-2 max-w-xs overflow-auto">
+                {JSON.stringify(localProfile, null, 2)}
+              </pre>
             )}
 
             {isEditing ? (
