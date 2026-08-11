@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { User, Phone, Upload, Loader2, Camera, Check, X, Trash2, Fingerprint } from "lucide-react";
+import { User, Phone, Upload, Loader2, Camera, Check, X, Trash2, Fingerprint, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -55,7 +55,7 @@ export default function UserProfileEditor({ userId, email, initialProfile, onClo
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Failed to save");
       
-      toast.success(`Profile for ${email} saved successfully`);
+      toast.success(`DATA FORCED TO DB: ID ...${userId.slice(-4)}`);
       router.refresh();
       onClose();
     } catch (error: any) {
@@ -85,7 +85,7 @@ export default function UserProfileEditor({ userId, email, initialProfile, onClo
         .getPublicUrl(filePath);
 
       setAvatarUrl(publicUrl);
-      toast.success("Photo uploaded. Click Save to apply.");
+      toast.success("Photo ready to save");
     } catch (error: any) {
       toast.error("Upload failed: " + error.message);
     } finally {
@@ -97,13 +97,20 @@ export default function UserProfileEditor({ userId, email, initialProfile, onClo
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="max-w-md rounded-[2rem] bg-slate-900 border-white/10 text-white shadow-2xl p-6 md:p-8">
         <DialogHeader>
+          <div className="flex items-center gap-2 text-emerald-400 mb-2">
+            <ShieldCheck className="h-4 w-4" />
+            <span className="text-[10px] font-bold uppercase tracking-widest">Master Admin Mode</span>
+          </div>
           <DialogTitle className="text-2xl font-black tracking-tight">Edit Trainer Profile</DialogTitle>
           <div className="flex flex-col gap-1.5 mt-2">
             <p className="text-sm text-slate-400 font-medium">{email}</p>
-            <div className="flex items-center gap-2 text-[10px] font-mono text-slate-500 bg-black/30 w-fit px-2.5 py-1 rounded-lg border border-white/5">
+            <div className="flex items-center gap-2 text-[10px] font-mono text-amber-400 bg-amber-400/10 w-fit px-2.5 py-1.5 rounded-lg border border-amber-400/20">
               <Fingerprint className="h-3 w-3" />
-              UID: {userId}
+              TARGET ID: {userId}
             </div>
+            <p className="text-[9px] text-slate-500 italic mt-1">
+              Verify this ID matches the one on the Trainer's dashboard.
+            </p>
           </div>
         </DialogHeader>
 
@@ -181,7 +188,7 @@ export default function UserProfileEditor({ userId, email, initialProfile, onClo
               className="flex-1 h-12 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 font-bold text-slate-950 hover:from-amber-300 hover:to-amber-400 shadow-lg shadow-amber-400/10"
             >
               {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
-              Save Changes
+              Force Save to DB
             </Button>
             <Button 
               variant="ghost" 
