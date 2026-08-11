@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { User, Phone, Upload, Loader2, Camera, Check, X, Trash2, Fingerprint, Database, Mail } from "lucide-react";
+import { User, Upload, Loader2, Check, Trash2, Fingerprint, Database, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -21,6 +21,10 @@ interface Props {
   email: string;
   initialProfile: UserProfile | null;
   onClose: () => void;
+}
+
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : "An unexpected error occurred";
 }
 
 export default function UserProfileEditor({ userId, email, initialProfile, onClose }: Props) {
@@ -56,18 +60,23 @@ export default function UserProfileEditor({ userId, email, initialProfile, onClo
       if (!response.ok) throw new Error(result.error || "Failed to save");
       
       const saved = result.saved;
+      if (!saved || result.targetId !== userId || saved.id !== userId) {
+        throw new Error("The saved profile does not match the selected trainer account");
+      }
+
       toast.success(
         <div className="flex flex-col gap-1">
           <span className="font-bold text-emerald-400">Trainer Updated!</span>
           <span className="text-[10px] text-slate-300">Target: {email}</span>
+          <span className="text-[10px] font-mono text-cyan-300">Profile ID: {saved.id}</span>
           <span className="text-[10px] text-slate-300">Name: {saved.full_name}</span>
         </div>
       );
       
       router.refresh();
       onClose();
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -94,8 +103,8 @@ export default function UserProfileEditor({ userId, email, initialProfile, onClo
 
       setAvatarUrl(publicUrl);
       toast.success("Photo uploaded successfully");
-    } catch (error: any) {
-      toast.error("Upload failed: " + error.message);
+    } catch (error: unknown) {
+      toast.error("Upload failed: " + getErrorMessage(error));
     } finally {
       setUploading(false);
     }
