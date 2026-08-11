@@ -27,7 +27,7 @@ import {
 
 
 
-export default function DashboardHeader({ canCloseMonth = false, paymentCount = 0, total = 0, heroImageUrl = null, isTrainer = false }: { canCloseMonth?: boolean; paymentCount?: number; total?: number; heroImageUrl?: string | null; isTrainer?: boolean }) {
+export default function DashboardHeader({ canCloseMonth = false, paymentCount = 0, total = 0, heroImageUrl = null }: { canCloseMonth?: boolean; paymentCount?: number; total?: number; heroImageUrl?: string | null }) {
 
 
   const [open, setOpen] = useState(false);
@@ -233,17 +233,6 @@ export default function DashboardHeader({ canCloseMonth = false, paymentCount = 
               />
 
 
-              <span
-                className="
-                  text-xs
-                  font-bold
-                  uppercase
-                  tracking-[0.3em]
-                  text-amber-400/80
-                "
-              >
-                ACE<span className="text-white">々</span>Trainer
-              </span>
 
 
             </div>

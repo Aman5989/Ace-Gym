@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/authorization";
+import { getCurrentAppUser } from "@/lib/authorization";
 import { revalidatePath } from "next/cache";
 
 export async function POST(request: Request) {
   try {
-    const admin = await requireAdmin();
-    if (!admin) {
-      return NextResponse.json({ error: "Administrator access required" }, { status: 403 });
+    const context = await getCurrentAppUser();
+    if (!context.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
@@ -21,7 +21,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid profile update payload" }, { status: 400 });
     }
 
-    const supabase = admin.supabase;
+    if (userId !== context.user.id) {
+      return NextResponse.json({ error: "You can only update your own trainer details" }, { status: 403 });
+    }
+
+    const supabase = context.supabase;
 
     // Use the v3 RPC, whose unambiguous return-column names avoid PostgreSQL ID collisions.
     const { data, error } = await supabase.rpc("master_update_profile_v3", {
