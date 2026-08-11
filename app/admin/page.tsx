@@ -19,8 +19,6 @@ export default async function Home() {
     getHeroImageUrl(),
   ]);
   const canViewPayments = role === "admin";
-  const isTrainer = role === "trainer";
-
   return (
     <main className="ace-shell min-h-screen overflow-hidden bg-linear-to-br from-[#05071a] via-[#0a0e27] to-[#100828]">
       <div className="relative mx-auto max-w-[1600px] space-y-8 px-4 py-6 sm:px-6 sm:py-10">
@@ -31,7 +29,6 @@ export default async function Home() {
             paymentCount={canViewPayments ? paymentSummary.count : 0}
             total={canViewPayments ? paymentSummary.monthTotal : 0}
             heroImageUrl={canViewPayments ? heroImageUrl : null}
-            isTrainer={isTrainer}
           />
         </div>
         <div className="ace-reveal ace-reveal-1-5">
