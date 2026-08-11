@@ -133,3 +133,12 @@ CREATE POLICY "avatars_public_read"
 ON storage.objects
 FOR SELECT TO public
 USING (bucket_id = 'avatars');
+
+-- Revoke every legacy self-service profile RPC. The application uses only
+-- master_update_profile_v3, whose administrator check is defined above.
+REVOKE ALL ON FUNCTION public.admin_update_user_profile(uuid, text, text, text) FROM PUBLIC, authenticated;
+REVOKE ALL ON FUNCTION public.final_update_profile(uuid, text, text, text) FROM PUBLIC, authenticated;
+REVOKE ALL ON FUNCTION public.triple_check_update_profile(uuid, text, text, text) FROM PUBLIC, authenticated;
+REVOKE ALL ON FUNCTION public.master_bypass_update_profile(uuid, text, text, text) FROM PUBLIC, authenticated;
+REVOKE ALL ON FUNCTION public.direct_path_update_profile(uuid, text, text, text) FROM PUBLIC, authenticated;
+REVOKE ALL ON FUNCTION public.master_update_profile_v2(uuid, text, text, text) FROM PUBLIC, authenticated;
