@@ -49,16 +49,19 @@ export default function UserHero({ user, profile, role }: Props) {
     if (!canEdit) return;
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from("profiles")
-        .upsert({
-          id: user.id,
+      const response = await fetch("/api/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.id,
           full_name: formData.full_name,
           phone: formData.phone,
-          updated_at: new Date().toISOString(),
-        });
+          avatar_url: profile?.avatar_url,
+        }),
+      });
 
-      if (error) throw error;
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Failed to update profile");
       
       toast.success("Profile updated successfully");
       setIsEditing(false);
@@ -90,15 +93,19 @@ export default function UserHero({ user, profile, role }: Props) {
         .from('avatars')
         .getPublicUrl(filePath);
 
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .upsert({
-          id: user.id,
+      const response = await fetch("/api/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.id,
+          full_name: formData.full_name,
+          phone: formData.phone,
           avatar_url: publicUrl,
-          updated_at: new Date().toISOString(),
-        });
+        }),
+      });
 
-      if (updateError) throw updateError;
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Failed to update photo");
 
       toast.success("Avatar updated successfully");
       router.refresh();
@@ -113,12 +120,19 @@ export default function UserHero({ user, profile, role }: Props) {
     if (!canEdit || !profile?.avatar_url) return;
     setUploading(true);
     try {
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({ avatar_url: null })
-        .eq("id", user.id);
+      const response = await fetch("/api/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.id,
+          full_name: formData.full_name,
+          phone: formData.phone,
+          avatar_url: null,
+        }),
+      });
 
-      if (updateError) throw updateError;
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Failed to remove photo");
 
       toast.success("Avatar removed");
       router.refresh();
@@ -213,7 +227,7 @@ export default function UserHero({ user, profile, role }: Props) {
           </div>
         </div>
 
-        {/* Right Side: Photo with Aligned Controls (Matches DashboardHeader style) */}
+        {/* Right Side: Photo with Aligned Controls */}
         <div className="flex flex-col items-center gap-2 md:items-end">
           <div className="w-[160px] max-w-full">
             <div className="group relative aspect-square w-full overflow-hidden rounded-2xl border border-white/15 bg-white/5 shadow-xl shadow-black/20">

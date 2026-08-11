@@ -41,17 +41,19 @@ export default function UserProfileEditor({ userId, email, initialProfile, onClo
   async function handleUpdateProfile() {
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from("profiles")
-        .upsert({
-          id: userId,
+      const response = await fetch("/api/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
           full_name: formData.full_name,
           phone: formData.phone,
           avatar_url: avatarUrl,
-          updated_at: new Date().toISOString(),
-        });
+        }),
+      });
 
-      if (error) throw error;
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Failed to update profile");
       
       toast.success(`Profile for ${email} updated`);
       router.refresh();
