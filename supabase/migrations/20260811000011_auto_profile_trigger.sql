@@ -60,7 +60,7 @@ ON CONFLICT (id) DO NOTHING;
 -- 5. Simplified RLS Policies (The "Super Fix")
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
--- Drop ALL possible previous policy names
+-- Drop ALL possible previous profile policy names
 DROP POLICY IF EXISTS "profiles_select_policy" ON public.profiles;
 DROP POLICY IF EXISTS "profiles_self_policy" ON public.profiles;
 DROP POLICY IF EXISTS "profiles_admin_policy" ON public.profiles;
@@ -70,8 +70,14 @@ DROP POLICY IF EXISTS "profiles_update_own" ON public.profiles;
 DROP POLICY IF EXISTS "profiles_admin_insert" ON public.profiles;
 DROP POLICY IF EXISTS "profiles_admin_update" ON public.profiles;
 DROP POLICY IF EXISTS "profiles_admin_delete" ON public.profiles;
+DROP POLICY IF EXISTS "profiles_select_all" ON public.profiles;
+DROP POLICY IF EXISTS "profiles_update_self" ON public.profiles;
+DROP POLICY IF EXISTS "profiles_admin_all" ON public.profiles;
+DROP POLICY IF EXISTS "profiles_user_own_policy" ON public.profiles;
+DROP POLICY IF EXISTS "profiles_read_all" ON public.profiles;
+DROP POLICY IF EXISTS "profiles_self_all" ON public.profiles;
 
--- Policy 1: Everyone can see all profiles (Public for authenticated users)
+-- Policy 1: Everyone can see all profiles
 CREATE POLICY "profiles_select_all"
 ON public.profiles FOR SELECT TO authenticated
 USING (true);
@@ -89,9 +95,27 @@ USING (public.is_admin())
 WITH CHECK (public.is_admin());
 
 -- 6. Storage Policies (Simplified)
-DROP POLICY IF EXISTS "avatars_read_all" ON storage.objects;
-DROP POLICY IF EXISTS "avatars_admin_policy" ON storage.objects;
+-- Drop ALL possible previous storage policy names
+DROP POLICY IF EXISTS "avatars_select_policy" ON storage.objects;
 DROP POLICY IF EXISTS "avatars_self_policy" ON storage.objects;
+DROP POLICY IF EXISTS "avatars_admin_policy" ON storage.objects;
+DROP POLICY IF EXISTS "avatars_select_all" ON storage.objects;
+DROP POLICY IF EXISTS "avatars_insert_all" ON storage.objects;
+DROP POLICY IF EXISTS "avatars_update_all" ON storage.objects;
+DROP POLICY IF EXISTS "avatars_delete_all" ON storage.objects;
+DROP POLICY IF EXISTS "avatars_read_public" ON storage.objects;
+DROP POLICY IF EXISTS "avatars_admin_manage" ON storage.objects;
+DROP POLICY IF EXISTS "avatars_user_own" ON storage.objects;
+DROP POLICY IF EXISTS "avatars_insert_staff" ON storage.objects;
+DROP POLICY IF EXISTS "avatars_update_staff" ON storage.objects;
+DROP POLICY IF EXISTS "avatars_delete_staff" ON storage.objects;
+DROP POLICY IF EXISTS "avatars_read_all" ON storage.objects;
+DROP POLICY IF EXISTS "avatars_insert_policy" ON storage.objects;
+DROP POLICY IF EXISTS "avatars_update_policy" ON storage.objects;
+DROP POLICY IF EXISTS "avatars_delete_policy" ON storage.objects;
+DROP POLICY IF EXISTS "Avatar images are publicly accessible" ON storage.objects;
+DROP POLICY IF EXISTS "avatars_admin_all" ON storage.objects;
+DROP POLICY IF EXISTS "avatars_self_all" ON storage.objects;
 
 CREATE POLICY "avatars_select_all"
 ON storage.objects FOR SELECT TO public
