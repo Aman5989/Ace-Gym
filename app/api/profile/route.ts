@@ -13,59 +13,32 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { userId, full_name, phone, avatar_url } = body;
 
-    console.log(`[API] Profile Update Request for ID: ${userId}`);
-
-    // Security check: Only admins can update other users' profiles
-    if (userId !== currentUser.id && role !== "admin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    console.log(`[API] Profile Update Request: Target ID ${userId} | Caller ${currentUser.email} (${role})`);
 
     const supabase = await createClient();
     
-    // Explicit two-step process to ensure Insert works correctly under RLS
-    const { data: existing } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("id", userId)
-      .maybeSingle();
+    // Call the SECURITY DEFINER RPC to bypass RLS issues
+    const { error } = await supabase.rpc("admin_update_user_profile", {
+      target_user_id: userId,
+      new_full_name: full_name,
+      new_phone: phone,
+      new_avatar_url: avatar_url
+    });
 
-    let result;
-    if (existing) {
-      console.log(`[API] Updating existing profile for ${userId}`);
-      result = await supabase
-        .from("profiles")
-        .update({
-          full_name,
-          phone,
-          avatar_url,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", userId);
-    } else {
-      console.log(`[API] Inserting new profile for ${userId}`);
-      result = await supabase
-        .from("profiles")
-        .insert({
-          id: userId,
-          full_name,
-          phone,
-          avatar_url,
-          updated_at: new Date().toISOString(),
-        });
+    if (error) {
+      console.error(`[API] RPC Error:`, error);
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    if (result.error) {
-      console.error(`[API] Supabase Error:`, result.error);
-      throw result.error;
-    }
+    console.log(`[API] Profile updated successfully for ${userId}`);
 
-    // Revalidate the admin and home paths to clear server-side cache
+    // Clear server-side cache
     revalidatePath("/admin");
     revalidatePath("/");
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error("PROFILE UPDATE ERROR:", error);
+    console.error("PROFILE UPDATE FATAL ERROR:", error);
     return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
   }
 }
