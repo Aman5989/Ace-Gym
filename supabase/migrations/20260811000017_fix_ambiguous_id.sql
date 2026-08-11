@@ -80,3 +80,25 @@ DROP POLICY IF EXISTS "profiles_universal_read" ON public.profiles;
 DROP POLICY IF EXISTS "profiles_select_all" ON public.profiles;
 
 CREATE POLICY "profiles_authenticated_select" ON public.profiles FOR SELECT TO authenticated USING (true);
+
+-- 5. Storage Policies Cleanup (Bulletproof)
+-- Ensure we don't hit "already exists" errors for storage policies
+DO $$
+BEGIN
+    DROP POLICY IF EXISTS "avatars_admin_all" ON storage.objects;
+    DROP POLICY IF EXISTS "avatars_admin_policy" ON storage.objects;
+    DROP POLICY IF EXISTS "avatars_public_read" ON storage.objects;
+EXCEPTION
+    WHEN undefined_table THEN
+        NULL;
+END $$;
+
+-- Recreate storage policies
+CREATE POLICY "avatars_admin_all" ON storage.objects
+FOR ALL TO authenticated
+USING (bucket_id = 'avatars' AND public.is_admin())
+WITH CHECK (bucket_id = 'avatars' AND public.is_admin());
+
+CREATE POLICY "avatars_public_read" ON storage.objects
+FOR SELECT TO public
+USING (bucket_id = 'avatars');

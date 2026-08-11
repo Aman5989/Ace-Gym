@@ -114,9 +114,9 @@ export default function UserProfileEditor({ userId, email, initialProfile, onClo
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="max-w-md rounded-[2rem] bg-slate-900 border-white/10 text-white shadow-2xl p-6 md:p-8">
         <DialogHeader>
-          <div className="flex items-center gap-2 text-amber-400 mb-2">
+          <div className="flex items-center gap-2 text-amber-400 mb-2 animate-pulse">
             <Database className="h-4 w-4" />
-            <span className="text-[10px] font-bold uppercase tracking-widest">Editing External Account</span>
+            <span className="text-[10px] font-black uppercase tracking-widest">⚠️ EDITING TRAINER ACCOUNT</span>
           </div>
           <DialogTitle className="text-2xl font-black tracking-tight flex items-center gap-2">
             <User className="h-6 w-6 text-amber-400" />
@@ -124,8 +124,8 @@ export default function UserProfileEditor({ userId, email, initialProfile, onClo
           </DialogTitle>
           <div className="flex flex-col gap-2 mt-3 p-3 rounded-2xl bg-white/5 border border-white/5">
             <div className="flex items-center gap-2">
-              <Mail className="h-4 w-4 text-amber-400/60" />
-              <p className="text-sm font-bold text-white truncate">{email}</p>
+              <Mail className="h-4 w-4 text-cyan-400" />
+              <p className="text-lg font-black text-white truncate">{email}</p>
             </div>
             <div className="flex items-center gap-2 text-[10px] font-mono text-cyan-400">
               <Fingerprint className="h-3 w-3" />

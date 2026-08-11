@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { User, Phone, Upload, Loader2, Camera, Check, X, Edit2, Trash2, RefreshCcw, Fingerprint, Clock, Code, Mail } from "lucide-react";
+import { User, Phone, Upload, Loader2, Camera, Check, X, Edit2, Trash2, RefreshCcw, Fingerprint, Clock, Code, Mail, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -74,9 +74,9 @@ export default function UserHero({ user, profile, role }: Props) {
           phone: data.phone ?? "",
         });
         setLastSync(new Date().toLocaleTimeString());
-        toast.success("Fresh data loaded");
+        toast.success("Fresh data loaded from DB");
       } else {
-        toast.info("No record found in DB");
+        toast.info("No record found in DB for your UID");
       }
       router.refresh();
     } catch (error: any) {
@@ -104,7 +104,12 @@ export default function UserHero({ user, profile, role }: Props) {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Failed to save");
       
-      toast.success(`Updated Your Profile (${user.email})`);
+      toast.success(
+        <div className="flex flex-col gap-1">
+          <span className="font-bold">Updated YOUR Profile!</span>
+          <span className="text-[10px] opacity-80">Target: {user.email}</span>
+        </div>
+      );
       setIsEditing(false);
       router.refresh();
       setTimeout(() => void handleRefresh(), 800);
@@ -148,7 +153,7 @@ export default function UserHero({ user, profile, role }: Props) {
 
       if (!response.ok) throw new Error("Failed to link photo");
 
-      toast.success("Photo updated");
+      toast.success("Your photo updated");
       router.refresh();
       setTimeout(() => void handleRefresh(), 800);
     } catch (error: any) {
@@ -175,7 +180,7 @@ export default function UserHero({ user, profile, role }: Props) {
 
       if (!response.ok) throw new Error("Failed to remove photo");
 
-      toast.success("Photo removed");
+      toast.success("Your photo removed");
       router.refresh();
       setTimeout(() => void handleRefresh(), 800);
     } catch (error: any) {
@@ -197,9 +202,22 @@ export default function UserHero({ user, profile, role }: Props) {
               <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-amber-400/80">
                 ACE<span className="text-white">々</span>Trainer
               </h2>
-              <div className="flex items-center gap-1.5 rounded-full bg-white/5 px-3 py-1 border border-white/5">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">My Profile</span>
+              <div className="flex items-center gap-1.5 rounded-full bg-cyan-400/20 px-3 py-1 border border-cyan-400/30">
+                <span className="text-[10px] font-black text-cyan-300 uppercase tracking-widest">My Personal Profile</span>
               </div>
+              
+              {role === "admin" && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => document.getElementById('role-management-section')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="h-6 rounded-full border-amber-400/20 bg-amber-400/10 px-3 text-[9px] font-bold text-amber-300 hover:bg-amber-400/20"
+                >
+                  <Users className="mr-1 h-2.5 w-2.5" />
+                  Edit Other Trainers
+                </Button>
+              )}
+
               <div className="flex items-center gap-1.5">
                 <button onClick={handleRefresh} disabled={refreshing} className="rounded-full p-1 text-slate-500 transition-colors hover:bg-white/5 hover:text-amber-400" title="Refresh Data">
                   <RefreshCcw className={`h-3 w-3 ${refreshing ? 'animate-spin' : ''}`} />
@@ -214,19 +232,19 @@ export default function UserHero({ user, profile, role }: Props) {
               {lastSync && (
                 <div className="flex items-center gap-1 text-[9px] text-slate-500 bg-white/5 px-2 py-0.5 rounded-full">
                   <Clock className="h-2.5 w-2.5" />
-                  Synced: {lastSync.includes('T') ? new Date(lastSync).toLocaleTimeString() : lastSync}
+                  DB Sync: {lastSync.includes('T') ? new Date(lastSync).toLocaleTimeString() : lastSync}
                 </div>
               )}
             </div>
             
-            <div className="flex items-center gap-1.5 mt-1 text-[10px] text-slate-500 font-medium">
-              <Mail className="h-3 w-3" />
-              {user?.email}
+            <div className="flex items-center gap-1.5 mt-1 text-[10px] text-slate-400 font-bold">
+              <Mail className="h-3 w-3 text-cyan-400/60" />
+              Logged in as: {user?.email}
             </div>
 
             {showId && (
-              <p className="text-[9px] font-mono text-slate-500 break-all bg-black/30 p-1.5 rounded-lg border border-white/5 mt-2">
-                UID: {user.id}
+              <p className="text-[9px] font-mono text-cyan-400 break-all bg-black/30 p-1.5 rounded-lg border border-cyan-500/20 mt-2">
+                MY UID: {user.id}
               </p>
             )}
 
@@ -237,14 +255,15 @@ export default function UserHero({ user, profile, role }: Props) {
             )}
 
             {isEditing ? (
-              <div className="mt-4 space-y-3 max-w-xs">
+              <div className="mt-4 space-y-3 max-w-xs p-4 rounded-2xl bg-white/5 border border-white/10 shadow-inner">
+                <div className="text-[10px] font-bold text-amber-400 uppercase tracking-widest mb-2">Editing Your Details</div>
                 <div className="space-y-1.5">
                   <label className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Full Name</label>
                   <Input 
                     value={formData.full_name} 
                     onChange={(e) => setFormData({...formData, full_name: e.target.value})}
                     className="h-10 rounded-xl border-white/10 bg-white/5 text-white focus:border-amber-400/50"
-                    placeholder="Enter Name"
+                    placeholder="Enter Your Name"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -253,13 +272,13 @@ export default function UserHero({ user, profile, role }: Props) {
                     value={formData.phone} 
                     onChange={(e) => setFormData({...formData, phone: e.target.value})}
                     className="h-10 rounded-xl border-white/10 bg-white/5 text-white focus:border-amber-400/50"
-                    placeholder="Enter Phone"
+                    placeholder="Enter Your Phone"
                   />
                 </div>
                 <div className="flex gap-2 pt-1">
-                  <Button size="sm" onClick={handleUpdateProfile} disabled={loading} className="h-9 rounded-xl bg-emerald-500 hover:bg-emerald-600">
+                  <Button size="sm" onClick={handleUpdateProfile} disabled={loading} className="h-9 rounded-xl bg-emerald-500 hover:bg-emerald-600 font-bold">
                     {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5 mr-1" />}
-                    Save to DB
+                    Save My Profile
                   </Button>
                   <Button size="sm" variant="ghost" onClick={() => setIsEditing(false)} className="h-9 rounded-xl text-slate-400 hover:text-white">
                     <X className="h-3.5 w-3.5 mr-1" />
@@ -277,6 +296,7 @@ export default function UserHero({ user, profile, role }: Props) {
                     <button 
                       onClick={() => setIsEditing(true)}
                       className="rounded-full p-2 text-slate-500 transition-colors hover:bg-white/5 hover:text-amber-400"
+                      title="Edit My Profile"
                     >
                       <Edit2 className="h-4 w-4" />
                     </button>
@@ -285,7 +305,7 @@ export default function UserHero({ user, profile, role }: Props) {
                 <div className="flex flex-wrap items-center gap-4 text-slate-400">
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-amber-400/60" />
-                    <span className="text-sm font-medium text-slate-300 capitalize">{role}</span>
+                    <span className="text-sm font-bold text-slate-200 capitalize">{role}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Phone className="h-4 w-4 text-amber-400/60" />
@@ -317,6 +337,7 @@ export default function UserHero({ user, profile, role }: Props) {
                   onClick={() => fileInputRef.current?.click()} 
                   disabled={uploading} 
                   className="h-8 flex-1 rounded-xl border border-white/10 bg-white/10 text-white backdrop-blur hover:bg-white/20"
+                  title="Upload My Photo"
                 >
                   {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
                 </Button>
@@ -327,6 +348,7 @@ export default function UserHero({ user, profile, role }: Props) {
                     disabled={uploading} 
                     variant="outline" 
                     className="h-8 flex-1 rounded-xl border-red-500/20 bg-red-500/10 text-red-200 hover:bg-red-500/20"
+                    title="Remove My Photo"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>

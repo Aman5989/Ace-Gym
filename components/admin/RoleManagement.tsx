@@ -84,7 +84,7 @@ export default function RoleManagement() {
   }
 
   return (
-    <section className="ace-panel rounded-3xl border border-white/10 bg-white/5 p-5 shadow-2xl shadow-black/20 sm:p-7">
+    <section id="role-management-section" className="ace-panel rounded-3xl border border-white/10 bg-white/5 p-5 shadow-2xl shadow-black/20 sm:p-7">
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-300">Access control</p>
