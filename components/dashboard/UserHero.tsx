@@ -49,21 +49,20 @@ export default function UserHero({ user, profile, role }: Props) {
   const canEdit = role === "admin";
 
   async function handleRefresh() {
+    if (!user?.id) {
+      toast.error("User session missing");
+      return;
+    }
+    
     setRefreshing(true);
     try {
-      console.log("Refreshing profile for user:", user.id);
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", user.id)
         .maybeSingle();
 
-      if (error) {
-        console.error("Refresh error:", error);
-        throw error;
-      }
-      
-      console.log("Refresh result:", data);
+      if (error) throw error;
       
       if (data) {
         setLocalProfile(data);
@@ -71,9 +70,9 @@ export default function UserHero({ user, profile, role }: Props) {
           full_name: data.full_name ?? "",
           phone: data.phone ?? "",
         });
-        toast.success("Profile updated");
+        toast.success("Profile data updated");
       } else {
-        toast.info("No profile data found yet");
+        toast.info(`No profile found for ${user.email || 'this account'}`);
       }
       
       router.refresh();
@@ -106,8 +105,7 @@ export default function UserHero({ user, profile, role }: Props) {
       toast.success("Profile saved");
       setIsEditing(false);
       router.refresh();
-      // Also trigger a local refresh to be sure
-      void handleRefresh();
+      setTimeout(() => void handleRefresh(), 500);
     } catch (error: any) {
       toast.error(error.message || "Failed to update profile");
     } finally {
@@ -151,7 +149,7 @@ export default function UserHero({ user, profile, role }: Props) {
 
       toast.success("Photo updated");
       router.refresh();
-      void handleRefresh();
+      setTimeout(() => void handleRefresh(), 500);
     } catch (error: any) {
       toast.error(error.message || "Failed to upload photo");
     } finally {
@@ -179,7 +177,7 @@ export default function UserHero({ user, profile, role }: Props) {
 
       toast.success("Photo removed");
       router.refresh();
-      void handleRefresh();
+      setTimeout(() => void handleRefresh(), 500);
     } catch (error: any) {
       toast.error(error.message || "Failed to remove photo");
     } finally {
@@ -281,7 +279,7 @@ export default function UserHero({ user, profile, role }: Props) {
           </div>
         </div>
 
-        {/* Right Side: Photo with Aligned Controls (Matches DashboardHeader style) */}
+        {/* Right Side: Photo with Aligned Controls */}
         <div className="flex flex-col items-center gap-2 md:items-end">
           <div className="w-[160px] max-w-full">
             <div className="group relative aspect-square w-full overflow-hidden rounded-2xl border border-white/15 bg-white/5 shadow-xl shadow-black/20">

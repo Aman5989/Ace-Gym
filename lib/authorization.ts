@@ -5,10 +5,10 @@ export type AppRole = "admin" | "trainer";
 
 const PRIMARY_ADMIN_EMAIL = "shubham@acegym.com";
 
-export const getCurrentAppUser = cache(async () => {
+export async function getCurrentAppUser() {
   const supabase = await createClient();
   
-  // Optimization: Use getSession for faster initial check, then getUser for security
+  // Use getUser for security and fresh session data
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { supabase, user: null, role: null as AppRole | null, profile: null };
   const normalizedEmail = (user.email ?? user.user_metadata?.email ?? "").trim().toLowerCase();
@@ -35,7 +35,7 @@ export const getCurrentAppUser = cache(async () => {
   }
 
   return { supabase, user, role, profile: profileResult.data };
-});
+}
 
 export async function requireAdmin() {
   const context = await getCurrentAppUser();
