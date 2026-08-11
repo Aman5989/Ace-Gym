@@ -51,23 +51,34 @@ export default function UserHero({ user, profile, role }: Props) {
   async function handleRefresh() {
     setRefreshing(true);
     try {
+      console.log("Refreshing profile for user:", user.id);
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", user.id)
         .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Refresh error:", error);
+        throw error;
+      }
       
-      setLocalProfile(data);
-      setFormData({
-        full_name: data?.full_name ?? "",
-        phone: data?.phone ?? "",
-      });
+      console.log("Refresh result:", data);
       
-      toast.success("Profile data refreshed");
+      if (data) {
+        setLocalProfile(data);
+        setFormData({
+          full_name: data.full_name ?? "",
+          phone: data.phone ?? "",
+        });
+        toast.success("Profile updated");
+      } else {
+        toast.info("No profile data found yet");
+      }
+      
       router.refresh();
     } catch (error: any) {
+      console.error("Refresh failed:", error);
       toast.error(error.message || "Failed to refresh profile");
     } finally {
       setRefreshing(false);
@@ -92,9 +103,11 @@ export default function UserHero({ user, profile, role }: Props) {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Failed to update profile");
       
-      toast.success("Profile updated successfully");
+      toast.success("Profile saved");
       setIsEditing(false);
       router.refresh();
+      // Also trigger a local refresh to be sure
+      void handleRefresh();
     } catch (error: any) {
       toast.error(error.message || "Failed to update profile");
     } finally {
@@ -136,10 +149,11 @@ export default function UserHero({ user, profile, role }: Props) {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Failed to update photo");
 
-      toast.success("Avatar updated successfully");
+      toast.success("Photo updated");
       router.refresh();
+      void handleRefresh();
     } catch (error: any) {
-      toast.error(error.message || "Failed to upload avatar");
+      toast.error(error.message || "Failed to upload photo");
     } finally {
       setUploading(false);
     }
@@ -163,10 +177,11 @@ export default function UserHero({ user, profile, role }: Props) {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Failed to remove photo");
 
-      toast.success("Avatar removed");
+      toast.success("Photo removed");
       router.refresh();
+      void handleRefresh();
     } catch (error: any) {
-      toast.error(error.message || "Failed to remove avatar");
+      toast.error(error.message || "Failed to remove photo");
     } finally {
       setUploading(false);
     }
@@ -266,7 +281,7 @@ export default function UserHero({ user, profile, role }: Props) {
           </div>
         </div>
 
-        {/* Right Side: Photo with Aligned Controls */}
+        {/* Right Side: Photo with Aligned Controls (Matches DashboardHeader style) */}
         <div className="flex flex-col items-center gap-2 md:items-end">
           <div className="w-[160px] max-w-full">
             <div className="group relative aspect-square w-full overflow-hidden rounded-2xl border border-white/15 bg-white/5 shadow-xl shadow-black/20">
