@@ -111,9 +111,12 @@ function checkbox(pdf: jsPDF, label: string, x: number, y: number, checked: bool
   pdf.setFillColor("#ffffff");
   pdf.rect(x + 35, y - 5, 8, 8, "FD");
   if (checked) {
-    pdf.setTextColor("#991b1b");
-    pdf.setFontSize(14);
-    pdf.text("✓", x + 35.5, y + 1.5);
+    // Draw the tick as vector strokes instead of a Unicode glyph. Helvetica
+    // does not reliably contain ✓, which can render as an apostrophe-like mark.
+    pdf.setDrawColor("#991b1b");
+    pdf.setLineWidth(0.9);
+    pdf.line(x + 36.5, y - 1.2, x + 38.5, y + 1);
+    pdf.line(x + 38.5, y + 1, x + 41.5, y - 2.8);
   }
 }
 
