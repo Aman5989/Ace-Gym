@@ -288,17 +288,20 @@ export async function printRenewalPdf(member: Member, renewal: RenewalPdfData) {
 }
 
 function printPdf(pdf: jsPDF) {
-  const printWindow = window.open("", "_blank", "noopener,noreferrer");
-  if (!printWindow) throw new Error("Please allow pop-ups to print the PDF");
+  // Embed the print action in the PDF and open a Blob URL directly. The old
+  // data-URI iframe could call print before the PDF viewer had loaded, which
+  // resulted in a blank print page in Chromium and some mobile browsers.
+  pdf.autoPrint();
+  const pdfBlob = pdf.output("blob");
+  const pdfUrl = URL.createObjectURL(pdfBlob);
+  const printWindow = window.open(pdfUrl, "_blank");
 
-  const dataUri = pdf.output("datauristring");
-  printWindow.document.write(`<!doctype html><html><head><title>ACE々GYM PDF</title></head><body style="margin:0;overflow:hidden"><iframe id="pdf-frame" title="ACE々GYM PDF" style="border:0;width:100vw;height:100vh" src="${dataUri}"></iframe></body></html>`);
-  printWindow.document.close();
-  printWindow.focus();
+  if (!printWindow) {
+    URL.revokeObjectURL(pdfUrl);
+    throw new Error("Please allow pop-ups to print the PDF");
+  }
 
-  const print = () => {
-    printWindow.focus();
-    printWindow.print();
-  };
-  window.setTimeout(print, 900);
+  // Keep the Blob URL alive while the browser PDF viewer loads and invokes the
+  // embedded print action, then release it after a generous safety window.
+  window.setTimeout(() => URL.revokeObjectURL(pdfUrl), 60_000);
 }
