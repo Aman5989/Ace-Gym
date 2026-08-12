@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Member } from "@/types/member";
 import EditMemberDialog from "./EditMemberDialog";
 import PaymentHistory from "@/components/payments/PaymentHistory";
-import { downloadMemberPdf } from "@/lib/member-pdf";
+import PdfOptionsDialog from "@/components/payments/PdfOptionsDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,15 +32,10 @@ function whatsappNumber(phone: string) {
 export default function MemberActions({ member, canViewPayments = true, canEdit = true, canDelete = true }: Props) {
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
+  const [pdfOpen, setPdfOpen] = useState(false);
 
-  function downloadProfile() {
-    try {
-      downloadMemberPdf(member);
-      toast.success("Member PDF downloaded");
-    } catch (error) {
-      console.error("MEMBER PDF ERROR:", error);
-      toast.error("Unable to create member PDF");
-    }
+  function openMemberPdf() {
+    setPdfOpen(true);
   }
 
   function sendReminder() {
@@ -71,9 +66,10 @@ export default function MemberActions({ member, canViewPayments = true, canEdit 
   return (
     <div className="flex items-center gap-1.5">
       {canViewPayments ? <PaymentHistory member={member} compact /> : null}
-      <Button type="button" variant="ghost" size="icon" onClick={downloadProfile} title="Download member PDF" className="h-9 w-9 rounded-xl text-indigo-500 hover:bg-indigo-50 hover:text-indigo-600">
+      <Button type="button" variant="ghost" size="icon" onClick={openMemberPdf} title="Member PDF options" aria-label="Member PDF options" className="h-9 w-9 rounded-xl text-indigo-500 hover:bg-indigo-50 hover:text-indigo-600">
         <Download className="h-4 w-4" />
       </Button>
+      <PdfOptionsDialog member={member} open={pdfOpen} onOpenChange={setPdfOpen} />
       {canViewPayments ? (
         <Button type="button" variant="ghost" size="icon" onClick={sendReminder} title="Send WhatsApp reminder" className="h-9 w-9 rounded-xl text-emerald-500 hover:bg-emerald-50 hover:text-emerald-600">
           <MessageCircle className="h-4 w-4" />

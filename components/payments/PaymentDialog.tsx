@@ -24,11 +24,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { advanceDueDate, formatCurrency, paymentMethods, toDateInputValue } from "@/lib/payment-utils";
+import { RenewalPdfData } from "@/lib/member-pdf";
 import { Member } from "@/types/member";
 
 interface Props {
   member: Member;
-  onSuccess?: () => void;
+  onSuccess?: (receipt: RenewalPdfData) => void;
   compact?: boolean;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -112,8 +113,16 @@ export default function PaymentDialog({ member, onSuccess, compact = false, open
       toast.success(`Payment recorded for ${member.full_name}`, {
         description: `Next due date: ${new Date(`${result.next_due_date}T00:00:00`).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}`,
       });
+      const receipt: RenewalPdfData = {
+        paymentId: result.payment?.id,
+        amount: totalAmount,
+        paymentMethod,
+        paymentDate,
+        membershipPlan,
+        nextDueDate: result.next_due_date,
+      };
       handleOpenChange(false);
-      onSuccess?.();
+      onSuccess?.(receipt);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Unable to record payment");
     } finally {

@@ -15,6 +15,8 @@ import { toast } from "sonner";
 import MemberForm from "@/components/forms/MemberForm";
 import MonthCloseButton from "@/components/dashboard/MonthCloseButton";
 import PaymentDialog from "@/components/payments/PaymentDialog";
+import PdfOptionsDialog from "@/components/payments/PdfOptionsDialog";
+import { RenewalPdfData } from "@/lib/member-pdf";
 import { Member } from "@/types/member";
 
 import { createClient } from "@/lib/supabase";
@@ -37,6 +39,7 @@ export default function DashboardHeader({ canCloseMonth = false, canRecordPaymen
   const [renewalSearch, setRenewalSearch] = useState("");
   const [renewalMember, setRenewalMember] = useState<Member | null>(null);
   const [renewalPaymentOpen, setRenewalPaymentOpen] = useState(false);
+  const [renewalReceipt, setRenewalReceipt] = useState<{ member: Member; renewal: RenewalPdfData } | null>(null);
   const [uploading, setUploading] = useState(false);
   const [imageUrl, setImageUrl] = useState(heroImageUrl);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -483,10 +486,31 @@ export default function DashboardHeader({ canCloseMonth = false, canRecordPaymen
             setRenewalPaymentOpen(nextOpen);
             if (!nextOpen) setRenewalMember(null);
           }}
-          onSuccess={() => {
+          onSuccess={(receipt) => {
+            if (renewalMember) {
+              setRenewalReceipt({
+                member: {
+                  ...renewalMember,
+                  membership_plan: receipt.membershipPlan,
+                  next_due_date: receipt.nextDueDate,
+                },
+                renewal: receipt,
+              });
+            }
             setRenewalPaymentOpen(false);
             setRenewalMember(null);
             router.refresh();
+          }}
+        />
+      ) : null}
+
+      {renewalReceipt ? (
+        <PdfOptionsDialog
+          member={renewalReceipt.member}
+          renewal={renewalReceipt.renewal}
+          open
+          onOpenChange={(nextOpen) => {
+            if (!nextOpen) setRenewalReceipt(null);
           }}
         />
       ) : null}
