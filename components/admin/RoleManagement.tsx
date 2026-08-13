@@ -142,8 +142,13 @@ export default function RoleManagement() {
               <div className="flex min-w-0 flex-col">
                 <span className="truncate text-sm font-semibold text-slate-200">{user.email}</span>
                 <div className="flex items-center gap-2 overflow-hidden">
-                  {user.profile?.full_name && <span className="truncate text-[10px] font-medium text-amber-400/80">{user.profile.full_name}</span>}
-                  <span className="truncate text-[8px] font-mono text-slate-600 opacity-60">ID: {user.user_id}</span>
+                  {user.email.toLowerCase() === "shubham@acegym.com" ? (
+                    <span className="truncate text-[10px] font-medium text-amber-400/80">
+                      ACE<span className="font-sans">々</span>Shubham
+                    </span>
+                  ) : user.profile?.full_name ? (
+                    <span className="truncate text-[10px] font-medium text-amber-400/80">{user.profile.full_name}</span>
+                  ) : null}
                 </div>
               </div>
             </div>
