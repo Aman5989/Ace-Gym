@@ -31,7 +31,7 @@ import {
 
 
 
-export default function DashboardHeader({ canCloseMonth = false, canRecordPayments = false, paymentCount = 0, total = 0, heroImageUrl = null, members = [] }: { canCloseMonth?: boolean; canRecordPayments?: boolean; paymentCount?: number; total?: number; heroImageUrl?: string | null; members?: Member[] }) {
+export default function DashboardHeader({ canCloseMonth = false, canRecordPayments = false, paymentCount = 0, total = 0, heroImageUrl = null, members = [], isTrainer = false }: { canCloseMonth?: boolean; canRecordPayments?: boolean; paymentCount?: number; total?: number; heroImageUrl?: string | null; members?: Member[]; isTrainer?: boolean }) {
 
 
   const [open, setOpen] = useState(false);
@@ -159,23 +159,31 @@ export default function DashboardHeader({ canCloseMonth = false, canRecordPaymen
     <>
 
       <div
-        className="
-          ace-glass ace-shimmer ace-reveal ace-shell
-          relative
-          overflow-hidden
-          rounded-3xl
-          border
-          border-white/10
-          bg-gradient-to-br
-          from-[#0a0e27]
-          via-[#111740]
-          to-[#1a0d33]
-          p-8
-          shadow-2xl
-          shadow-indigo-950/40
-          md:p-10
-        "
-      >
+          className={`
+            ace-glass ace-shimmer ace-reveal ace-shell
+            relative
+            overflow-hidden
+            rounded-3xl
+            border
+            border-white/10
+            ${isTrainer ? "bg-[#0b1017]" : "bg-gradient-to-br from-[#0a0e27] via-[#111740] to-[#1a0d33]"}
+            p-8
+            shadow-2xl
+            shadow-indigo-950/40
+            md:p-10
+          `}
+        >
+          {isTrainer ? (
+            <>
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-0 bg-cover bg-center bg-no-repeat"
+                style={{ backgroundImage: "url('/assets/trainer-dashboard-bg.png')" }}
+              />
+              <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/60 to-slate-950/15" />
+              <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/85 via-transparent to-slate-950/10" />
+            </>
+          ) : null}
 
         {/* Decorative glow accents */}
         <div

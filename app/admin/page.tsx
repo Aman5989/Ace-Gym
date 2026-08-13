@@ -48,6 +48,7 @@ export default async function Home() {
             paymentCount={canViewPayments ? paymentSummary.count : 0}
             total={canViewPayments ? paymentSummary.monthTotal : 0}
             heroImageUrl={canViewPayments ? heroImageUrl : null}
+            isTrainer={role === "trainer"}
           />
         </div>
         <div className="ace-reveal ace-reveal-1-5">
