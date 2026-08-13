@@ -24,7 +24,7 @@ import { getPlanMonths, toDateInputValue } from "@/lib/payment-utils";
 
 interface Props {
   member?: Member;
-  onSuccess?: () => void;
+  onSuccess?: (member?: Member) => void;
 }
 
 const plans = [
@@ -189,8 +189,27 @@ export default function MemberForm({
       if (result?.warning) toast.warning(result.warning);
       else toast.success("Member added and registration fee recorded");
 
+      const createdMember: Member = {
+        id: result?.member?.id ?? crypto.randomUUID(),
+        full_name: formData.full_name,
+        phone: formData.phone,
+        father_name: formData.father_name || null,
+        address: formData.address || null,
+        gender: formData.gender || null,
+        timing: formData.timing as Member["timing"],
+        payment_type: formData.payment_type as Member["payment_type"],
+        membership_plan: formData.membership_plan,
+        monthly_fee: monthlyFee,
+        join_date: formData.join_date,
+        next_due_date: result?.next_due_date ?? formData.next_due_date,
+        status: "active",
+        notes: formData.notes || null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
       router.refresh();
-      onSuccess?.();
+      onSuccess?.(createdMember);
     } catch (error) {
       console.error("MEMBER SAVE REQUEST FAILED:", error);
       toast.error(

@@ -35,6 +35,7 @@ export default function DashboardHeader({ canCloseMonth = false, canRecordPaymen
 
 
   const [open, setOpen] = useState(false);
+  const [newMemberPdf, setNewMemberPdf] = useState<Member | null>(null);
   const [renewalOpen, setRenewalOpen] = useState(false);
   const [renewalSearch, setRenewalSearch] = useState("");
   const [renewalMember, setRenewalMember] = useState<Member | null>(null);
@@ -423,7 +424,10 @@ export default function DashboardHeader({ canCloseMonth = false, canRecordPaymen
           >
 
             <MemberForm
-              onSuccess={() => setOpen(false)}
+              onSuccess={(createdMember) => {
+                setOpen(false);
+                if (createdMember) setNewMemberPdf(createdMember);
+              }}
             />
 
           </div>
@@ -475,6 +479,16 @@ export default function DashboardHeader({ canCloseMonth = false, canRecordPaymen
           </div>
         </DialogContent>
       </Dialog>
+
+      {newMemberPdf ? (
+        <PdfOptionsDialog
+          member={newMemberPdf}
+          open
+          onOpenChange={(nextOpen) => {
+            if (!nextOpen) setNewMemberPdf(null);
+          }}
+        />
+      ) : null}
 
       {renewalMember ? (
         <PaymentDialog
