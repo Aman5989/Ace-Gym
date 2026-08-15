@@ -2,6 +2,7 @@
 
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 
@@ -29,6 +30,7 @@ export default function LoginForm() {
     () => createClient(),
     []
   );
+  const router = useRouter();
 
 
 
@@ -93,7 +95,7 @@ export default function LoginForm() {
 
 
       toast.success("Login successful");
-      window.location.replace("/admin");
+      router.replace("/admin");
 
 
     } catch (error) {
