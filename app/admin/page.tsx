@@ -19,6 +19,7 @@ export default async function Home() {
     getHeroImageUrl(),
   ]);
   const canViewPayments = role === "admin";
+  const canCollectDue = role === "admin" || role === "trainer";
 
   type RoleRow = { user_id: string; email: string; role: string };
   let trainerOptions: TrainerHeroOption[] = [];
@@ -62,14 +63,16 @@ export default async function Home() {
             upiCollectedThisMonth={canViewPayments ? paymentSummary.upiTotal : 0}
             registrationCollectedThisMonth={canViewPayments ? paymentSummary.registrationTotal : 0}
             renewalCollectedThisMonth={canViewPayments ? paymentSummary.renewalTotal : 0}
+            dueCollectedThisMonth={canViewPayments ? paymentSummary.dueTotal : 0}
             registrationCount={canViewPayments ? paymentSummary.registrationCount : 0}
             renewalCount={canViewPayments ? paymentSummary.renewalCount : 0}
+            dueCount={canViewPayments ? paymentSummary.dueCount : 0}
             paymentCount={canViewPayments ? paymentSummary.count : 0}
             canViewPayments={canViewPayments}
           />
         </div>
         <div className="ace-reveal ace-reveal-3">
-          <MembersTable members={members} canViewPayments={canViewPayments} canEditMembers={canViewPayments} canDeleteMembers={canViewPayments} />
+          <MembersTable members={members} canViewPayments={canViewPayments} canCollectDue={canCollectDue} canEditMembers={canViewPayments} canDeleteMembers={canViewPayments} />
         </div>
         {canViewPayments ? (
           <>

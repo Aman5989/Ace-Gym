@@ -11,13 +11,15 @@ interface Props {
   upiCollectedThisMonth?: number;
   registrationCollectedThisMonth?: number;
   renewalCollectedThisMonth?: number;
+  dueCollectedThisMonth?: number;
   registrationCount?: number;
   renewalCount?: number;
+  dueCount?: number;
   paymentCount?: number;
   canViewPayments?: boolean;
 }
 
-export default function StatsCards({ members, collectedThisMonth = 0, cashCollectedThisMonth = 0, upiCollectedThisMonth = 0, registrationCollectedThisMonth = 0, renewalCollectedThisMonth = 0, registrationCount = 0, renewalCount = 0, paymentCount = 0, canViewPayments = true }: Props) {
+export default function StatsCards({ members, collectedThisMonth = 0, cashCollectedThisMonth = 0, upiCollectedThisMonth = 0, registrationCollectedThisMonth = 0, renewalCollectedThisMonth = 0, dueCollectedThisMonth = 0, registrationCount = 0, renewalCount = 0, dueCount = 0, paymentCount = 0, canViewPayments = true }: Props) {
   const today = new Date();
   const totalMembers = members.length;
   const overdueMembers = members.filter((member) => new Date(`${member.next_due_date}T23:59:59`) < today).length;
@@ -63,7 +65,7 @@ export default function StatsCards({ members, collectedThisMonth = 0, cashCollec
                       </div>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                     <div className="flex items-center gap-2 rounded-xl bg-white/5 px-2.5 py-2">
                       <UserPlus className="h-3.5 w-3.5 text-violet-300" />
                       <div>
@@ -78,6 +80,14 @@ export default function StatsCards({ members, collectedThisMonth = 0, cashCollec
                         <p className="text-[10px] uppercase tracking-wide text-slate-500">Renewal</p>
                         <p className="text-xs font-semibold text-amber-200">{formatCurrency(renewalCollectedThisMonth)}</p>
                         <p className="text-[10px] text-slate-500">{renewalCount} renewed</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 rounded-xl bg-white/5 px-2.5 py-2">
+                      <CircleDollarSign className="h-3.5 w-3.5 text-emerald-300" />
+                      <div>
+                        <p className="text-[10px] uppercase tracking-wide text-slate-500">Due Collection</p>
+                        <p className="text-xs font-semibold text-emerald-200">{formatCurrency(dueCollectedThisMonth)}</p>
+                        <p className="text-[10px] text-slate-500">{dueCount} collected</p>
                       </div>
                     </div>
                   </div>

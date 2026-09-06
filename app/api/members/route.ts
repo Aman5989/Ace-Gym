@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     // authenticated session here rather than an admin check.
     const supabase = await createClient();
 
-    const { full_name, phone, father_name, address, gender, timing, payment_type, membership_plan, monthly_fee, join_date, next_due_date, notes, cash_amount, upi_amount } = body;
+    const { full_name, phone, father_name, address, gender, timing, payment_type, membership_plan, monthly_fee, due_amount, join_date, next_due_date, notes, cash_amount, upi_amount } = body;
 
     if (!full_name || !phone || !membership_plan) {
       return NextResponse.json({ error: "Required fields missing" }, { status: 400 });
@@ -53,11 +53,15 @@ export async function POST(request: NextRequest) {
 
     const isMixedPayment = payment_type === "UPI + Cash";
     const amount = Number(monthly_fee);
+    const dueAmount = Number(due_amount ?? 0);
     const cashAmount = isMixedPayment ? Number(cash_amount) : payment_type === "Cash" ? amount : 0;
     const upiAmount = isMixedPayment ? Number(upi_amount) : payment_type === "UPI" ? amount : 0;
 
     if (!Number.isFinite(amount) || amount <= 0) {
       return NextResponse.json({ error: "Invalid membership fee" }, { status: 400 });
+    }
+    if (!Number.isFinite(dueAmount) || dueAmount < 0) {
+      return NextResponse.json({ error: "Due amount cannot be negative" }, { status: 400 });
     }
 
     // Insert Member
@@ -73,6 +77,7 @@ export async function POST(request: NextRequest) {
         payment_type: payment_type || "UPI",
         membership_plan,
         monthly_fee: amount,
+        due_amount: dueAmount,
         join_date,
         next_due_date: next_due_date || join_date,
         notes: notes || null,

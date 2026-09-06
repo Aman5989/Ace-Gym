@@ -13,6 +13,7 @@ export async function POST(request: Request) {
       gender,
       membership_plan,
       monthly_fee,
+      due_amount,
       join_date,
       next_due_date,
       payment_type,
@@ -30,6 +31,11 @@ export async function POST(request: Request) {
       );
     }
 
+    const dueAmount = Number(due_amount ?? 0);
+    if (!Number.isFinite(dueAmount) || dueAmount < 0) {
+      return NextResponse.json({ error: "Due amount cannot be negative" }, { status: 400 });
+    }
+
     const supabase = await createClient();
 
     const { error } = await supabase
@@ -42,6 +48,7 @@ export async function POST(request: Request) {
         gender: gender || null,
         membership_plan,
         monthly_fee: Number(monthly_fee),
+        due_amount: dueAmount,
         join_date,
         next_due_date,
         payment_type: payment_type || "UPI",

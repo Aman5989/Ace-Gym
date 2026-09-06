@@ -92,6 +92,9 @@ export default function MemberForm({
     monthly_fee:
       member?.monthly_fee?.toString() ?? "",
 
+    due_amount:
+      member?.due_amount?.toString() ?? "0",
+
     join_date: initialJoinDate,
 
     next_due_date: member?.next_due_date ?? defaultDueDate(initialPlan, initialJoinDate),
@@ -124,10 +127,15 @@ export default function MemberForm({
     try {
       const isMixedPayment = formData.payment_type === "UPI + Cash";
       const monthlyFee = Number(formData.monthly_fee);
+      const dueAmount = Number(formData.due_amount || 0);
       const cashAmount = isMixedPayment ? Number(formData.cash_amount) : formData.payment_type === "Cash" ? monthlyFee : 0;
       const upiAmount = isMixedPayment ? Number(formData.upi_amount) : formData.payment_type === "UPI" ? monthlyFee : 0;
       if (!Number.isFinite(monthlyFee) || monthlyFee <= 0) {
         toast.error("Enter a valid membership fee");
+        return;
+      }
+      if (!Number.isFinite(dueAmount) || dueAmount < 0) {
+        toast.error("Due amount cannot be negative");
         return;
       }
       if (isMixedPayment && (!Number.isFinite(cashAmount) || !Number.isFinite(upiAmount) || cashAmount <= 0 || upiAmount <= 0 || Math.abs(cashAmount + upiAmount - monthlyFee) > 0.01)) {
@@ -144,6 +152,7 @@ export default function MemberForm({
         payment_type: formData.payment_type,
         membership_plan: formData.membership_plan,
         monthly_fee: monthlyFee,
+        due_amount: dueAmount,
         join_date: formData.join_date,
         next_due_date: formData.next_due_date,
         notes: formData.notes || null,
@@ -200,6 +209,7 @@ export default function MemberForm({
         payment_type: formData.payment_type as Member["payment_type"],
         membership_plan: formData.membership_plan,
         monthly_fee: monthlyFee,
+        due_amount: dueAmount,
         join_date: formData.join_date,
         next_due_date: result?.next_due_date ?? formData.next_due_date,
         status: "active",
@@ -369,6 +379,17 @@ export default function MemberForm({
               onChange={handleChange}
               placeholder="1500"
               required
+            />
+          </Field>
+          <Field label="Due Amount">
+            <InputField
+              name="due_amount"
+              type="number"
+              min="0"
+              step="0.01"
+              value={formData.due_amount}
+              onChange={handleChange}
+              placeholder="0"
             />
           </Field>
           <Field label="Payment Type">

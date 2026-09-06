@@ -4,18 +4,20 @@ export type PaymentMethod = "UPI" | "Cash" | "UPI + Cash" | "Card" | "Bank Trans
  * Business meaning of a payment, kept separate from the payment channel.
  * - registration: the first fee collected when a member joins
  * - renewal: every subsequent subscription fee
+ * - due: a payment collected against an outstanding member balance
  * - adjustment: a manual correction entry
  */
-export type FeeCategory = "registration" | "renewal" | "adjustment";
+export type FeeCategory = "registration" | "renewal" | "due" | "adjustment";
 
 export const feeCategoryLabels: Record<FeeCategory, string> = {
   registration: "Registration Fee",
   renewal: "Renewal Fee",
+  due: "Due Collection",
   adjustment: "Adjustment",
 };
 
 export function feeCategoryLabel(value?: string | null): string {
-  if (value === "registration" || value === "renewal" || value === "adjustment") {
+  if (value === "registration" || value === "renewal" || value === "due" || value === "adjustment") {
     return feeCategoryLabels[value];
   }
   return feeCategoryLabels.renewal;

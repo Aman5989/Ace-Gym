@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Member } from "@/types/member";
 import EditMemberDialog from "./EditMemberDialog";
 import PaymentHistory from "@/components/payments/PaymentHistory";
+import DueCollectionDialog from "@/components/payments/DueCollectionDialog";
 import PdfOptionsDialog from "@/components/payments/PdfOptionsDialog";
 import {
   AlertDialog,
@@ -22,14 +23,14 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-interface Props { member: Member; canViewPayments?: boolean; canEdit?: boolean; canDelete?: boolean; }
+interface Props { member: Member; canViewPayments?: boolean; canCollectDue?: boolean; canEdit?: boolean; canDelete?: boolean; }
 
 function whatsappNumber(phone: string) {
   const digits = phone.replace(/\D/g, "");
   return digits.length === 10 ? `91${digits}` : digits;
 }
 
-export default function MemberActions({ member, canViewPayments = true, canEdit = true, canDelete = true }: Props) {
+export default function MemberActions({ member, canViewPayments = true, canCollectDue = true, canEdit = true, canDelete = true }: Props) {
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
   const [pdfOpen, setPdfOpen] = useState(false);
@@ -66,6 +67,7 @@ export default function MemberActions({ member, canViewPayments = true, canEdit 
   return (
     <div className="flex items-center gap-1.5">
       {canViewPayments ? <PaymentHistory member={member} compact /> : null}
+      {canCollectDue && member.due_amount > 0 ? <DueCollectionDialog member={member} compact onSuccess={() => router.refresh()} /> : null}
       <Button type="button" variant="ghost" size="icon" onClick={openMemberPdf} title="Member PDF options" aria-label="Member PDF options" className="h-9 w-9 rounded-xl text-indigo-500 hover:bg-indigo-50 hover:text-indigo-600">
         <Download className="h-4 w-4" />
       </Button>

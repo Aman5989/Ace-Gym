@@ -22,6 +22,8 @@ export interface Member {
 
     monthly_fee: number;
 
+    due_amount: number;
+
     membership_plan: string;
   
     next_due_date: string;

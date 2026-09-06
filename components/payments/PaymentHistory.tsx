@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { formatCurrency } from "@/lib/payment-utils";
 import { Member } from "@/types/member";
-import { Payment } from "@/types/payment";
+import { feeCategoryLabel, Payment } from "@/types/payment";
 
 interface Props {
   member: Member;
@@ -55,16 +55,16 @@ export default function PaymentHistory({ member, compact = false }: Props) {
     return () => { cancelled = true; };
   }, [member.id, open]);
 
-  function isRegistration(payment: Payment) {
+  function paymentCategory(payment: Payment) {
     const category = String(payment.fee_category ?? "").toLowerCase();
-    if (category === "registration") return true;
-    if (category === "renewal" || category === "adjustment") return false;
-    return String(payment.notes ?? "").toLowerCase().includes("initial membership payment");
+    if (category === "registration" || category === "renewal" || category === "due" || category === "adjustment") return category;
+    return String(payment.notes ?? "").toLowerCase().includes("initial membership payment") ? "registration" : "renewal";
   }
 
   const totalPaid = payments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
-  const registrationPaid = payments.filter(isRegistration).reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
-  const renewalPaid = totalPaid - registrationPaid;
+  const registrationPaid = payments.filter((payment) => paymentCategory(payment) === "registration").reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+  const renewalPaid = payments.filter((payment) => paymentCategory(payment) === "renewal").reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+  const duePaid = payments.filter((payment) => paymentCategory(payment) === "due").reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -95,7 +95,7 @@ export default function PaymentHistory({ member, compact = false }: Props) {
             <span className="text-sm text-slate-300">Total recorded</span>
             <span className="text-xl font-bold">{formatCurrency(totalPaid)}</span>
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
             <div className="rounded-2xl border border-violet-100 bg-violet-50 px-3 py-2">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-violet-500">Registration Fee</p>
               <p className="text-base font-bold text-violet-900">{formatCurrency(registrationPaid)}</p>
@@ -103,6 +103,10 @@ export default function PaymentHistory({ member, compact = false }: Props) {
             <div className="rounded-2xl border border-amber-100 bg-amber-50 px-3 py-2">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-600">Renewal Fee</p>
               <p className="text-base font-bold text-amber-900">{formatCurrency(renewalPaid)}</p>
+            </div>
+            <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-3 py-2">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-600">Due Collection</p>
+              <p className="text-base font-bold text-emerald-900">{formatCurrency(duePaid)}</p>
             </div>
           </div>
         </div>
@@ -121,7 +125,7 @@ export default function PaymentHistory({ member, compact = false }: Props) {
                 </div>
                 {payment.notes && <p className="mt-1 truncate text-xs text-slate-400">{payment.notes}</p>}
               </div>
-              <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${isRegistration(payment) ? "bg-violet-100 text-violet-700" : "bg-amber-100 text-amber-700"}`}>{isRegistration(payment) ? "Registration Fee" : "Renewal Fee"}</span>
+              <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${paymentCategory(payment) === "registration" ? "bg-violet-100 text-violet-700" : paymentCategory(payment) === "due" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>{feeCategoryLabel(paymentCategory(payment))}</span>
             </div>
           ))}
         </div>

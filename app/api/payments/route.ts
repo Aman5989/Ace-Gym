@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
     const amount = Number(body.amount);
     const paymentMethod = String(body.payment_method ?? "UPI");
     const paymentDate = String(body.payment_date ?? "");
+    const feeCategory = String(body.fee_category ?? "renewal");
     const membershipPlan = String(body.membership_plan ?? "");
     const notes = body.notes ? String(body.notes) : null;
     const requestedCash = Number(body.cash_amount ?? 0);
@@ -51,7 +52,6 @@ export async function POST(request: NextRequest) {
       !Number.isFinite(amount) ||
       amount <= 0 ||
       !paymentDate ||
-      !["Monthly", "Quarterly", "Half Yearly", "Yearly"].includes(membershipPlan) ||
       !Number.isFinite(cashAmount) ||
       !Number.isFinite(upiAmount) ||
       cashAmount < 0 ||
@@ -67,6 +67,41 @@ export async function POST(request: NextRequest) {
     const context = await getCurrentAppUser();
     if (!context.user || !["admin", "trainer"].includes(context.role ?? "")) {
       return NextResponse.json({ error: "Admin or trainer access required" }, { status: 403 });
+    }
+
+    if (feeCategory === "due") {
+      const { data, error } = await context.supabase.rpc("record_member_due_collection", {
+        target_member_id: memberId,
+        target_amount: amount,
+        target_payment_method: paymentMethod,
+        target_cash_amount: cashAmount,
+        target_upi_amount: upiAmount,
+        target_payment_date: paymentDate,
+        target_notes: notes,
+      });
+
+      if (error) {
+        console.error("DUE COLLECTION RPC ERROR:", error);
+        return NextResponse.json({ error: error.message }, { status: 400 });
+      }
+
+      const collection = Array.isArray(data) ? data[0] : data;
+      if (!collection?.payment_id || collection.remaining_due_amount === null || collection.remaining_due_amount === undefined) {
+        return NextResponse.json({ error: "Due collection could not be verified" }, { status: 502 });
+      }
+
+      return NextResponse.json(
+        {
+          payment: { id: collection.payment_id },
+          remaining_due_amount: collection.remaining_due_amount,
+          fee_category: "due",
+        },
+        { status: 201 },
+      );
+    }
+
+    if (feeCategory !== "renewal" || !["Monthly", "Quarterly", "Half Yearly", "Yearly"].includes(membershipPlan)) {
+      return NextResponse.json({ error: "A valid renewal membership plan is required" }, { status: 400 });
     }
 
     const { data, error } = await context.supabase.rpc("record_member_renewal", {

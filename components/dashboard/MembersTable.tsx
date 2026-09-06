@@ -27,6 +27,7 @@ import MemberActions from "./MemberActions";
 interface Props {
   members: Member[];
   canViewPayments?: boolean;
+  canCollectDue?: boolean;
   canDeleteMembers?: boolean;
   canEditMembers?: boolean;
 }
@@ -36,6 +37,7 @@ interface Props {
 export default function MembersTable({
   members,
   canViewPayments = true,
+  canCollectDue = true,
   canDeleteMembers = true,
   canEditMembers = true,
 }: Props) {
@@ -514,6 +516,7 @@ export default function MembersTable({
                         "Timing",
                         ...(canDeleteMembers ? ["Payment Type"] : []),
                         "Total Fee",
+                        "Due Amount",
                         "Join Date",
                         ...(canDeleteMembers ? ["Notes", "Created", "Updated"] : []),
                         "Plan",
@@ -717,7 +720,11 @@ export default function MembersTable({
                             </span>
                           </td>
 
-
+                          <td className="px-6 py-4">
+                            <span className={member.due_amount > 0 ? "font-semibold text-amber-300" : "font-semibold text-emerald-300"}>
+                              ₹{Number(member.due_amount || 0).toLocaleString("en-IN")}
+                            </span>
+                          </td>
 
                           <td className="px-6 py-4 text-slate-300">
 
@@ -835,7 +842,7 @@ export default function MembersTable({
 
                           <td className="px-6 py-4">
 
-                            <MemberActions member={member} canViewPayments={canViewPayments} canEdit={canEditMembers} canDelete={canDeleteMembers} />
+                            <MemberActions member={member} canViewPayments={canViewPayments} canCollectDue={canCollectDue} canEdit={canEditMembers} canDelete={canDeleteMembers} />
 
                           </td>
 

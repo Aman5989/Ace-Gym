@@ -29,6 +29,8 @@ export interface PaymentTotals {
   renewalTotal: number;
   registrationCount: number;
   renewalCount: number;
+  dueTotal: number;
+  dueCount: number;
 }
 
 const MIXED_METHODS = new Set(["upi + cash", "half upi + half cash"]);
@@ -83,7 +85,11 @@ function aggregate(payments: Payment[]): PaymentTotals {
       totals.cashTotal += cash;
       totals.upiTotal += upi;
       totals.count += 1;
-      if (registration) {
+      const category = String(payment.fee_category ?? "").toLowerCase();
+      if (category === "due") {
+        totals.dueTotal += amount;
+        totals.dueCount += 1;
+      } else if (registration) {
         totals.registrationTotal += amount;
         totals.registrationCount += 1;
       } else {
@@ -101,6 +107,8 @@ function aggregate(payments: Payment[]): PaymentTotals {
       renewalTotal: 0,
       registrationCount: 0,
       renewalCount: 0,
+      dueTotal: 0,
+      dueCount: 0,
     },
   );
 }
@@ -114,6 +122,8 @@ const EMPTY_TOTALS: PaymentTotals = {
   renewalTotal: 0,
   registrationCount: 0,
   renewalCount: 0,
+  dueTotal: 0,
+  dueCount: 0,
 };
 
 export async function getPaymentsSummary() {

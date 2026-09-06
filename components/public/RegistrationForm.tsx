@@ -62,6 +62,7 @@ export default function RegistrationForm() {
     gender: "",
     membership_plan: "Monthly",
     monthly_fee: "",
+    due_amount: "0",
     payment_type: "UPI" as (typeof paymentTypes)[number],
     join_date: "",
     next_due_date: "",
@@ -162,6 +163,7 @@ export default function RegistrationForm() {
         gender: "",
         membership_plan: "Monthly",
         monthly_fee: "",
+        due_amount: "0",
         payment_type: "UPI",
         join_date: "",
         next_due_date: "",
@@ -439,6 +441,18 @@ export default function RegistrationForm() {
 
 
 
+
+      <Field label="Due Amount">
+        <InputBox
+          name="due_amount"
+          type="number"
+          min="0"
+          step="0.01"
+          placeholder="0"
+          value={formData.due_amount}
+          onChange={handleChange}
+        />
+      </Field>
 
       <Field label="Payment Type">
         <Select

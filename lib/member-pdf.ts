@@ -202,7 +202,7 @@ function drawCommonDocument(
   labelLine(pdf, details.renewal ? "Renewal Date:" : "Start Date:", formatDate(details.paymentDate), margin + 104, y, 76);
   labelLine(pdf, "Total Amount:", money(details.amount), margin + 7, y + 11, 75);
   labelLine(pdf, "End Date:", formatDate(details.nextDueDate), margin + 104, y + 11, 76);
-  labelLine(pdf, "Dues Amount:", "", margin + 7, y + 22, 75);
+  labelLine(pdf, "Dues Amount:", money(member.due_amount), margin + 7, y + 22, 75);
   labelLine(pdf, "Package For:", details.membershipPlan, margin + 104, y + 22, 76);
   labelLine(pdf, "Payment Type:", details.paymentMethod || member.payment_type || "UPI", margin + 7, y + 33, 95);
   pdf.setTextColor(MUTED);
