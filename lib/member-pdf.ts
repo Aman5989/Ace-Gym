@@ -218,13 +218,8 @@ function drawCommonDocument(
   for (const rule of rules) {
     const lines = pdf.splitTextToSize(rule.text, content - 22);
     const lineHeight = 4.2;
-    const boxHeight = lines.length * lineHeight + 4;
 
     if (rule.highlight) {
-      pdf.setFillColor("#fff7ed");
-      pdf.setDrawColor("#f59e0b");
-      pdf.setLineWidth(0.35);
-      pdf.roundedRect(margin + 11, y - 3.2, content - 22, boxHeight, 1.5, 1.5, "FD");
       pdf.setTextColor("#92400e");
       pdf.setFont("helvetica", "bold");
     } else {
