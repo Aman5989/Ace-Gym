@@ -31,12 +31,13 @@ const MUTED = "#374151";
 const BORDER = "#1f2937";
 const LIGHT = "#f3f4f6";
 const rules = [
-  "Fee is non-refundable in any condition.",
-  "All members are allowed only one time a day for workout.",
-  "Proper athletic footwear is only acceptable in Gym premise. No slippers or sandals are allowed.",
-  "Anyone found defaming or damaging Gym premise or property will be subjected to disciplinary action.",
-  "Gym organization is not responsible for loss or stolen articles.",
-  "Member should follow all Gym rules & regulations and maintain proper cleanliness.",
+  { text: "Fee is non-refundable in any condition.", highlight: false },
+  { text: "All members are allowed only one time a day for workout.", highlight: false },
+  { text: "Please bring your own towel. This is mandatory.", highlight: true },
+  { text: "Members must wear a proper T-shirt, trousers, and athletic shoes. Sandals and slippers are not permitted.", highlight: true },
+  { text: "Anyone found defaming or damaging Gym premise or property will be subjected to disciplinary action.", highlight: false },
+  { text: "Gym organization is not responsible for loss or stolen articles.", highlight: false },
+  { text: "Member should follow all Gym rules & regulations and maintain proper cleanliness.", highlight: false },
 ];
 
 function formatDate(value: string | null | undefined) {
@@ -213,14 +214,27 @@ function drawCommonDocument(
 
   sectionTitle(pdf, "Rules & Regulations", margin + 2, y, content - 4);
   y += 13;
-  pdf.setTextColor(INK);
-  pdf.setFont("helvetica", "normal");
   pdf.setFontSize(8.4);
   for (const rule of rules) {
+    const lines = pdf.splitTextToSize(rule.text, content - 22);
+    const lineHeight = 4.2;
+    const boxHeight = lines.length * lineHeight + 4;
+
+    if (rule.highlight) {
+      pdf.setFillColor("#fff7ed");
+      pdf.setDrawColor("#f59e0b");
+      pdf.setLineWidth(0.35);
+      pdf.roundedRect(margin + 11, y - 3.2, content - 22, boxHeight, 1.5, 1.5, "FD");
+      pdf.setTextColor("#92400e");
+      pdf.setFont("helvetica", "bold");
+    } else {
+      pdf.setTextColor(INK);
+      pdf.setFont("helvetica", "normal");
+    }
+
     pdf.text("•", margin + 8, y);
-    const lines = pdf.splitTextToSize(rule, content - 22);
     pdf.text(lines, margin + 14, y);
-    y += lines.length * 4.2 + 2.2;
+    y += lines.length * lineHeight + (rule.highlight ? 5 : 2.2);
   }
 
   y = Math.min(y + 5, height - 30);
