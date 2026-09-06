@@ -229,7 +229,7 @@ function drawCommonDocument(
 
     pdf.text("•", margin + 8, y);
     pdf.text(lines, margin + 14, y);
-    y += lines.length * lineHeight + (rule.highlight ? 5 : 2.2);
+    y += lines.length * lineHeight + 2.2;
   }
 
   y = Math.min(y + 5, height - 30);
