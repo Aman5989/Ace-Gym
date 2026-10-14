@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CalendarDays, ChevronDown, History, Loader2, ReceiptText, RefreshCw, UserPlus, WalletCards } from "lucide-react";
+import { CalendarDays, Check, ChevronDown, History, Loader2, Pencil, ReceiptText, RefreshCw, UserPlus, WalletCards } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PaymentWithMember } from "@/types/payment";
@@ -68,10 +69,16 @@ type MonthGroup = {
 };
 
 export default function AdminPaymentLedger() {
+  const router = useRouter();
   const [payments, setPayments] = useState<PaymentWithMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedMonth, setExpandedMonth] = useState<string | null>(null);
+  const [editingPaymentId, setEditingPaymentId] = useState<string | null>(null);
+  const [editAmount, setEditAmount] = useState("");
+  const [editMethod, setEditMethod] = useState<"UPI" | "Cash">("UPI");
+  const [editError, setEditError] = useState<string | null>(null);
+  const [savingPayment, setSavingPayment] = useState(false);
 
   async function loadPayments() {
     setLoading(true);
@@ -92,6 +99,54 @@ export default function AdminPaymentLedger() {
     const timer = window.setTimeout(() => { void loadPayments(); }, 0);
     return () => window.clearTimeout(timer);
   }, []);
+
+  function startEditing(payment: PaymentWithMember) {
+    setEditingPaymentId(payment.id);
+    setEditAmount(String(payment.amount));
+    setEditMethod(payment.payment_method === "Cash" ? "Cash" : "UPI");
+    setEditError(null);
+  }
+
+  async function savePayment(paymentId: string) {
+    const amount = Number(editAmount);
+    if (!Number.isFinite(amount) || amount <= 0 || Math.abs(amount - Math.round(amount * 100) / 100) > 0.0000001) {
+      setEditError("Enter a positive amount with up to two decimal places.");
+      return;
+    }
+
+    setSavingPayment(true);
+    setEditError(null);
+    try {
+      const response = await fetch("/api/payments", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: paymentId, amount, payment_method: editMethod }),
+      });
+      const result: {
+        error?: string;
+        payment?: {
+          id: string;
+          amount: number;
+          payment_method: string;
+          cash_amount: number;
+          upi_amount: number;
+        };
+      } = await response.json();
+      if (!response.ok) throw new Error(result.error ?? "Unable to update payment");
+      const correctedPayment = result.payment;
+      if (!correctedPayment) throw new Error("The payment update could not be verified");
+
+      setPayments((current) => current.map((payment) => (
+        payment.id === correctedPayment.id ? { ...payment, ...correctedPayment } : payment
+      )));
+      setEditingPaymentId(null);
+      router.refresh();
+    } catch (requestError) {
+      setEditError(requestError instanceof Error ? requestError.message : "Unable to update payment");
+    } finally {
+      setSavingPayment(false);
+    }
+  }
 
   const months = useMemo<MonthGroup[]>(() => {
     const groups = new Map<string, MonthGroup>();
@@ -195,18 +250,73 @@ export default function AdminPaymentLedger() {
                     const { cash, upi } = splitPayment(payment);
                     const mixed = MIXED_METHODS.has(String(payment.payment_method).toLowerCase());
                     return (
-                      <div key={payment.id} className="flex flex-wrap items-center gap-3 rounded-xl border border-white/5 bg-white/[0.03] px-3 py-3 sm:px-4">
-                        <div className="min-w-[150px] flex-1">
-                          <p className="font-semibold text-white">{payment.member?.full_name ?? "Unknown member"}</p>
-                          <p className="mt-1 text-xs text-slate-500">{payment.notes || (registration ? "Registration fee" : "Renewal fee")}</p>
+                      <div key={payment.id} className="space-y-2">
+                        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-white/5 bg-white/[0.03] px-3 py-3 sm:px-4">
+                          <div className="min-w-[150px] flex-1">
+                            <p className="font-semibold text-white">{payment.member?.full_name ?? "Unknown member"}</p>
+                            <p className="mt-1 text-xs text-slate-500">{payment.notes || (registration ? "Registration fee" : "Renewal fee")}</p>
+                          </div>
+                          <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${registration ? "bg-violet-500/15 text-violet-300" : "bg-amber-500/15 text-amber-300"}`}>{registration ? "Registration Fee" : "Renewal Fee"}</span>
+                          <span className="inline-flex items-center gap-1.5 text-xs text-slate-400"><CalendarDays className="h-3.5 w-3.5" />{formatDate(payment.payment_date)}</span>
+                          <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs font-semibold text-slate-300">{methodLabel(String(payment.payment_method))}</span>
+                          <span className="text-right">
+                            <span className="block font-bold text-emerald-300">{formatCurrency(Number(payment.amount))}</span>
+                            {mixed ? <span className="block text-[10px] text-slate-500">Cash {formatCurrency(cash)} · UPI {formatCurrency(upi)}</span> : null}
+                          </span>
+                          {(payment.payment_method === "Cash" || payment.payment_method === "UPI") && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => startEditing(payment)}
+                              disabled={savingPayment}
+                              className="rounded-lg border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 hover:text-white"
+                            >
+                              <Pencil className="mr-1.5 h-3.5 w-3.5" />
+                              Edit
+                            </Button>
+                          )}
                         </div>
-                        <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${registration ? "bg-violet-500/15 text-violet-300" : "bg-amber-500/15 text-amber-300"}`}>{registration ? "Registration Fee" : "Renewal Fee"}</span>
-                        <span className="inline-flex items-center gap-1.5 text-xs text-slate-400"><CalendarDays className="h-3.5 w-3.5" />{formatDate(payment.payment_date)}</span>
-                        <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs font-semibold text-slate-300">{methodLabel(String(payment.payment_method))}</span>
-                        <span className="text-right">
-                          <span className="block font-bold text-emerald-300">{formatCurrency(Number(payment.amount))}</span>
-                          {mixed ? <span className="block text-[10px] text-slate-500">Cash {formatCurrency(cash)} · UPI {formatCurrency(upi)}</span> : null}
-                        </span>
+                        {editingPaymentId === payment.id && (
+                          <form
+                            onSubmit={(event) => {
+                              event.preventDefault();
+                              void savePayment(payment.id);
+                            }}
+                            className="grid gap-3 rounded-xl border border-violet-400/20 bg-violet-500/5 p-3 sm:grid-cols-[1fr_1fr_auto_auto] sm:items-end"
+                          >
+                            <label className="space-y-1 text-xs font-medium text-slate-300">
+                              Amount
+                              <input
+                                type="number"
+                                min="0.01"
+                                step="0.01"
+                                required
+                                value={editAmount}
+                                onChange={(event) => setEditAmount(event.target.value)}
+                                className="h-10 w-full rounded-lg border border-white/10 bg-slate-950 px-3 text-sm text-white outline-none focus:border-violet-400"
+                              />
+                            </label>
+                            <label className="space-y-1 text-xs font-medium text-slate-300">
+                              Payment method
+                              <select
+                                value={editMethod}
+                                onChange={(event) => setEditMethod(event.target.value === "Cash" ? "Cash" : "UPI")}
+                                className="h-10 w-full rounded-lg border border-white/10 bg-slate-950 px-3 text-sm text-white outline-none focus:border-violet-400"
+                              >
+                                <option value="UPI">UPI</option>
+                                <option value="Cash">Cash</option>
+                              </select>
+                            </label>
+                            <Button type="submit" disabled={savingPayment} className="h-10 rounded-lg bg-violet-500 text-white hover:bg-violet-600">
+                              {savingPayment ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Check className="mr-1.5 h-4 w-4" />Save</>}
+                            </Button>
+                            <Button type="button" variant="ghost" disabled={savingPayment} onClick={() => setEditingPaymentId(null)} className="h-10 rounded-lg text-slate-300 hover:bg-white/10 hover:text-white">
+                              Cancel
+                            </Button>
+                            {editError && <p role="alert" className="text-xs text-rose-300 sm:col-span-4">{editError}</p>}
+                          </form>
+                        )}
                       </div>
                     );
                   })}

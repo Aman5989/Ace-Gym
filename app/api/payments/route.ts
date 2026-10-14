@@ -30,6 +30,57 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({ payments: data ?? [] });
 }
 
+export async function PATCH(request: NextRequest) {
+  const admin = await requireAdmin();
+  if (!admin) return NextResponse.json({ error: "Administrator access required" }, { status: 403 });
+
+  let parsedBody: unknown;
+  try {
+    parsedBody = await request.json();
+  } catch {
+    return NextResponse.json({ error: "A valid payment correction is required" }, { status: 400 });
+  }
+
+  if (!parsedBody || typeof parsedBody !== "object" || Array.isArray(parsedBody)) {
+    return NextResponse.json({ error: "A valid payment correction is required" }, { status: 400 });
+  }
+
+  const body = parsedBody as Record<string, unknown>;
+  const paymentId = typeof body.id === "string" ? body.id : "";
+  const amount = Number(body.amount);
+  const paymentMethod = body.payment_method;
+  if (
+    !paymentId ||
+    !Number.isFinite(amount) ||
+    amount <= 0 ||
+    Math.abs(amount - Math.round(amount * 100) / 100) > 0.0000001 ||
+    (paymentMethod !== "UPI" && paymentMethod !== "Cash")
+  ) {
+    return NextResponse.json({ error: "A valid payment ID, positive amount, and payment method are required" }, { status: 400 });
+  }
+
+  const { error } = await admin.supabase.rpc("correct_payment_record", {
+    target_payment_id: paymentId,
+    target_amount: amount,
+    target_payment_method: paymentMethod,
+  });
+
+  if (error) {
+    console.error("PAYMENT CORRECTION RPC ERROR:", error);
+    return NextResponse.json({ error: error.message }, { status: 400 });
+  }
+
+  return NextResponse.json({
+    payment: {
+      id: paymentId,
+      amount,
+      payment_method: paymentMethod,
+      cash_amount: paymentMethod === "Cash" ? amount : 0,
+      upi_amount: paymentMethod === "UPI" ? amount : 0,
+    },
+  });
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
