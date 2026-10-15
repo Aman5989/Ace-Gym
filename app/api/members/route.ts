@@ -54,14 +54,21 @@ export async function POST(request: NextRequest) {
     const isMixedPayment = payment_type === "UPI + Cash";
     const amount = Number(monthly_fee);
     const dueAmount = Number(due_amount ?? 0);
-    const cashAmount = isMixedPayment ? Number(cash_amount) : payment_type === "Cash" ? amount : 0;
-    const upiAmount = isMixedPayment ? Number(upi_amount) : payment_type === "UPI" ? amount : 0;
+    const paidAmount = Math.round((amount - dueAmount) * 100) / 100;
+    const cashAmount = isMixedPayment ? Number(cash_amount) : payment_type === "Cash" ? paidAmount : 0;
+    const upiAmount = isMixedPayment ? Number(upi_amount) : payment_type === "UPI" ? paidAmount : 0;
 
     if (!Number.isFinite(amount) || amount <= 0) {
       return NextResponse.json({ error: "Invalid membership fee" }, { status: 400 });
     }
     if (!Number.isFinite(dueAmount) || dueAmount < 0) {
       return NextResponse.json({ error: "Due amount cannot be negative" }, { status: 400 });
+    }
+    if (dueAmount > amount) {
+      return NextResponse.json({ error: "Due amount cannot exceed the membership fee" }, { status: 400 });
+    }
+    if (!Number.isFinite(cashAmount) || !Number.isFinite(upiAmount) || cashAmount < 0 || upiAmount < 0 || Math.abs(cashAmount + upiAmount - paidAmount) > 0.01) {
+      return NextResponse.json({ error: "Cash and UPI amounts must equal the amount paid after dues" }, { status: 400 });
     }
 
     // Insert Member
@@ -87,6 +94,17 @@ export async function POST(request: NextRequest) {
 
     if (memberError || !member) {
       return NextResponse.json({ error: memberError?.message ?? "Unable to add member" }, { status: 500 });
+    }
+
+    // Record the paid portion of the initial payment. A registration may be
+    // created fully on due, in which case there is no payment row yet.
+    if (paidAmount <= 0) {
+      const nextDue = advanceDueDate(join_date, membership_plan, join_date);
+      await supabase
+        .from("members")
+        .update({ next_due_date: nextDue })
+        .eq("id", member.id);
+      return NextResponse.json({ member, next_due_date: nextDue }, { status: 201 });
     }
 
     // Record Initial Payment
@@ -119,7 +137,7 @@ export async function POST(request: NextRequest) {
       .from("payments")
       .insert({
         member_id: member.id,
-        amount,
+        amount: paidAmount,
         payment_method: payment_type || "UPI",
         cash_amount: cashAmount,
         upi_amount: upiAmount,

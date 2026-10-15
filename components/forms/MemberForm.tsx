@@ -128,8 +128,9 @@ export default function MemberForm({
       const isMixedPayment = formData.payment_type === "UPI + Cash";
       const monthlyFee = Number(formData.monthly_fee);
       const dueAmount = Number(formData.due_amount || 0);
-      const cashAmount = isMixedPayment ? Number(formData.cash_amount) : formData.payment_type === "Cash" ? monthlyFee : 0;
-      const upiAmount = isMixedPayment ? Number(formData.upi_amount) : formData.payment_type === "UPI" ? monthlyFee : 0;
+      const paidAmount = Math.round((monthlyFee - dueAmount) * 100) / 100;
+      const cashAmount = isMixedPayment ? Number(formData.cash_amount) : formData.payment_type === "Cash" ? paidAmount : 0;
+      const upiAmount = isMixedPayment ? Number(formData.upi_amount) : formData.payment_type === "UPI" ? paidAmount : 0;
       if (!Number.isFinite(monthlyFee) || monthlyFee <= 0) {
         toast.error("Enter a valid membership fee");
         return;
@@ -138,8 +139,12 @@ export default function MemberForm({
         toast.error("Due amount cannot be negative");
         return;
       }
-      if (isMixedPayment && (!Number.isFinite(cashAmount) || !Number.isFinite(upiAmount) || cashAmount <= 0 || upiAmount <= 0 || Math.abs(cashAmount + upiAmount - monthlyFee) > 0.01)) {
-        toast.error("Cash and UPI amounts must be greater than zero and add up to the membership fee");
+      if (dueAmount > monthlyFee) {
+        toast.error("Due amount cannot exceed the membership fee");
+        return;
+      }
+      if (isMixedPayment && (!Number.isFinite(cashAmount) || !Number.isFinite(upiAmount) || cashAmount < 0 || upiAmount < 0 || (paidAmount > 0 && (cashAmount <= 0 || upiAmount <= 0)) || Math.abs(cashAmount + upiAmount - paidAmount) > 0.01)) {
+        toast.error("Cash and UPI amounts must equal the amount paid after dues");
         return;
       }
       const payload = {
@@ -433,7 +438,7 @@ export default function MemberForm({
                 />
               </Field>
               <div className="md:col-span-2 rounded-xl border border-cyan-300/20 bg-cyan-300/5 px-4 py-3 text-sm text-slate-600">
-                Initial payment total: <span className="font-semibold text-blue-700">₹{(Number(formData.cash_amount || 0) + Number(formData.upi_amount || 0)).toLocaleString("en-IN")}</span>. It must match the membership fee.
+                Initial payment total: <span className="font-semibold text-blue-700">₹{(Number(formData.cash_amount || 0) + Number(formData.upi_amount || 0)).toLocaleString("en-IN")}</span>. It must equal the membership fee after subtracting the due amount.
               </div>
             </>
           ) : null}
