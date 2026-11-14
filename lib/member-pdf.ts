@@ -31,7 +31,7 @@ const MUTED = "#374151";
 const BORDER = "#1f2937";
 const LIGHT = "#f3f4f6";
 const rules = [
-  { text: "Fee is non-refundable in any condition.", highlight: false },
+  { text: "Fee is non-refundable in any condition and cannot be exchanged with another person.", highlight: false },
   { text: "All members are allowed only one time a day for workout.", highlight: false },
   { text: "Please bring your own towel. This is mandatory.", highlight: true },
   { text: "Members must wear a proper T-shirt, trousers, and athletic shoes. Sandals and slippers are not permitted.", highlight: true },
